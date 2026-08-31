@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Vite production build
+dist/
+
+# Environment / secrets
+.env
+.env.*
+
+# Logs
+*.log
+
+# Editor / OS files
+.vscode/
+.DS_Store
+Thumbs.db
