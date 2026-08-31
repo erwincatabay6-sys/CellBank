@@ -1,4 +1,11 @@
 import {
+    useLocation,
+    useNavigate
+} from "react-router-dom";
+
+import {
+
+
     LayoutDashboard,
     Wrench,
     Users,
@@ -13,30 +20,42 @@ import {
 
 function Sidebar({ collapsed, onToggle }) {
 
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const navItems = [
         {
             label: "Dashboard",
-            icon: LayoutDashboard
+            icon: LayoutDashboard,
+            path: "/dashboard"
         },
+
         {
             label: "Repairs",
-            icon: Wrench
+            icon: Wrench,
+            path: "/repairs"
         },
+
         {
             label: "Customers",
-            icon: Users
+            icon: Users,
+            path: "/customers"
         },
         {
             label: "Technicians",
-            icon: UserCog
+            icon: UserCog,
+            path: "/technicians"
         },
         {
             label: "Reports",
-            icon: BarChart3
+            icon: BarChart3,
+            path: "/reports"
+
         },
         {
             label: "Administration",
-            icon: Shield
+            icon: Shield,
+            path: "/administration"
         }
     ];
 
@@ -71,10 +90,17 @@ function Sidebar({ collapsed, onToggle }) {
 
                     return (
                         <button
-                            className="nav-item"
+                            className={
+                                `nav-item ${
+                                location.pathname === item.path
+                                ? "active"
+                                : ""
+                            }`
+                        }
                             type="button"
                             key={item.label}
                             title={collapsed ? item.label : undefined}
+                            onClick={() => navigate(item.path)}
                         >
                             <Icon size={20} />
 
@@ -89,29 +115,35 @@ function Sidebar({ collapsed, onToggle }) {
 
             <div className="sidebar-profile">
 
-                <UserCircle
-                    className="profile-icon"
-                    size={34}
-                />
+    <UserCircle
+        className="profile-icon"
+        size={34}
+    />
 
-                {!collapsed && (
-                    <>
-                        <div className="profile-details">
-                            <strong>Miguel Santos</strong>
-                            <span>Technician</span>
-                        </div>
+    {!collapsed && (
+        <div className="profile-details">
+            <strong>Miguel Santos</strong>
+            <span>Technician</span>
+        </div>
+    )}
 
-                        <button
-                            className="account-settings"
-                            type="button"
-                            aria-label="Account Settings"
-                        >
-                            <Settings size={18} />
-                        </button>
-                    </>
-                )}
+    <button
+        className={
+            `account-settings ${
+                location.pathname === "/account"
+                    ? "active"
+                    : ""
+            }`
+        }
+        type="button"
+        aria-label="Account Settings"
+        title={collapsed ? "Account Settings" : undefined}
+        onClick={() => navigate("/account")}
+    >
+        <Settings size={18} />
+    </button>
 
-            </div>
+        </div>
 
         </aside>
     );

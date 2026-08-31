@@ -1,24 +1,114 @@
+import { Route, Routes } from "react-router-dom";
+
 import StaffLayout from "../layouts/StaffLayout.jsx";
+import PublicLayout from "../layouts/PublicLayout.jsx";
+
+import LandingPage from "../features/tracking/pages/LandingPage.jsx";
+import TrackingPage from "../features/tracking/pages/TrackingPage.jsx";
+import LoginPage from "../features/auth/pages/LoginPage.jsx";
+import DashboardPage from "../features/dashboard/pages/DashboardPage.jsx";
+import RepairListPage from "../features/repairs/pages/RepairListPage.jsx";
+import CustomerListPage from "../features/customers/pages/CustomerListPage.jsx";
+import TechnicianPage from "../features/technicians/pages/TechnicianPage.jsx";
+import ReportsPage from "../features/reports/pages/ReportsPage.jsx";
+import AdministrationPage from "../features/administration/pages/AdministrationPage.jsx";
+import AccountSettingsPage from "../features/account/pages/AccountSettingsPage.jsx";
 
 function App() {
     return (
-        <StaffLayout>
+        <Routes>
 
-            <section className="page-header">
-                <h2>Dashboard</h2>
+            <Route
+                path="/"
+                element={
+                    <PublicLayout>
+                        <LandingPage />
+                    </PublicLayout>
+                }
+            />
 
-                <p>
-                    Overview of Cellbank repair operations.
-                </p>
-            </section>
+            <Route
+                path="/track"
+                element={
+                    <PublicLayout>
+                        <TrackingPage />
+                    </PublicLayout>
+                }
+            />
 
-            <section className="page-content">
-                <p>
-                    Cellbank frontend foundation is running.
-                </p>
-            </section>
+            <Route
+                path="/login"
+                element={
+                    <PublicLayout>
+                        <LoginPage />
+                    </PublicLayout>
+                }
+            />
 
-        </StaffLayout>
+            <Route
+                path="/dashboard"
+                element={
+                    <StaffLayout>
+                        <DashboardPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/repairs"
+                element={
+                    <StaffLayout>
+                        <RepairListPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/customers"
+                element={
+                    <StaffLayout>
+                        <CustomerListPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/technicians"
+                element={
+                    <StaffLayout>
+                        <TechnicianPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/reports"
+                element={
+                    <StaffLayout>
+                        <ReportsPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/administration"
+                element={
+                    <StaffLayout>
+                        <AdministrationPage />
+                    </StaffLayout>
+                }
+            />
+
+            <Route
+                path="/account"
+                element={
+                    <StaffLayout>
+                        <AccountSettingsPage />
+                    </StaffLayout>
+                }
+            />
+
+        </Routes>
     );
 }
 
