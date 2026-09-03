@@ -534,3 +534,48 @@
     background-color: var(--primary-soft);
     color: var(--primary-dark);
 }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 9px;
+
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.status-received {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+.status-in-progress {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-awaiting-parts {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.status-ready-for-release {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.status-completed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-cancelled {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+

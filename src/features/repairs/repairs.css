@@ -1,0 +1,1366 @@
+.repair-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.repair-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.repair-table th,
+.repair-table td {
+    padding: 14px 16px;
+
+    border-bottom: 1px solid var(--border);
+
+    text-align: left;
+    vertical-align: middle;
+}
+
+.repair-table th {
+    background-color: #f9fafb;
+
+    color: var(--text-secondary);
+
+    font-size: 0.75rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.repair-table td {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.repair-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.repair-table tbody tr:hover {
+    background-color: var(--primary-soft);
+}
+
+.repair-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.repair-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+.repair-search {
+    min-width: 260px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 12px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.repair-search:focus-within {
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.repair-search input {
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+}
+
+.repair-toolbar select {
+    min-height: 42px;
+
+    padding: 0 12px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    color: var(--text-primary);
+}
+
+.new-repair-button {
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-left: auto;
+
+    padding: 0 16px;
+
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+
+    background-color: var(--primary);
+    color: #ffffff;
+
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.new-repair-button:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.new-repair-button:active {
+    transform: scale(0.98);
+}
+
+.repair-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+.repair-form-section {
+    padding: 24px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.repair-form-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 24px;
+}
+
+.repair-form-section-header h3 {
+    margin-bottom: 6px;
+}
+
+.repair-form-section-header p {
+    color: var(--text-secondary);
+}
+
+.repair-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+.repair-form-group {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.repair-form-group label {
+    font-weight: 600;
+}
+
+.repair-form-group input,
+.repair-form-group select,
+.repair-form-group textarea {
+    width: 100%;
+
+    padding: 11px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background-color: var(--surface);
+    color: var(--text-primary);
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.repair-form-group input:focus,
+.repair-form-group select:focus,
+.repair-form-group textarea:focus {
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.secondary-repair-button {
+    min-height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background-color: var(--surface);
+    color: var(--text-primary);
+
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.secondary-repair-button:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.repair-form-full {
+    grid-column: 1 / -1;
+}
+
+.repair-form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.repair-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    padding-bottom: 24px;
+}
+
+.cancel-repair-button,
+.create-repair-button {
+    min-height: 42px;
+
+    padding: 0 18px;
+
+    border-radius: 8px;
+
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.cancel-repair-button {
+    border: 1px solid var(--border);
+
+    background-color: var(--surface);
+    color: var(--text-primary);
+}
+
+.cancel-repair-button:hover {
+    border-color: var(--primary);
+
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.create-repair-button {
+    border: 1px solid var(--primary);
+
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.create-repair-button:hover {
+    border-color: var(--primary-dark);
+    background-color: var(--primary-dark);
+}
+
+.cancel-repair-button:active,
+.create-repair-button:active {
+    transform: scale(0.98);
+}
+
+.selected-device-summary {
+    margin-top: 20px;
+
+    padding: 18px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.selected-device-summary h4 {
+    margin-bottom: 16px;
+}
+
+.selected-device-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+.selected-device-grid div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.selected-device-grid span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.selected-device-grid strong {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.secondary-repair-button:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.5;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background-color: rgba(15, 23, 42, 0.45);
+
+    z-index: 2000;
+}
+
+.device-modal {
+    width: 100%;
+    max-width: 620px;
+
+    max-height: 90vh;
+    overflow-y: auto;
+
+    padding: 24px;
+
+    background-color: var(--surface);
+
+    border-radius: 12px;
+
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 24px;
+}
+
+.modal-header h3 {
+    margin-bottom: 6px;
+}
+
+.modal-header p {
+    color: var(--text-secondary);
+}
+
+.modal-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px;
+
+    border: none;
+    border-radius: 6px;
+
+    background: none;
+
+    color: var(--text-primary);
+}
+
+.modal-close-button:hover {
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.device-registration-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+.modal-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 6px;
+}
+.repair-submit-message {
+    padding: 12px 16px;
+
+    background-color: #dcfce7;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+
+    color: #166534;
+
+    font-weight: 600;
+}
+
+.create-repair-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+.repair-workspace-header {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding: 20px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.repair-workspace-header > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.workspace-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+.repair-row {
+    cursor: pointer;
+}
+.repair-overview h3 {
+    margin-bottom: 16px;
+
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.repair-overview p {
+    margin-bottom: 10px;
+
+    font-size: 0.9rem;
+    line-height: 1.5;
+
+    color: var(--text-primary);
+}
+
+.repair-overview p:last-child {
+    margin-bottom: 0;
+}
+
+.repair-overview p strong {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.repair-workspace-tabs {
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+
+    margin-bottom: 20px;
+    padding: 4px;
+
+    overflow-x: auto;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.workspace-tab {
+    flex-shrink: 0;
+
+    padding: 10px 14px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: none;
+    color: var(--text-secondary);
+
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.workspace-tab:hover {
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.workspace-tab.active {
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+.repair-workspace-header .status-badge {
+    align-self: flex-start;
+    width: fit-content;
+}
+
+.workspace-section-description {
+    margin-bottom: 18px;
+
+    color: var(--text-secondary);
+}
+
+.findings-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.finding-item {
+    padding: 16px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.finding-item strong {
+    display: block;
+
+    margin-bottom: 6px;
+}
+
+.finding-item p {
+    margin: 0;
+
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.workspace-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 18px;
+}
+
+.finding-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding: 20px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.finding-form-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 12px;
+}
+
+.finding-field {
+    margin-bottom: 12px;
+}
+
+.finding-field:last-child {
+    margin-bottom: 0;
+}
+
+.finding-field span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    color: var(--text-secondary);
+}
+
+.finding-field p {
+    margin: 0;
+
+    line-height: 1.5;
+}
+
+.status-awaiting-approval {
+    background-color: #ffedd5;
+    color: #c2410c;
+}
+
+.status-change-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding: 20px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.status-history-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.status-history-item {
+    padding: 16px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.status-history-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 10px;
+}
+
+.status-history-top > span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.status-history-item p {
+    margin: 6px 0 0;
+
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.part-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding: 20px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.parts-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.parts-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.parts-table th,
+.parts-table td {
+    padding: 12px 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    text-align: left;
+}
+
+.parts-table th {
+    background-color: #f9fafb;
+
+    color: var(--text-secondary);
+
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.parts-total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 16px;
+
+    margin-top: 18px;
+}
+
+.parts-total span {
+    color: var(--text-secondary);
+}
+
+.parts-total strong {
+    font-size: 1.1rem;
+}
+.payment-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+.payment-summary > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    padding: 16px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.payment-summary span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.payment-summary strong {
+    font-size: 1rem;
+}
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+    padding: 20px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.payment-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.payment-item {
+    padding: 16px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.payment-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 8px;
+}
+
+.payment-item-top > span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.payment-item p {
+    margin: 6px 0 0;
+
+    color: var(--text-secondary);
+}
+.ai-repair-context {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+.ai-repair-context > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.ai-repair-context span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.ai-conversation {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    min-height: 280px;
+    max-height: 440px;
+
+    margin-bottom: 16px;
+    padding: 16px;
+
+    overflow-y: auto;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.ai-message {
+    display: flex;
+
+    gap: 10px;
+
+    max-width: 80%;
+}
+
+.assistant-message {
+    align-self: flex-start;
+}
+
+.technician-message {
+    align-self: flex-end;
+}
+
+.ai-message-icon {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+}
+
+.ai-message-content {
+    padding: 12px 14px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.ai-message-content span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    color: var(--text-secondary);
+}
+
+.ai-message-content p {
+    margin: 0;
+
+    line-height: 1.5;
+}
+
+.ai-message-form {
+    display: flex;
+    align-items: flex-end;
+
+    gap: 12px;
+}
+
+.ai-message-form textarea {
+    flex: 1;
+
+    min-height: 80px;
+
+    padding: 12px;
+
+    resize: vertical;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    outline: none;
+}
+
+.ai-message-form textarea:focus {
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.ai-message-form .create-repair-button {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+}
+.ai-finding-button {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 10px;
+    padding: 7px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background-color: var(--surface);
+    color: var(--primary-dark);
+
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.ai-finding-button:hover {
+    background-color: var(--primary-soft);
+    border-color: var(--primary);
+}
+
+.ai-history-context {
+    margin-bottom: 20px;
+    padding: 16px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.ai-history-context h4 {
+    margin-bottom: 10px;
+}
+
+.ai-history-context > p {
+    margin: 6px 0;
+}
+
+.repeated-problem-alert {
+    margin-top: 12px;
+    padding: 12px 14px;
+
+    background-color: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+}
+
+.repeated-problem-alert strong {
+    display: block;
+
+    margin-bottom: 5px;
+}
+
+.repeated-problem-alert p {
+    margin: 0;
+}
+
+.ai-message-actions {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 10px;
+}
+
+
+.ai-finding-button,
+.ai-status-button {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background-color: var(--surface);
+
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+
+.ai-finding-button {
+    color: var(--primary-dark);
+}
+
+
+.ai-status-button {
+    color: var(--text-primary);
+}
+
+
+.ai-finding-button:hover,
+.ai-status-button:hover {
+    background-color: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+.price-agreement-section {
+    margin-bottom: 28px;
+    padding: 18px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.price-agreement-header,
+.parts-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 16px;
+}
+
+.price-agreement-header p,
+.parts-section-header p {
+    margin-top: 4px;
+
+    color: var(--text-secondary);
+}
+
+.price-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+.price-summary > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.price-summary span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+.price-agreement-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    margin-top: 16px;
+    padding: 16px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.repair-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-top: 16px;
+}
+
+.repair-overview-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.repair-overview-grid span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.repair-overview-grid strong {
+    line-height: 1.4;
+}
+
+.inline-cost-button {
+    align-self: flex-start;
+
+    margin-top: 4px;
+    padding: 0;
+
+    border: none;
+    background: none;
+
+    color: var(--primary-dark);
+
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.inline-cost-button:hover {
+    text-decoration: underline;
+}
+
+.repair-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-top: 16px;
+}
+
+
+.repair-overview-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.repair-overview-grid .overview-wide {
+    grid-column: span 2;
+}
+
+
+.repair-overview-grid span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.repair-overview-grid strong {
+    line-height: 1.4;
+}
+
+.workspace-empty-state {
+    padding: 28px;
+
+    text-align: center;
+
+    background-color: #f9fafb;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+}
+
+.workspace-empty-state strong {
+    display: block;
+
+    margin-bottom: 6px;
+}
+
+.workspace-empty-state p {
+    margin: 0;
+
+    color: var(--text-secondary);
+}
+.ai-history-empty {
+    margin-bottom: 20px;
+}
+
+/* =========================================
+   REPAIR WORKSPACE RESPONSIVE LAYOUT
+========================================= */
+
+@media (max-width: 900px) {
+
+    .repair-workspace-header {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .repair-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .repair-overview-grid .overview-wide {
+        grid-column: span 2;
+    }
+
+    .price-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .payment-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ai-repair-context {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .repair-workspace-header {
+        grid-template-columns: 1fr;
+    }
+
+    .repair-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .repair-overview-grid .overview-wide {
+        grid-column: span 1;
+    }
+
+    .price-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-repair-context {
+        grid-template-columns: 1fr;
+    }
+
+
+    .workspace-section-header,
+    .price-agreement-header,
+    .parts-section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .workspace-section-header > button,
+    .price-agreement-header > button,
+    .parts-section-header > button {
+        align-self: flex-start;
+    }
+
+
+    .finding-form-actions {
+        flex-wrap: wrap;
+    }
+
+
+    .ai-message {
+        max-width: 100%;
+    }
+
+
+    .ai-message-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .ai-message-form .create-repair-button {
+        align-self: flex-end;
+    }
+
+}

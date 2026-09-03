@@ -13,6 +13,8 @@ import TechnicianPage from "../features/technicians/pages/TechnicianPage.jsx";
 import ReportsPage from "../features/reports/pages/ReportsPage.jsx";
 import AdministrationPage from "../features/administration/pages/AdministrationPage.jsx";
 import AccountSettingsPage from "../features/account/pages/AccountSettingsPage.jsx";
+import NewRepairPage from "../features/repairs/pages/NewRepairPage.jsx";
+import RepairWorkspacePage from "../features/repairs/pages/RepairWorkspacePage.jsx";
 
 function App() {
     return (
@@ -108,6 +110,24 @@ function App() {
                 }
             />
 
+            <Route
+                path="/repairs/new"
+                element={
+                    <StaffLayout>
+                        <NewRepairPage />
+                    </StaffLayout>
+                }
+            />
+
+
+            <Route
+                path="/repairs/:repairId"
+                element={
+                    <StaffLayout>
+                        <RepairWorkspacePage />
+                    </StaffLayout>
+                }
+            />
         </Routes>
     );
 }
