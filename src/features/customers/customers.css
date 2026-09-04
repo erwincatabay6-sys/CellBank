@@ -1,0 +1,502 @@
+.customer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+
+.customer-search {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    width: min(420px, 100%);
+
+    padding: 0 12px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.customer-search input {
+    width: 100%;
+
+    padding: 11px 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+}
+
+
+.customer-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+
+.customer-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+
+.customer-table th,
+.customer-table td {
+    padding: 14px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+.customer-table th {
+    background-color: #f9fafb;
+
+    color: var(--text-secondary);
+
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+
+.customer-row {
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease;
+}
+
+
+.customer-row:hover {
+    background-color: var(--primary-soft);
+}
+
+
+@media (max-width: 650px) {
+
+    .customer-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .customer-search {
+        width: 100%;
+    }
+
+
+    .customer-toolbar .create-repair-button {
+        align-self: flex-start;
+    }
+
+}
+
+.customer-info-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-top: 16px;
+}
+
+
+.customer-info-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.customer-info-grid span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.customer-info-grid strong {
+    line-height: 1.4;
+}
+
+
+@media (max-width: 900px) {
+
+    .customer-info-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .customer-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+.customer-device-list {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.customer-device-card {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+
+    padding: 16px;
+
+    text-align: left;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+
+.customer-device-card:hover {
+    background-color: #f9fafb;
+    border-color: var(--primary);
+}
+
+
+.customer-device-card > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+
+.customer-device-card span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.customer-device-card strong {
+    color: var(--text-primary);
+
+    line-height: 1.4;
+}
+
+
+@media (max-width: 900px) {
+
+    .customer-device-list {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .customer-device-card {
+        grid-template-columns: 1fr;
+    }
+
+}
+.device-info-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.device-info-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.device-info-grid span,
+.device-repair-item span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.device-info-grid strong,
+.device-repair-item strong {
+    line-height: 1.4;
+}
+
+
+.device-repair-history {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.device-repair-item {
+    display: grid;
+    grid-template-columns:
+        0.8fr 2fr 1fr 1fr;
+
+    gap: 16px;
+
+    align-items: center;
+
+    width: 100%;
+
+    padding: 16px;
+
+    text-align: left;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.device-repair-item:hover {
+    background-color: #f9fafb;
+    border-color: var(--primary);
+}
+
+
+.device-repair-item > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+@media (max-width: 900px) {
+
+    .device-info-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .device-repair-item {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .device-info-grid,
+    .device-repair-item {
+        grid-template-columns: 1fr;
+    }
+
+}
+.customer-repair-history {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.customer-repair-item {
+    display: grid;
+    grid-template-columns:
+        0.9fr 1.2fr 2fr 1fr;
+
+    gap: 16px;
+
+    align-items: center;
+
+    width: 100%;
+
+    padding: 16px;
+
+    text-align: left;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.customer-repair-item:hover {
+    background-color: #f9fafb;
+    border-color: var(--primary);
+}
+
+
+.customer-repair-item > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.customer-repair-item span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.customer-repair-item strong {
+    line-height: 1.4;
+}
+
+
+@media (max-width: 900px) {
+
+    .customer-repair-item {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .customer-repair-item {
+        grid-template-columns: 1fr;
+    }
+
+}
+.device-repeat-alert {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 16px;
+    padding: 16px;
+
+    background-color: #fff8e6;
+    border: 1px solid #f2d38b;
+    border-radius: 8px;
+}
+
+
+.device-repeat-alert p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+}
+
+
+.device-repeat-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.device-repeat-list span {
+    padding: 6px 10px;
+
+    background-color: white;
+    border: 1px solid #f2d38b;
+    border-radius: 999px;
+
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+
+@media (max-width: 650px) {
+
+    .device-repeat-alert {
+        flex-direction: column;
+    }
+
+}
+
+.status-badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: fit-content;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.customer-repair-item .status-badge,
+.device-repair-item .status-badge {
+    width: fit-content;
+    justify-self: start;
+}
+
+.customer-repair-item > div,
+.device-repair-item > div {
+    align-items: flex-start;
+}

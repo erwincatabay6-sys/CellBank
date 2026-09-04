@@ -1,35 +1,89 @@
 import { useState } from "react";
+
 import { X } from "lucide-react";
+
 
 function DeviceRegistrationModal({
     customerName,
+    initialDevice = null,
     onClose,
     onSave
 }) {
 
-    const [deviceType, setDeviceType] = useState("");
-    const [brand, setBrand] = useState("");
-    const [model, setModel] = useState("");
-    const [serialNumber, setSerialNumber] = useState("");
-    const [imei, setImei] = useState("");
-    const [notes, setNotes] = useState("");
+    // -----------------------------
+    // MODE
+    // -----------------------------
 
+    const isEditing =
+        initialDevice != null;
+
+
+    // -----------------------------
+    // FORM STATE
+    // -----------------------------
+
+    const [deviceType, setDeviceType] =
+        useState(
+            initialDevice?.type ?? ""
+        );
+
+    const [brand, setBrand] =
+        useState(
+            initialDevice?.brand ?? ""
+        );
+
+    const [model, setModel] =
+        useState(
+            initialDevice?.model ?? ""
+        );
+
+    const [serialNumber, setSerialNumber] =
+        useState(
+            initialDevice?.serialNumber ?? ""
+        );
+
+    const [imei, setImei] =
+        useState(
+            initialDevice?.imei ?? ""
+        );
+
+    const [notes, setNotes] =
+        useState(
+            initialDevice?.notes ?? ""
+        );
+
+
+    // -----------------------------
+    // SUBMISSION
+    // -----------------------------
 
     function handleSubmit(event) {
 
         event.preventDefault();
 
-        const newDevice = {
-            type: deviceType,
-            brand,
-            model,
-            serialNumber: serialNumber || null,
-            imei: imei || null,
-            notes: notes || null,
-            previousRepairs: 0
+
+        const deviceData = {
+            type:
+                deviceType,
+
+            brand:
+                brand.trim(),
+
+            model:
+                model.trim(),
+
+            serialNumber:
+                serialNumber.trim() || null,
+
+            imei:
+                imei.trim() || null,
+
+            notes:
+                notes.trim() || null
         };
 
-        onSave(newDevice);
+
+        onSave(deviceData);
     }
 
 
@@ -38,15 +92,29 @@ function DeviceRegistrationModal({
 
             <div className="device-modal">
 
+                {/* =========================
+                    MODAL HEADER
+                ========================== */}
                 <div className="modal-header">
 
                     <div>
-                        <h3>New Device</h3>
+
+                        <h3>
+                            {isEditing
+                                ? "Edit Device"
+                                : "New Device"
+                            }
+                        </h3>
 
                         <p>
-                            Register a device for {customerName}.
+                            {isEditing
+                                ? `Update device information for ${customerName}.`
+                                : `Register a device for ${customerName}.`
+                            }
                         </p>
+
                     </div>
+
 
                     <button
                         className="modal-close-button"
@@ -60,22 +128,28 @@ function DeviceRegistrationModal({
                 </div>
 
 
+                {/* =========================
+                    DEVICE FORM
+                ========================== */}
                 <form
                     className="device-registration-form"
                     onSubmit={handleSubmit}
                 >
 
+                    {/* DEVICE TYPE */}
                     <div className="repair-form-group">
 
-                        <label htmlFor="new-device-type">
+                        <label htmlFor="device-type">
                             Device Type
                         </label>
 
                         <select
-                            id="new-device-type"
+                            id="device-type"
                             value={deviceType}
                             onChange={(event) =>
-                                setDeviceType(event.target.value)
+                                setDeviceType(
+                                    event.target.value
+                                )
                             }
                             required
                         >
@@ -110,18 +184,21 @@ function DeviceRegistrationModal({
 
                     <div className="modal-form-grid">
 
+                        {/* BRAND */}
                         <div className="repair-form-group">
 
-                            <label htmlFor="new-device-brand">
+                            <label htmlFor="device-brand">
                                 Brand
                             </label>
 
                             <input
-                                id="new-device-brand"
+                                id="device-brand"
                                 type="text"
                                 value={brand}
                                 onChange={(event) =>
-                                    setBrand(event.target.value)
+                                    setBrand(
+                                        event.target.value
+                                    )
                                 }
                                 placeholder="Enter brand"
                                 required
@@ -130,18 +207,21 @@ function DeviceRegistrationModal({
                         </div>
 
 
+                        {/* MODEL */}
                         <div className="repair-form-group">
 
-                            <label htmlFor="new-device-model">
+                            <label htmlFor="device-model">
                                 Model
                             </label>
 
                             <input
-                                id="new-device-model"
+                                id="device-model"
                                 type="text"
                                 value={model}
                                 onChange={(event) =>
-                                    setModel(event.target.value)
+                                    setModel(
+                                        event.target.value
+                                    )
                                 }
                                 placeholder="Enter model"
                                 required
@@ -150,18 +230,21 @@ function DeviceRegistrationModal({
                         </div>
 
 
+                        {/* SERIAL NUMBER */}
                         <div className="repair-form-group">
 
-                            <label htmlFor="new-device-serial">
+                            <label htmlFor="device-serial">
                                 Serial Number
                             </label>
 
                             <input
-                                id="new-device-serial"
+                                id="device-serial"
                                 type="text"
                                 value={serialNumber}
                                 onChange={(event) =>
-                                    setSerialNumber(event.target.value)
+                                    setSerialNumber(
+                                        event.target.value
+                                    )
                                 }
                                 placeholder="Optional"
                             />
@@ -169,18 +252,21 @@ function DeviceRegistrationModal({
                         </div>
 
 
+                        {/* IMEI */}
                         <div className="repair-form-group">
 
-                            <label htmlFor="new-device-imei">
+                            <label htmlFor="device-imei">
                                 IMEI
                             </label>
 
                             <input
-                                id="new-device-imei"
+                                id="device-imei"
                                 type="text"
                                 value={imei}
                                 onChange={(event) =>
-                                    setImei(event.target.value)
+                                    setImei(
+                                        event.target.value
+                                    )
                                 }
                                 placeholder="Optional"
                             />
@@ -190,17 +276,20 @@ function DeviceRegistrationModal({
                     </div>
 
 
+                    {/* NOTES */}
                     <div className="repair-form-group">
 
-                        <label htmlFor="new-device-notes">
+                        <label htmlFor="device-notes">
                             Notes
                         </label>
 
                         <textarea
-                            id="new-device-notes"
+                            id="device-notes"
                             value={notes}
                             onChange={(event) =>
-                                setNotes(event.target.value)
+                                setNotes(
+                                    event.target.value
+                                )
                             }
                             placeholder="Optional identifying notes"
                             rows="3"
@@ -209,6 +298,7 @@ function DeviceRegistrationModal({
                     </div>
 
 
+                    {/* ACTIONS */}
                     <div className="modal-actions">
 
                         <button
@@ -219,11 +309,15 @@ function DeviceRegistrationModal({
                             Cancel
                         </button>
 
+
                         <button
                             className="create-repair-button"
                             type="submit"
                         >
-                            Register Device
+                            {isEditing
+                                ? "Save Changes"
+                                : "Register Device"
+                            }
                         </button>
 
                     </div>
@@ -235,5 +329,6 @@ function DeviceRegistrationModal({
         </div>
     );
 }
+
 
 export default DeviceRegistrationModal;

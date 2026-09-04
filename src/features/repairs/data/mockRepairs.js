@@ -2,6 +2,8 @@ export const mockRepairs = [
     {
         id: 1,
 
+        deviceId: 1,
+
         reference: "CB-2026-00124",
 
         customer: "Juan Cruz",
@@ -37,7 +39,7 @@ export const mockRepairs = [
                 problemCategory: "Charging",
 
                 problem:
-                    "Phone only charges when cable is positioned at an angle."
+                    "Phone only charges when the cable is positioned at an angle."
             },
 
             {
@@ -68,9 +70,11 @@ export const mockRepairs = [
     {
         id: 2,
 
+        deviceId: 2,
+
         reference: "CB-2026-00125",
 
-        customer: "Maria Reyes",
+        customer: "Juan Cruz",
 
         device: "Acer Aspire 5",
 
@@ -112,11 +116,13 @@ export const mockRepairs = [
     {
         id: 3,
 
+        deviceId: 3,
+
         reference: "CB-2026-00126",
 
-        customer: "Ana Santos",
+        customer: "Maria Reyes",
 
-        device: "iPhone 13",
+        device: "Apple iPhone 13",
 
         technician: "Miguel Santos",
 

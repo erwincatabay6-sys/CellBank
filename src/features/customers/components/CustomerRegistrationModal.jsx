@@ -1,30 +1,72 @@
 import { useState } from "react";
+
 import { X } from "lucide-react";
 
+
 function CustomerRegistrationModal({
+    initialCustomer = null,
     onClose,
     onSave
 }) {
 
-    const [fullName, setFullName] = useState("");
-    const [contactNumber, setContactNumber] = useState("");
-    const [email, setEmail] = useState("");
-    const [address, setAddress] = useState("");
+    // -----------------------------
+    // MODE
+    // -----------------------------
 
+    const isEditing =
+        initialCustomer != null;
+
+
+    // -----------------------------
+    // FORM STATE
+    // -----------------------------
+
+    const [name, setName] =
+        useState(
+            initialCustomer?.name ?? ""
+        );
+
+    const [phone, setPhone] =
+        useState(
+            initialCustomer?.phone ?? ""
+        );
+
+    const [email, setEmail] =
+        useState(
+            initialCustomer?.email ?? ""
+        );
+
+    const [address, setAddress] =
+        useState(
+            initialCustomer?.address ?? ""
+        );
+
+
+    // -----------------------------
+    // SUBMISSION
+    // -----------------------------
 
     function handleSubmit(event) {
 
         event.preventDefault();
 
-        const newCustomer = {
-            name: fullName,
-            contactNumber,
-            email: email || null,
-            address: address || null,
-            devices: []
+
+        const customerData = {
+            name:
+                name.trim(),
+
+            phone:
+                phone.trim(),
+
+            email:
+                email.trim(),
+
+            address:
+                address.trim()
         };
 
-        onSave(newCustomer);
+
+        onSave(customerData);
     }
 
 
@@ -33,15 +75,29 @@ function CustomerRegistrationModal({
 
             <div className="device-modal">
 
+                {/* =========================
+                    MODAL HEADER
+                ========================== */}
                 <div className="modal-header">
 
                     <div>
-                        <h3>New Customer</h3>
+
+                        <h3>
+                            {isEditing
+                                ? "Edit Customer"
+                                : "New Customer"
+                            }
+                        </h3>
 
                         <p>
-                            Register a new Cellbank customer.
+                            {isEditing
+                                ? "Update customer information."
+                                : "Register a new customer in the system."
+                            }
                         </p>
+
                     </div>
+
 
                     <button
                         className="modal-close-button"
@@ -55,93 +111,107 @@ function CustomerRegistrationModal({
                 </div>
 
 
+                {/* =========================
+                    CUSTOMER FORM
+                ========================== */}
                 <form
                     className="device-registration-form"
                     onSubmit={handleSubmit}
                 >
 
+                    {/* FULL NAME */}
                     <div className="repair-form-group">
 
-                        <label htmlFor="new-customer-name">
+                        <label htmlFor="customer-name">
                             Full Name
                         </label>
 
                         <input
-                            id="new-customer-name"
+                            id="customer-name"
                             type="text"
-                            value={fullName}
+                            value={name}
                             onChange={(event) =>
-                                setFullName(event.target.value)
+                                setName(
+                                    event.target.value
+                                )
                             }
-                            placeholder="Enter full name"
+                            placeholder="Enter customer name"
                             required
                         />
 
                     </div>
 
 
+                    {/* PHONE */}
                     <div className="repair-form-group">
 
-                        <label htmlFor="new-customer-contact">
-                            Contact Number
+                        <label htmlFor="customer-phone">
+                            Phone Number
                         </label>
 
                         <input
-                            id="new-customer-contact"
-                            type="text"
-                            value={contactNumber}
+                            id="customer-phone"
+                            type="tel"
+                            value={phone}
                             onChange={(event) =>
-                                setContactNumber(event.target.value)
+                                setPhone(
+                                    event.target.value
+                                )
                             }
-                            placeholder="Enter contact number"
+                            placeholder="Enter phone number"
                             required
                         />
 
                     </div>
 
 
-                    <div className="modal-form-grid">
+                    {/* EMAIL */}
+                    <div className="repair-form-group">
 
-                        <div className="repair-form-group">
+                        <label htmlFor="customer-email">
+                            Email Address
+                        </label>
 
-                            <label htmlFor="new-customer-email">
-                                Email
-                            </label>
-
-                            <input
-                                id="new-customer-email"
-                                type="email"
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
-                                placeholder="Optional"
-                            />
-
-                        </div>
-
-
-                        <div className="repair-form-group">
-
-                            <label htmlFor="new-customer-address">
-                                Address
-                            </label>
-
-                            <input
-                                id="new-customer-address"
-                                type="text"
-                                value={address}
-                                onChange={(event) =>
-                                    setAddress(event.target.value)
-                                }
-                                placeholder="Optional"
-                            />
-
-                        </div>
+                        <input
+                            id="customer-email"
+                            type="email"
+                            value={email}
+                            onChange={(event) =>
+                                setEmail(
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Optional email address"
+                        />
 
                     </div>
 
 
+                    {/* ADDRESS */}
+                    <div className="repair-form-group">
+
+                        <label htmlFor="customer-address">
+                            Address
+                        </label>
+
+                        <textarea
+                            id="customer-address"
+                            value={address}
+                            onChange={(event) =>
+                                setAddress(
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Optional customer address"
+                            rows="3"
+                        />
+
+                    </div>
+
+
+                    {/* =========================
+                        FORM ACTIONS
+                    ========================== */}
                     <div className="modal-actions">
 
                         <button
@@ -152,11 +222,15 @@ function CustomerRegistrationModal({
                             Cancel
                         </button>
 
+
                         <button
                             className="create-repair-button"
                             type="submit"
                         >
-                            Register Customer
+                            {isEditing
+                                ? "Save Changes"
+                                : "Register Customer"
+                            }
                         </button>
 
                     </div>
@@ -168,5 +242,6 @@ function CustomerRegistrationModal({
         </div>
     );
 }
+
 
 export default CustomerRegistrationModal;

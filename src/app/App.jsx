@@ -15,6 +15,9 @@ import AdministrationPage from "../features/administration/pages/AdministrationP
 import AccountSettingsPage from "../features/account/pages/AccountSettingsPage.jsx";
 import NewRepairPage from "../features/repairs/pages/NewRepairPage.jsx";
 import RepairWorkspacePage from "../features/repairs/pages/RepairWorkspacePage.jsx";
+import CustomerDetailsPage from "../features/customers/pages/CustomerDetailsPage.jsx";
+import DeviceDetailsPage from "../features/customers/pages/DeviceDetailsPage.jsx";
+
 
 function App() {
     return (
@@ -75,6 +78,11 @@ function App() {
             />
 
             <Route
+                path="/customers/:customerId"
+                element={<CustomerDetailsPage />}
+            />
+
+            <Route
                 path="/technicians"
                 element={
                     <StaffLayout>
@@ -128,6 +136,12 @@ function App() {
                     </StaffLayout>
                 }
             />
+
+            <Route
+                path="/customers/:customerId/devices/:deviceId"
+                element={<DeviceDetailsPage />}
+            />
+            
         </Routes>
     );
 }
