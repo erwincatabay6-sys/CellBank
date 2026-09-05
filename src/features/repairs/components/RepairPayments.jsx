@@ -1,19 +1,16 @@
-import { useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
 import { Plus } from "lucide-react";
 
-
-const initialPayments = [
-   {
-        id: 1,
-        amount: 1000,
-        recordedBy: "Miguel Santos",
-        recordedAt: "September 2, 2026 - 2:30 PM",
-        note: "Customer deposit."
-    }
-];
+import { mockPayments }
+    from "../data/mockPayments.js";
 
 
 function RepairPayments({
+    repairId,
     repairTotal
 }) {
 
@@ -22,7 +19,12 @@ function RepairPayments({
     // -----------------------------
 
     const [payments, setPayments] =
-        useState(initialPayments);
+        useState(() =>
+            mockPayments.filter(
+                (payment) =>
+                    payment.repairId === repairId
+            )
+        );
 
     const [formOpen, setFormOpen] =
         useState(false);
@@ -35,18 +37,42 @@ function RepairPayments({
 
 
     // -----------------------------
-    // DERIVED VALUES
+    // REPAIR CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        const repairPayments =
+            mockPayments.filter(
+                (payment) =>
+                    payment.repairId === repairId
+            );
+
+
+        setPayments(repairPayments);
+
+        setAmount("");
+        setNote("");
+
+        setFormOpen(false);
+
+    }, [repairId]);
+
+
+    // -----------------------------
+    // DERIVED FINANCIAL VALUES
     // -----------------------------
 
     const effectiveRepairTotal =
         repairTotal ?? 0;
 
 
-    const totalPaid = payments.reduce(
-        (total, payment) =>
-            total + payment.amount,
-        0
-    );
+    const totalPaid =
+        payments.reduce(
+            (total, payment) =>
+                total + payment.amount,
+            0
+        );
 
 
     const balance =
@@ -56,7 +82,8 @@ function RepairPayments({
         );
 
 
-    let paymentStatus = "Unpaid";
+    let paymentStatus =
+        "Unpaid";
 
 
     if (repairTotal == null) {
@@ -83,7 +110,7 @@ function RepairPayments({
 
 
     // -----------------------------
-    // HELPERS
+    // FORM HELPERS
     // -----------------------------
 
     function resetForm() {
@@ -98,6 +125,7 @@ function RepairPayments({
         if (formOpen) {
             resetForm();
         }
+
 
         setFormOpen(
             !formOpen
@@ -123,7 +151,10 @@ function RepairPayments({
 
 
         const newPayment = {
-            id: payments.length + 1,
+            id:
+                Date.now(),
+
+            repairId,
 
             amount:
                 Number(amount),
@@ -268,6 +299,7 @@ function RepairPayments({
                     onSubmit={handleSubmit}
                 >
 
+                    {/* AMOUNT */}
                     <div className="repair-form-group">
 
                         <label htmlFor="payment-amount">
@@ -292,6 +324,7 @@ function RepairPayments({
                     </div>
 
 
+                    {/* PAYMENT NOTE */}
                     <div className="repair-form-group">
 
                         <label htmlFor="payment-note">
@@ -315,6 +348,7 @@ function RepairPayments({
                     </div>
 
 
+                    {/* FORM ACTIONS */}
                     <div className="finding-form-actions">
 
                         <button

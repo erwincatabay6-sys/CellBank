@@ -419,6 +419,7 @@ function RepairWorkspacePage() {
             >
 
                 <RepairPayments
+                    repairId={repair.id}
                     repairTotal={agreedPrice}
                 />
 
