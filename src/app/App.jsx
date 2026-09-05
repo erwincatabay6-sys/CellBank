@@ -17,7 +17,7 @@ import NewRepairPage from "../features/repairs/pages/NewRepairPage.jsx";
 import RepairWorkspacePage from "../features/repairs/pages/RepairWorkspacePage.jsx";
 import CustomerDetailsPage from "../features/customers/pages/CustomerDetailsPage.jsx";
 import DeviceDetailsPage from "../features/customers/pages/DeviceDetailsPage.jsx";
-
+import TechnicianDetailsPage from "../features/technicians/pages/TechnicianDetailsPage.jsx";
 
 function App() {
     return (
@@ -141,7 +141,12 @@ function App() {
                 path="/customers/:customerId/devices/:deviceId"
                 element={<DeviceDetailsPage />}
             />
-            
+
+            <Route
+                path="/technicians/:technicianId"
+                element={<TechnicianDetailsPage />}
+            />
+
         </Routes>
     );
 }

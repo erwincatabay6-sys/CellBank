@@ -1,0 +1,243 @@
+.technician-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+
+.technician-search {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    width: min(420px, 100%);
+
+    padding: 0 12px;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.technician-search input {
+    width: 100%;
+
+    padding: 11px 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+}
+
+
+.technician-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+
+.technician-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+
+.technician-table th,
+.technician-table td {
+    padding: 14px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+.technician-table th {
+    background-color: #f9fafb;
+
+    color: var(--text-secondary);
+
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+
+.technician-row {
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease;
+}
+
+
+.technician-row:hover {
+    background-color: var(--primary-soft);
+}
+
+
+.technician-status {
+    display: inline-flex;
+
+    width: fit-content;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.technician-status.active {
+    background-color: #e8f7ee;
+    color: #237a45;
+}
+
+
+.technician-status.inactive {
+    background-color: #f1f3f5;
+    color: var(--text-secondary);
+}
+
+
+@media (max-width: 650px) {
+
+    .technician-search {
+        width: 100%;
+    }
+
+}
+.technician-info-grid,
+.technician-workload-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.technician-info-grid > div,
+.technician-workload-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 14px;
+
+    background-color: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+.technician-info-grid span,
+.technician-workload-grid span,
+.technician-repair-item span {
+    font-size: 0.75rem;
+
+    color: var(--text-secondary);
+}
+
+
+.technician-repair-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.technician-repair-item {
+    display: grid;
+    grid-template-columns:
+        0.9fr 1.2fr 1.5fr 1fr;
+
+    gap: 16px;
+
+    align-items: center;
+
+    width: 100%;
+
+    padding: 16px;
+
+    text-align: left;
+
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.technician-repair-item:hover {
+    background-color: #f9fafb;
+    border-color: var(--primary);
+}
+
+
+.technician-repair-item > div {
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 5px;
+}
+
+
+.technician-repair-item .status-badge {
+    width: fit-content;
+
+    justify-self: start;
+}
+
+
+@media (max-width: 1000px) {
+
+    .technician-info-grid,
+    .technician-workload-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .technician-repair-item {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .technician-info-grid,
+    .technician-workload-grid,
+    .technician-repair-item {
+        grid-template-columns: 1fr;
+    }
+
+}
