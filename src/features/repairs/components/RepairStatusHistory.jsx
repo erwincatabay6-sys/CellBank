@@ -6,20 +6,79 @@ import {
 import StatusBadge
     from "../../../components/StatusBadge.jsx";
 
+import { canChangeRepairStatus }
+    from "../../../config/accessControl.js";
+
+
+// =====================================================
+// AVAILABLE REPAIR STATUSES
+// =====================================================
+
+const repairStatuses = [
+    {
+        value: "RECEIVED",
+        label: "Received"
+    },
+
+    {
+        value: "AWAITING_APPROVAL",
+        label: "Awaiting Approval"
+    },
+
+    {
+        value: "IN_PROGRESS",
+        label: "In Progress"
+    },
+
+    {
+        value: "AWAITING_PARTS",
+        label: "Awaiting Parts"
+    },
+
+    {
+        value: "READY_FOR_RELEASE",
+        label: "Ready for Release"
+    },
+
+    {
+        value: "COMPLETED",
+        label: "Completed"
+    },
+
+    {
+        value: "CANCELLED",
+        label: "Cancelled"
+    }
+];
+
 
 const initialHistory = [
     {
         id: 1,
+
         status: "RECEIVED",
-        changedBy: "Miguel Santos",
-        changedAt: "September 1, 2026 - 9:15 AM",
-        note: "Device received for inspection."
+
+        changedBy:
+            "Miguel Santos",
+
+        changedAt:
+            "September 1, 2026 - 9:15 AM",
+
+        note:
+            "Device received for inspection."
     },
+
     {
         id: 2,
+
         status: "AWAITING_APPROVAL",
-        changedBy: "Miguel Santos",
-        changedAt: "September 1, 2026 - 10:30 AM",
+
+        changedBy:
+            "Miguel Santos",
+
+        changedAt:
+            "September 1, 2026 - 10:30 AM",
+
         note:
             "Inspection completed. Awaiting customer approval."
     }
@@ -27,6 +86,7 @@ const initialHistory = [
 
 
 function RepairStatusHistory({
+    currentRole = "ADMIN",
     currentStatus,
     onStatusChange,
     suggestedStatus = "",
@@ -34,20 +94,42 @@ function RepairStatusHistory({
 }) {
 
     // -----------------------------
-    // STATUS HISTORY STATE
+    // HISTORY STATE
     // -----------------------------
 
     const [history, setHistory] =
         useState(initialHistory);
 
-    const [formOpen, setFormOpen] =
-        useState(false);
+
+    // -----------------------------
+    // FORM STATE
+    // -----------------------------
 
     const [status, setStatus] =
         useState("");
 
     const [note, setNote] =
         useState("");
+
+    const [formOpen, setFormOpen] =
+        useState(false);
+
+
+    // -----------------------------
+    // ALLOWED STATUSES
+    // -----------------------------
+
+    const allowedStatuses =
+        repairStatuses.filter(
+            (repairStatus) =>
+                repairStatus.value !==
+                    currentStatus &&
+
+                canChangeRepairStatus(
+                    currentRole,
+                    repairStatus.value
+                )
+        );
 
 
     // -----------------------------
@@ -61,23 +143,41 @@ function RepairStatusHistory({
         }
 
 
-        setStatus(suggestedStatus);
+        const suggestionAllowed =
+            suggestedStatus !==
+                currentStatus &&
 
-        setFormOpen(true);
+            canChangeRepairStatus(
+                currentRole,
+                suggestedStatus
+            );
+
+
+        if (suggestionAllowed) {
+
+            setStatus(
+                suggestedStatus
+            );
+
+            setFormOpen(true);
+        }
 
 
         if (onSuggestionHandled) {
+
             onSuggestionHandled();
         }
 
     }, [
         suggestedStatus,
+        currentStatus,
+        currentRole,
         onSuggestionHandled
     ]);
 
 
     // -----------------------------
-    // HELPERS
+    // FORM HELPERS
     // -----------------------------
 
     function resetForm() {
@@ -117,8 +217,25 @@ function RepairStatusHistory({
         event.preventDefault();
 
 
+        if (!status) {
+            return;
+        }
+
+
+        if (
+            status === currentStatus ||
+            !canChangeRepairStatus(
+                currentRole,
+                status
+            )
+        ) {
+            return;
+        }
+
+
         const newEntry = {
-            id: history.length + 1,
+            id:
+                Date.now(),
 
             status,
 
@@ -126,7 +243,8 @@ function RepairStatusHistory({
                 "Miguel Santos",
 
             changedAt:
-                new Date().toLocaleString(),
+                new Date()
+                    .toLocaleString(),
 
             note:
                 note.trim() || null
@@ -140,7 +258,10 @@ function RepairStatusHistory({
 
 
         if (onStatusChange) {
-            onStatusChange(status);
+
+            onStatusChange(
+                status
+            );
         }
 
 
@@ -165,8 +286,8 @@ function RepairStatusHistory({
                     </h3>
 
                     <p className="workspace-section-description">
-                        Review repair progress and record
-                        approved status changes.
+                        Review repair progress and
+                        record approved status changes.
                     </p>
 
                 </div>
@@ -202,7 +323,9 @@ function RepairStatusHistory({
 
                         <div>
                             <StatusBadge
-                                status={currentStatus}
+                                status={
+                                    currentStatus
+                                }
                             />
                         </div>
 
@@ -215,7 +338,6 @@ function RepairStatusHistory({
                         <label htmlFor="repair-status">
                             New Status
                         </label>
-
 
                         <select
                             id="repair-status"
@@ -232,29 +354,25 @@ function RepairStatusHistory({
                                 Select status
                             </option>
 
-                            <option value="AWAITING_APPROVAL">
-                                Awaiting Approval
-                            </option>
 
-                            <option value="IN_PROGRESS">
-                                In Progress
-                            </option>
+                            {allowedStatuses.map(
+                                (repairStatus) => (
 
-                            <option value="AWAITING_PARTS">
-                                Awaiting Parts
-                            </option>
+                                    <option
+                                        key={
+                                            repairStatus.value
+                                        }
+                                        value={
+                                            repairStatus.value
+                                        }
+                                    >
+                                        {
+                                            repairStatus.label
+                                        }
+                                    </option>
 
-                            <option value="READY_FOR_RELEASE">
-                                Ready for Release
-                            </option>
-
-                            <option value="COMPLETED">
-                                Completed
-                            </option>
-
-                            <option value="CANCELLED">
-                                Cancelled
-                            </option>
+                                )
+                            )}
 
                         </select>
 
@@ -267,7 +385,6 @@ function RepairStatusHistory({
                         <label htmlFor="status-note">
                             Status Note
                         </label>
-
 
                         <textarea
                             id="status-note"
@@ -331,7 +448,9 @@ function RepairStatusHistory({
                                 <div className="status-history-top">
 
                                     <StatusBadge
-                                        status={entry.status}
+                                        status={
+                                            entry.status
+                                        }
                                     />
 
                                     <span>
@@ -369,7 +488,7 @@ function RepairStatusHistory({
                 <div className="workspace-empty-state">
 
                     <strong>
-                        No status history recorded
+                        No status history
                     </strong>
 
                     <p>

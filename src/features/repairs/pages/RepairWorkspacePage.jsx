@@ -9,6 +9,9 @@ import {
 } from "react-router-dom";
 
 
+import { hasAccess }
+    from "../../../config/accessControl.js";
+
 import StatusBadge
     from "../../../components/StatusBadge.jsx";
 
@@ -34,49 +37,65 @@ import { mockRepairs }
     from "../data/mockRepairs.js";
 
 
+// =====================================================
+// WORKSPACE TABS
+// =====================================================
+
 const workspaceTabs = [
     {
         id: "overview",
         label: "Overview"
     },
+
     {
         id: "findings",
-        label: "Findings"
+        label: "Findings",
+        permission: "technicalFindings"
     },
+
     {
         id: "status-history",
         label: "Status History"
     },
+
     {
         id: "parts-costs",
         label: "Parts & Costs"
     },
+
     {
         id: "payments",
         label: "Payments"
     },
+
     {
         id: "ai",
-        label: "AI Troubleshooting"
+        label: "AI Troubleshooting",
+        permission: "aiTroubleshooting"
     }
 ];
 
 
-function RepairWorkspacePage() {
+function RepairWorkspacePage({
+    currentRole = "ADMIN"
+}) {
 
-    const { repairId } = useParams();
+    const { repairId } =
+        useParams();
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
 
     // -----------------------------
     // CURRENT REPAIR
     // -----------------------------
 
-    const repair = mockRepairs.find(
-        (repair) =>
-            repair.id === Number(repairId)
-    );
+    const repair =
+        mockRepairs.find(
+            (repair) =>
+                repair.id === Number(repairId)
+        );
 
 
     // -----------------------------
@@ -87,36 +106,73 @@ function RepairWorkspacePage() {
         useState("overview");
 
 
-    const [currentStatus, setCurrentStatus] =
-        useState(
-            repair?.status ?? ""
-        );
+    const [
+        currentStatus,
+        setCurrentStatus
+    ] = useState(
+        repair?.status ?? ""
+    );
 
 
-    const [estimatedCost, setEstimatedCost] =
-        useState(
-            repair?.estimatedCost ?? null
-        );
+    const [
+        estimatedCost,
+        setEstimatedCost
+    ] = useState(
+        repair?.estimatedCost ?? null
+    );
 
 
-    const [agreedPrice, setAgreedPrice] =
-        useState(
-            repair?.agreedPrice ?? null
-        );
+    const [
+        agreedPrice,
+        setAgreedPrice
+    ] = useState(
+        repair?.agreedPrice ?? null
+    );
 
 
     // -----------------------------
     // AI ASSISTANCE STATE
     // -----------------------------
 
-    const [aiFindingDraft, setAiFindingDraft] =
-        useState("");
+    const [
+        aiFindingDraft,
+        setAiFindingDraft
+    ] = useState("");
 
 
     const [
         aiStatusSuggestion,
         setAiStatusSuggestion
     ] = useState("");
+
+
+    // -----------------------------
+    // ROLE PERMISSIONS
+    // -----------------------------
+
+    const canUseFindings =
+        hasAccess(
+            currentRole,
+            "technicalFindings"
+        );
+
+
+    const canUseAi =
+        hasAccess(
+            currentRole,
+            "aiTroubleshooting"
+        );
+
+
+    const visibleWorkspaceTabs =
+        workspaceTabs.filter(
+            (tab) =>
+                !tab.permission ||
+                hasAccess(
+                    currentRole,
+                    tab.permission
+                )
+        );
 
 
     // -----------------------------
@@ -155,10 +211,47 @@ function RepairWorkspacePage() {
 
 
     // -----------------------------
+    // ROLE CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (
+            activeTab === "findings" &&
+            !canUseFindings
+        ) {
+
+            setActiveTab("overview");
+
+            return;
+        }
+
+
+        if (
+            activeTab === "ai" &&
+            !canUseAi
+        ) {
+
+            setActiveTab("overview");
+        }
+
+    }, [
+        activeTab,
+        canUseFindings,
+        canUseAi
+    ]);
+
+
+    // -----------------------------
     // AI ACTION HANDLERS
     // -----------------------------
 
     function handleUseAsFinding(text) {
+
+        if (!canUseFindings) {
+            return;
+        }
+
 
         setAiFindingDraft(text);
 
@@ -175,6 +268,16 @@ function RepairWorkspacePage() {
 
 
     // -----------------------------
+    // TAB NAVIGATION
+    // -----------------------------
+
+    function handleTabChange(tabId) {
+
+        setActiveTab(tabId);
+    }
+
+
+    // -----------------------------
     // REPAIR NOT FOUND
     // -----------------------------
 
@@ -182,6 +285,7 @@ function RepairWorkspacePage() {
 
         return (
             <>
+
                 <section className="page-header">
 
                     <h2>
@@ -209,6 +313,7 @@ function RepairWorkspacePage() {
                     </button>
 
                 </section>
+
             </>
         );
     }
@@ -302,7 +407,7 @@ function RepairWorkspacePage() {
             ========================== */}
             <nav className="repair-workspace-tabs">
 
-                {workspaceTabs.map((tab) => (
+                {visibleWorkspaceTabs.map((tab) => (
 
                     <button
                         key={tab.id}
@@ -315,7 +420,9 @@ function RepairWorkspacePage() {
                         }
                         type="button"
                         onClick={() =>
-                            setActiveTab(tab.id)
+                            handleTabChange(
+                                tab.id
+                            )
                         }
                     >
                         {tab.label}
@@ -337,26 +444,11 @@ function RepairWorkspacePage() {
 
                 <RepairOverview
                     repair={repair}
-                    estimatedCost={estimatedCost}
-                    agreedPrice={agreedPrice}
-                />
-
-            </div>
-
-
-            {/* =========================
-                FINDINGS
-            ========================== */}
-            <div
-                hidden={
-                    activeTab !== "findings"
-                }
-            >
-
-                <RepairFindings
-                    aiDraft={aiFindingDraft}
-                    onDraftUsed={() =>
-                        setAiFindingDraft("")
+                    estimatedCost={
+                        estimatedCost
+                    }
+                    agreedPrice={
+                        agreedPrice
                     }
                 />
 
@@ -364,17 +456,52 @@ function RepairWorkspacePage() {
 
 
             {/* =========================
+                FINDINGS
+                ADMIN + TECHNICIAN ONLY
+            ========================== */}
+            {canUseFindings && (
+
+                <div
+                    hidden={
+                        activeTab !== "findings"
+                    }
+                >
+
+                    <RepairFindings
+                        aiDraft={
+                            aiFindingDraft
+                        }
+                        onDraftUsed={() =>
+                            setAiFindingDraft("")
+                        }
+                    />
+
+                </div>
+
+            )}
+
+
+            {/* =========================
                 STATUS HISTORY
             ========================== */}
             <div
                 hidden={
-                    activeTab !== "status-history"
+                    activeTab !==
+                        "status-history"
                 }
             >
 
                 <RepairStatusHistory
-                    currentStatus={currentStatus}
-                    onStatusChange={setCurrentStatus}
+                    currentRole={
+                        currentRole
+                    }
+
+                    currentStatus={
+                        currentStatus
+                    }
+                    onStatusChange={
+                        setCurrentStatus
+                    }
                     suggestedStatus={
                         aiStatusSuggestion
                     }
@@ -391,16 +518,24 @@ function RepairWorkspacePage() {
             ========================== */}
             <div
                 hidden={
-                    activeTab !== "parts-costs"
+                    activeTab !==
+                        "parts-costs"
                 }
             >
 
                 <RepairPartsCosts
-                    estimatedCost={estimatedCost}
+                    currentRole={
+                        currentRole
+                    }
+                    estimatedCost={
+                        estimatedCost
+                    }
                     onEstimatedCostChange={
                         setEstimatedCost
                     }
-                    agreedPrice={agreedPrice}
+                    agreedPrice={
+                        agreedPrice
+                    }
                     onAgreedPriceChange={
                         setAgreedPrice
                     }
@@ -419,8 +554,15 @@ function RepairWorkspacePage() {
             >
 
                 <RepairPayments
-                    repairId={repair.id}
-                    repairTotal={agreedPrice}
+                    currentRole={
+                        currentRole
+                    }
+                    repairId={
+                        repair.id
+                    }
+                    repairTotal={
+                        agreedPrice
+                    }
                 />
 
             </div>
@@ -428,24 +570,31 @@ function RepairWorkspacePage() {
 
             {/* =========================
                 AI TROUBLESHOOTING
+                ADMIN + TECHNICIAN ONLY
             ========================== */}
-            <div
-                hidden={
-                    activeTab !== "ai"
-                }
-            >
+            {canUseAi && (
 
-                <RepairAiTroubleshooting
-                    repair={repair}
-                    onUseAsFinding={
-                        handleUseAsFinding
+                <div
+                    hidden={
+                        activeTab !== "ai"
                     }
-                    onSuggestStatus={
-                        handleStatusSuggestion
-                    }
-                />
+                >
 
-            </div>
+                    <RepairAiTroubleshooting
+                        repair={
+                            repair
+                        }
+                        onUseAsFinding={
+                            handleUseAsFinding
+                        }
+                        onSuggestStatus={
+                            handleStatusSuggestion
+                        }
+                    />
+
+                </div>
+
+            )}
 
         </>
     );

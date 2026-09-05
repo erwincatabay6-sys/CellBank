@@ -5,14 +5,30 @@ import {
 
 import { Plus } from "lucide-react";
 
+
+import { hasAccess }
+    from "../../../config/accessControl.js";
+
 import { mockPayments }
     from "../data/mockPayments.js";
 
 
 function RepairPayments({
+    currentRole = "ADMIN",
     repairId,
     repairTotal
 }) {
+
+    // -----------------------------
+    // ROLE PERMISSIONS
+    // -----------------------------
+
+    const canRecordPayments =
+        hasAccess(
+            currentRole,
+            "recordPayments"
+        );
+
 
     // -----------------------------
     // PAYMENT STATE
@@ -26,11 +42,16 @@ function RepairPayments({
             )
         );
 
-    const [formOpen, setFormOpen] =
-        useState(false);
+
+    const [
+        formOpen,
+        setFormOpen
+    ] = useState(false);
+
 
     const [amount, setAmount] =
         useState("");
+
 
     const [note, setNote] =
         useState("");
@@ -49,14 +70,36 @@ function RepairPayments({
             );
 
 
-        setPayments(repairPayments);
+        setPayments(
+            repairPayments
+        );
+
 
         setAmount("");
+
         setNote("");
 
         setFormOpen(false);
 
     }, [repairId]);
+
+
+    // -----------------------------
+    // ROLE CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (!canRecordPayments) {
+
+            setFormOpen(false);
+
+            setAmount("");
+
+            setNote("");
+        }
+
+    }, [canRecordPayments]);
 
 
     // -----------------------------
@@ -77,7 +120,8 @@ function RepairPayments({
 
     const balance =
         Math.max(
-            effectiveRepairTotal - totalPaid,
+            effectiveRepairTotal -
+                totalPaid,
             0
         );
 
@@ -93,7 +137,8 @@ function RepairPayments({
 
     }
     else if (
-        totalPaid >= effectiveRepairTotal &&
+        totalPaid >=
+            effectiveRepairTotal &&
         effectiveRepairTotal > 0
     ) {
 
@@ -116,13 +161,20 @@ function RepairPayments({
     function resetForm() {
 
         setAmount("");
+
         setNote("");
     }
 
 
     function handleFormToggle() {
 
+        if (!canRecordPayments) {
+            return;
+        }
+
+
         if (formOpen) {
+
             resetForm();
         }
 
@@ -150,6 +202,30 @@ function RepairPayments({
         event.preventDefault();
 
 
+        if (!canRecordPayments) {
+            return;
+        }
+
+
+        if (repairTotal == null) {
+            return;
+        }
+
+
+        const paymentAmount =
+            Number(amount);
+
+
+        if (
+            !Number.isFinite(
+                paymentAmount
+            ) ||
+            paymentAmount <= 0
+        ) {
+            return;
+        }
+
+
         const newPayment = {
             id:
                 Date.now(),
@@ -157,23 +233,26 @@ function RepairPayments({
             repairId,
 
             amount:
-                Number(amount),
+                paymentAmount,
 
             recordedBy:
                 "Miguel Santos",
 
             recordedAt:
-                new Date().toLocaleString(),
+                new Date()
+                    .toLocaleString(),
 
             note:
                 note.trim() || null
         };
 
 
-        setPayments((currentPayments) => [
-            ...currentPayments,
-            newPayment
-        ]);
+        setPayments(
+            (currentPayments) => [
+                ...currentPayments,
+                newPayment
+            ]
+        );
 
 
         resetForm();
@@ -197,25 +276,34 @@ function RepairPayments({
                     </h3>
 
                     <p className="workspace-section-description">
-                        Record deposits and payments made
-                        for this repair.
+                        Review deposits and payments
+                        recorded for this repair.
                     </p>
 
                 </div>
 
 
-                <button
-                    className="secondary-repair-button"
-                    type="button"
-                    onClick={handleFormToggle}
-                    disabled={repairTotal == null}
-                >
-                    <Plus size={18} />
+                {/* ADMIN + FRONT DESK */}
+                {canRecordPayments && (
 
-                    <span>
-                        Record Payment
-                    </span>
-                </button>
+                    <button
+                        className="secondary-repair-button"
+                        type="button"
+                        onClick={
+                            handleFormToggle
+                        }
+                        disabled={
+                            repairTotal == null
+                        }
+                    >
+                        <Plus size={18} />
+
+                        <span>
+                            Record Payment
+                        </span>
+                    </button>
+
+                )}
 
             </div>
 
@@ -291,12 +379,16 @@ function RepairPayments({
 
             {/* =========================
                 PAYMENT FORM
+                ADMIN + FRONT DESK
             ========================== */}
-            {formOpen && (
+            {formOpen &&
+                canRecordPayments && (
 
                 <form
                     className="payment-form"
-                    onSubmit={handleSubmit}
+                    onSubmit={
+                        handleSubmit
+                    }
                 >
 
                     {/* AMOUNT */}
@@ -354,7 +446,9 @@ function RepairPayments({
                         <button
                             className="cancel-repair-button"
                             type="button"
-                            onClick={handleCancel}
+                            onClick={
+                                handleCancel
+                            }
                         >
                             Cancel
                         </button>
@@ -391,11 +485,16 @@ function RepairPayments({
                             <div className="payment-item-top">
 
                                 <strong>
-                                    ₱{payment.amount.toFixed(2)}
+                                    ₱{
+                                        payment.amount
+                                            .toFixed(2)
+                                    }
                                 </strong>
 
                                 <span>
-                                    {payment.recordedAt}
+                                    {
+                                        payment.recordedAt
+                                    }
                                 </span>
 
                             </div>
@@ -405,7 +504,9 @@ function RepairPayments({
                                 Recorded by{" "}
 
                                 <strong>
-                                    {payment.recordedBy}
+                                    {
+                                        payment.recordedBy
+                                    }
                                 </strong>
                             </p>
 
@@ -433,8 +534,10 @@ function RepairPayments({
                     </strong>
 
                     <p>
-                        Record a deposit or payment
-                        when the customer makes one.
+                        {canRecordPayments
+                            ? "Record a deposit or payment when the customer makes one."
+                            : "Payments recorded for this repair will appear here."
+                        }
                     </p>
 
                 </div>

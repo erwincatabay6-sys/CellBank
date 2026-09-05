@@ -3,7 +3,11 @@ import { useState } from "react";
 import Header from "../components/Header.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 
-function StaffLayout({ children }) {
+function StaffLayout({ 
+    children,
+    currentRole,
+    currentUserName 
+}) {
 
     const [sidebarCollapsed, setSidebarCollapsed] =
         useState(false);
@@ -22,6 +26,8 @@ function StaffLayout({ children }) {
                 <Sidebar
                     collapsed={sidebarCollapsed}
                     onToggle={toggleSidebar}
+                    currentRole={currentRole}
+                    currentUserName={currentUserName}
                 />
 
                 <main className="main-content">

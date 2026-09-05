@@ -1,15 +1,26 @@
-import { useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
 import { Plus } from "lucide-react";
 
+import { hasAccess }
+    from "../../../config/accessControl.js";
+
+
+// =====================================================
+// TEMPORARY PARTS DATA
+// =====================================================
 
 const initialParts = [
-
     {
         id: 1,
         name: "Charging Port",
         quantity: 1,
         unitCost: 450
     },
+
     {
         id: 2,
         name: "USB-C Cable",
@@ -17,16 +28,38 @@ const initialParts = [
         unitCost: 180
     }
 ];
-    
-
 
 
 function RepairPartsCosts({
+    currentRole = "ADMIN",
     estimatedCost,
     onEstimatedCostChange,
     agreedPrice,
     onAgreedPriceChange
 }) {
+
+    // -----------------------------
+    // ROLE PERMISSIONS
+    // -----------------------------
+
+    const canEditEstimatedCost =
+        hasAccess(
+            currentRole,
+            "editEstimatedCost"
+        );
+
+    const canEditPartsCosts =
+        hasAccess(
+            currentRole,
+            "editPartsCosts"
+        );
+
+    const canEditAgreedPrice =
+        hasAccess(
+            currentRole,
+            "editAgreedPrice"
+        );
+
 
     // -----------------------------
     // PARTS STATE
@@ -35,8 +68,10 @@ function RepairPartsCosts({
     const [parts, setParts] =
         useState(initialParts);
 
-    const [partFormOpen, setPartFormOpen] =
-        useState(false);
+    const [
+        partFormOpen,
+        setPartFormOpen
+    ] = useState(false);
 
     const [partName, setPartName] =
         useState("");
@@ -52,48 +87,127 @@ function RepairPartsCosts({
     // ESTIMATE STATE
     // -----------------------------
 
-    const [estimateFormOpen, setEstimateFormOpen] =
-        useState(false);
+    const [
+        estimateFormOpen,
+        setEstimateFormOpen
+    ] = useState(false);
 
-    const [estimateInput, setEstimateInput] =
-        useState(
-            estimatedCost != null
-                ? String(estimatedCost)
-                : ""
-        );
+    const [
+        estimateInput,
+        setEstimateInput
+    ] = useState(
+        estimatedCost != null
+            ? String(estimatedCost)
+            : ""
+    );
 
 
     // -----------------------------
     // AGREEMENT STATE
     // -----------------------------
 
-    const [priceFormOpen, setPriceFormOpen] =
-        useState(false);
+    const [
+        priceFormOpen,
+        setPriceFormOpen
+    ] = useState(false);
 
-    const [priceInput, setPriceInput] =
-        useState(
-            agreedPrice != null
-                ? String(agreedPrice)
-                : ""
-        );
+    const [
+        priceInput,
+        setPriceInput
+    ] = useState(
+        agreedPrice != null
+            ? String(agreedPrice)
+            : ""
+    );
+
+
+    // -----------------------------
+    // PERMISSION SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (!canEditEstimatedCost) {
+
+            setEstimateFormOpen(false);
+        }
+
+
+        if (!canEditPartsCosts) {
+
+            setPartFormOpen(false);
+        }
+
+
+        if (!canEditAgreedPrice) {
+
+            setPriceFormOpen(false);
+        }
+
+    }, [
+        canEditEstimatedCost,
+        canEditPartsCosts,
+        canEditAgreedPrice
+    ]);
 
 
     // -----------------------------
     // DERIVED VALUES
     // -----------------------------
 
-    const partsTotal = parts.reduce(
-        (total, part) =>
-            total + (
-                part.quantity *
-                part.unitCost
-            ),
-        0
-    );
+    const partsTotal =
+        parts.reduce(
+            (total, part) =>
+                total +
+                (
+                    part.quantity *
+                    part.unitCost
+                ),
+            0
+        );
 
 
     // -----------------------------
-    // PART HANDLERS
+    // PART FORM HELPERS
+    // -----------------------------
+
+    function resetPartForm() {
+
+        setPartName("");
+        setQuantity(1);
+        setUnitCost("");
+    }
+
+
+    function handlePartFormToggle() {
+
+        if (!canEditPartsCosts) {
+            return;
+        }
+
+
+        if (partFormOpen) {
+
+            resetPartForm();
+        }
+
+
+        setPartFormOpen(
+            !partFormOpen
+        );
+    }
+
+
+    function handlePartCancel() {
+
+        resetPartForm();
+
+        setPartFormOpen(false);
+    }
+
+
+    // -----------------------------
+    // PART SUBMISSION
     // -----------------------------
 
     function handlePartSubmit(event) {
@@ -101,8 +215,14 @@ function RepairPartsCosts({
         event.preventDefault();
 
 
+        if (!canEditPartsCosts) {
+            return;
+        }
+
+
         const newPart = {
-            id: parts.length + 1,
+            id:
+                Date.now(),
 
             name:
                 partName.trim(),
@@ -121,19 +241,9 @@ function RepairPartsCosts({
         ]);
 
 
-        setPartName("");
-        setQuantity(1);
-        setUnitCost("");
+        resetPartForm();
 
         setPartFormOpen(false);
-    }
-
-
-    function handlePartFormToggle() {
-
-        setPartFormOpen(
-            !partFormOpen
-        );
     }
 
 
@@ -142,6 +252,11 @@ function RepairPartsCosts({
     // -----------------------------
 
     function handleEstimateFormToggle() {
+
+        if (!canEditEstimatedCost) {
+            return;
+        }
+
 
         setEstimateInput(
             estimatedCost != null
@@ -165,11 +280,17 @@ function RepairPartsCosts({
         event.preventDefault();
 
 
+        if (!canEditEstimatedCost) {
+            return;
+        }
+
+
         const newEstimatedCost =
             Number(estimateInput);
 
 
         if (onEstimatedCostChange) {
+
             onEstimatedCostChange(
                 newEstimatedCost
             );
@@ -185,6 +306,11 @@ function RepairPartsCosts({
     // -----------------------------
 
     function handlePriceFormToggle() {
+
+        if (!canEditAgreedPrice) {
+            return;
+        }
+
 
         setPriceInput(
             agreedPrice != null
@@ -208,11 +334,17 @@ function RepairPartsCosts({
         event.preventDefault();
 
 
+        if (!canEditAgreedPrice) {
+            return;
+        }
+
+
         const newAgreedPrice =
             Number(priceInput);
 
 
         if (onAgreedPriceChange) {
+
             onAgreedPriceChange(
                 newAgreedPrice
             );
@@ -238,8 +370,9 @@ function RepairPartsCosts({
                     </h3>
 
                     <p className="workspace-section-description">
-                        Manage the repair price agreement
-                        and record parts used for this repair.
+                        Review repair pricing,
+                        customer agreement,
+                        and parts used for this repair.
                     </p>
 
                 </div>
@@ -261,28 +394,37 @@ function RepairPartsCosts({
                         </h4>
 
                         <p>
-                            Record the repair price agreed
-                            upon with the customer.
+                            Review the estimated cost
+                            and customer-approved repair price.
                         </p>
 
                     </div>
 
 
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={handlePriceFormToggle}
-                    >
-                        {agreedPrice != null
-                            ? "Update Agreement"
-                            : "Record Agreement"
-                        }
-                    </button>
+                    {/* ADMIN + FRONT DESK */}
+                    {canEditAgreedPrice && (
+
+                        <button
+                            className="secondary-repair-button"
+                            type="button"
+                            onClick={
+                                handlePriceFormToggle
+                            }
+                        >
+                            {agreedPrice != null
+                                ? "Update Agreement"
+                                : "Record Agreement"
+                            }
+                        </button>
+
+                    )}
 
                 </div>
 
 
-                {/* PRICE SUMMARY */}
+                {/* =========================
+                    PRICE SUMMARY
+                ========================== */}
                 <div className="price-summary">
 
                     {/* ESTIMATED COST */}
@@ -300,16 +442,23 @@ function RepairPartsCosts({
                         </strong>
 
 
-                        <button
-                            className="inline-cost-button"
-                            type="button"
-                            onClick={handleEstimateFormToggle}
-                        >
-                            {estimatedCost != null
-                                ? "Update Estimate"
-                                : "Set Estimate"
-                            }
-                        </button>
+                        {/* ADMIN + TECHNICIAN */}
+                        {canEditEstimatedCost && (
+
+                            <button
+                                className="inline-cost-button"
+                                type="button"
+                                onClick={
+                                    handleEstimateFormToggle
+                                }
+                            >
+                                {estimatedCost != null
+                                    ? "Update Estimate"
+                                    : "Set Estimate"
+                                }
+                            </button>
+
+                        )}
 
                     </div>
 
@@ -350,12 +499,18 @@ function RepairPartsCosts({
                 </div>
 
 
-                {/* ESTIMATE FORM */}
-                {estimateFormOpen && (
+                {/* =========================
+                    ESTIMATE FORM
+                    ADMIN + TECHNICIAN
+                ========================== */}
+                {estimateFormOpen &&
+                    canEditEstimatedCost && (
 
                     <form
                         className="price-agreement-form"
-                        onSubmit={handleEstimateSubmit}
+                        onSubmit={
+                            handleEstimateSubmit
+                        }
                     >
 
                         <div className="repair-form-group">
@@ -388,7 +543,9 @@ function RepairPartsCosts({
                                 className="cancel-repair-button"
                                 type="button"
                                 onClick={() =>
-                                    setEstimateFormOpen(false)
+                                    setEstimateFormOpen(
+                                        false
+                                    )
                                 }
                             >
                                 Cancel
@@ -409,12 +566,18 @@ function RepairPartsCosts({
                 )}
 
 
-                {/* AGREED PRICE FORM */}
-                {priceFormOpen && (
+                {/* =========================
+                    AGREED PRICE FORM
+                    ADMIN + FRONT DESK
+                ========================== */}
+                {priceFormOpen &&
+                    canEditAgreedPrice && (
 
                     <form
                         className="price-agreement-form"
-                        onSubmit={handlePriceSubmit}
+                        onSubmit={
+                            handlePriceSubmit
+                        }
                     >
 
                         <div className="repair-form-group">
@@ -447,7 +610,9 @@ function RepairPartsCosts({
                                 className="cancel-repair-button"
                                 type="button"
                                 onClick={() =>
-                                    setPriceFormOpen(false)
+                                    setPriceFormOpen(
+                                        false
+                                    )
                                 }
                             >
                                 Cancel
@@ -482,38 +647,52 @@ function RepairPartsCosts({
                     </h4>
 
                     <p>
-                        Record parts actually used
+                        Review parts actually used
                         during the repair.
                     </p>
 
                 </div>
 
 
-                <button
-                    className="secondary-repair-button"
-                    type="button"
-                    onClick={handlePartFormToggle}
-                >
-                    <Plus size={18} />
+                {/* ADMIN + TECHNICIAN */}
+                {canEditPartsCosts && (
 
-                    <span>
-                        Add Part
-                    </span>
-                </button>
+                    <button
+                        className="secondary-repair-button"
+                        type="button"
+                        onClick={
+                            handlePartFormToggle
+                        }
+                    >
+                        <Plus size={18} />
+
+                        <span>
+                            Add Part
+                        </span>
+                    </button>
+
+                )}
 
             </div>
 
 
-            {/* ADD PART FORM */}
-            {partFormOpen && (
+            {/* =========================
+                ADD PART FORM
+                ADMIN + TECHNICIAN
+            ========================== */}
+            {partFormOpen &&
+                canEditPartsCosts && (
 
                 <form
                     className="part-form"
-                    onSubmit={handlePartSubmit}
+                    onSubmit={
+                        handlePartSubmit
+                    }
                 >
 
                     <div className="repair-form-grid">
 
+                        {/* PART NAME */}
                         <div className="repair-form-group">
 
                             <label htmlFor="part-name">
@@ -536,6 +715,7 @@ function RepairPartsCosts({
                         </div>
 
 
+                        {/* QUANTITY */}
                         <div className="repair-form-group">
 
                             <label htmlFor="part-quantity">
@@ -558,6 +738,7 @@ function RepairPartsCosts({
                         </div>
 
 
+                        {/* UNIT COST */}
                         <div className="repair-form-group">
 
                             <label htmlFor="part-unit-cost">
@@ -589,8 +770,8 @@ function RepairPartsCosts({
                         <button
                             className="cancel-repair-button"
                             type="button"
-                            onClick={() =>
-                                setPartFormOpen(false)
+                            onClick={
+                                handlePartCancel
                             }
                         >
                             Cancel
@@ -617,17 +798,31 @@ function RepairPartsCosts({
             {parts.length > 0 ? (
 
                 <>
+
                     <div className="parts-table-wrapper">
 
                         <table className="parts-table">
 
                             <thead>
+
                                 <tr>
-                                    <th>Part</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Cost</th>
-                                    <th>Subtotal</th>
+                                    <th>
+                                        Part
+                                    </th>
+
+                                    <th>
+                                        Quantity
+                                    </th>
+
+                                    <th>
+                                        Unit Cost
+                                    </th>
+
+                                    <th>
+                                        Subtotal
+                                    </th>
                                 </tr>
+
                             </thead>
 
 
@@ -646,7 +841,10 @@ function RepairPartsCosts({
                                         </td>
 
                                         <td>
-                                            ₱{part.unitCost.toFixed(2)}
+                                            ₱{
+                                                part.unitCost
+                                                    .toFixed(2)
+                                            }
                                         </td>
 
                                         <td>
@@ -680,6 +878,7 @@ function RepairPartsCosts({
                         </strong>
 
                     </div>
+
                 </>
 
             ) : (
@@ -691,8 +890,10 @@ function RepairPartsCosts({
                     </strong>
 
                     <p>
-                        Add a part when a component
-                        is used for this repair.
+                        {canEditPartsCosts
+                            ? "Add a part when a component is used for this repair."
+                            : "Parts used for this repair will appear here."
+                        }
                     </p>
 
                 </div>

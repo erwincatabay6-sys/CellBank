@@ -1,25 +1,78 @@
-import { Plus, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+    Plus,
+    Search
+} from "lucide-react";
 
-import RepairTable from "../components/RepairTable.jsx";
+import { useNavigate }
+    from "react-router-dom";
+
+
+import { hasAccess }
+    from "../../../config/accessControl.js";
+
+import RepairTable
+    from "../components/RepairTable.jsx";
+
 import "../repairs.css";
 
-function RepairListPage() {
 
-    const navigate = useNavigate();
+function RepairListPage({
+    currentRole = "ADMIN"
+}) {
+
+    const navigate =
+        useNavigate();
+
+
+    // -----------------------------
+    // ROLE PERMISSIONS
+    // -----------------------------
+
+    const canCreateRepair =
+        hasAccess(
+            currentRole,
+            "createRepair"
+        );
+
+
+    // -----------------------------
+    // NAVIGATION
+    // -----------------------------
+
+    function handleNewRepair() {
+
+        navigate(
+            "/repairs/new"
+        );
+    }
+
 
     return (
         <>
+
+            {/* =========================
+                PAGE HEADER
+            ========================== */}
             <section className="page-header">
-                <h2>Repairs</h2>
+
+                <h2>
+                    Repairs
+                </h2>
 
                 <p>
-                    Manage and monitor Cellbank repair jobs.
+                    Manage and monitor
+                    Cellbank repair jobs.
                 </p>
+
             </section>
 
+
+            {/* =========================
+                REPAIR TOOLBAR
+            ========================== */}
             <section className="repair-toolbar">
 
+                {/* SEARCH */}
                 <div className="repair-search">
 
                     <Search size={18} />
@@ -31,13 +84,23 @@ function RepairListPage() {
 
                 </div>
 
-                <select defaultValue="">
+
+                {/* STATUS FILTER */}
+                <select
+                    defaultValue=""
+                    aria-label="Filter by repair status"
+                >
+
                     <option value="">
                         All Statuses
                     </option>
 
                     <option value="RECEIVED">
                         Received
+                    </option>
+
+                    <option value="AWAITING_APPROVAL">
+                        Awaiting Approval
                     </option>
 
                     <option value="IN_PROGRESS">
@@ -59,9 +122,16 @@ function RepairListPage() {
                     <option value="CANCELLED">
                         Cancelled
                     </option>
+
                 </select>
 
-                <select defaultValue="">
+
+                {/* TECHNICIAN FILTER */}
+                <select
+                    defaultValue=""
+                    aria-label="Filter by technician"
+                >
+
                     <option value="">
                         All Technicians
                     </option>
@@ -73,24 +143,44 @@ function RepairListPage() {
                     <option value="carlo">
                         Carlo Mendoza
                     </option>
+
                 </select>
 
-                <button
-                    className="new-repair-button"
-                    type="button"
-                    onClick={() => navigate("/repairs/new")}
-                >
-                    <Plus size={18} />
-                    <span>New Repair</span>
-                </button>
+
+                {/* NEW REPAIR */}
+                {canCreateRepair && (
+
+                    <button
+                        className="new-repair-button"
+                        type="button"
+                        onClick={
+                            handleNewRepair
+                        }
+                    >
+                        <Plus size={18} />
+
+                        <span>
+                            New Repair
+                        </span>
+                    </button>
+
+                )}
 
             </section>
 
+
+            {/* =========================
+                REPAIR TABLE
+            ========================== */}
             <section className="page-content">
+
                 <RepairTable />
+
             </section>
+
         </>
     );
 }
+
 
 export default RepairListPage;
