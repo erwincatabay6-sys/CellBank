@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState }
+    from "react";
 
 import {
     Plus,
     Search
 } from "lucide-react";
 
+
+import {
+    isValidRoleCombination
+} from "../../../config/accessControl.js";
 
 import StaffTable
     from "../components/StaffTable.jsx";
@@ -51,10 +56,12 @@ function AdministrationPage() {
         setStaffModalOpen
     ] = useState(false);
 
+
     const [
         selectedUser,
         setSelectedUser
     ] = useState(null);
+
 
     const [
         formError,
@@ -131,10 +138,16 @@ function AdministrationPage() {
                 .toLowerCase();
 
 
+        // -------------------------
+        // DUPLICATE USERNAME
+        // -------------------------
+
         const duplicateUsername =
             users.some(
                 (user) =>
-                    user.id !== ignoredUserId &&
+                    user.id !==
+                        ignoredUserId &&
+
                     user.username
                         .toLowerCase() ===
                         normalizedUsername
@@ -150,10 +163,16 @@ function AdministrationPage() {
         }
 
 
+        // -------------------------
+        // DUPLICATE EMAIL
+        // -------------------------
+
         const duplicateEmail =
             users.some(
                 (user) =>
-                    user.id !== ignoredUserId &&
+                    user.id !==
+                        ignoredUserId &&
+
                     user.email
                         .toLowerCase() ===
                         normalizedEmail
@@ -169,6 +188,10 @@ function AdministrationPage() {
         }
 
 
+        // -------------------------
+        // ROLE REQUIRED
+        // -------------------------
+
         if (
             !userData.roles ||
             userData.roles.length === 0
@@ -178,6 +201,94 @@ function AdministrationPage() {
                 "A staff account must have " +
                 "at least one role."
             );
+        }
+
+
+        // -------------------------
+        // VALID ROLE COMBINATION
+        // -------------------------
+
+        if (
+            !isValidRoleCombination(
+                userData.roles
+            )
+        ) {
+
+            return (
+                "Invalid role assignment. " +
+                "Administrator must be exclusive, " +
+                "and only Technician plus Front Desk " +
+                "may be combined."
+            );
+        }
+
+
+        // -------------------------
+        // EXACTLY ONE ADMIN
+        // -------------------------
+
+        const assigningAdmin =
+            userData.roles.includes(
+                "ADMIN"
+            );
+
+
+        if (assigningAdmin) {
+
+            const anotherAdminExists =
+                users.some(
+                    (user) =>
+                        user.id !==
+                            ignoredUserId &&
+
+                        user.roles.includes(
+                            "ADMIN"
+                        )
+                );
+
+
+            if (anotherAdminExists) {
+
+                return (
+                    "Only one Administrator account " +
+                    "is allowed in the system."
+                );
+            }
+        }
+
+
+        // -------------------------
+        // ADMIN ROLE CANNOT BE REMOVED
+        // -------------------------
+
+        if (ignoredUserId != null) {
+
+            const originalUser =
+                users.find(
+                    (user) =>
+                        user.id ===
+                            ignoredUserId
+                );
+
+
+            const originalUserIsAdmin =
+                originalUser
+                    ?.roles.includes(
+                        "ADMIN"
+                    ) ?? false;
+
+
+            if (
+                originalUserIsAdmin &&
+                !assigningAdmin
+            ) {
+
+                return (
+                    "The Administrator role cannot " +
+                    "be removed from the system's " +
+                    "Administrator account."
+                );
+            }
         }
 
 
@@ -263,7 +374,8 @@ function AdministrationPage() {
         const user =
             users.find(
                 (user) =>
-                    user.id === userId
+                    user.id ===
+                        userId
             );
 
 
@@ -306,52 +418,11 @@ function AdministrationPage() {
         }
 
 
-        const removingAdminRole =
-            selectedUser.roles.includes(
-                "ADMIN"
-            ) &&
-            !updatedUser.roles.includes(
-                "ADMIN"
-            );
-
-
-        if (removingAdminRole) {
-
-            const otherActiveAdmins =
-                users.filter(
-                    (user) =>
-                        user.id !==
-                            selectedUser.id &&
-
-                        user.status ===
-                            "ACTIVE" &&
-
-                        user.roles.includes(
-                            "ADMIN"
-                        )
-                );
-
-
-            if (
-                selectedUser.status ===
-                    "ACTIVE" &&
-                otherActiveAdmins.length === 0
-            ) {
-
-                setFormError(
-                    "At least one active administrator " +
-                    "must remain in the system."
-                );
-
-                return;
-            }
-        }
-
-
         setUsers((currentUsers) =>
             currentUsers.map(
                 (user) =>
-                    user.id === selectedUser.id
+                    user.id ===
+                        selectedUser.id
                         ? {
                             ...user,
 
@@ -389,7 +460,8 @@ function AdministrationPage() {
         const user =
             users.find(
                 (user) =>
-                    user.id === userId
+                    user.id ===
+                        userId
             );
 
 
@@ -398,36 +470,25 @@ function AdministrationPage() {
         }
 
 
+        // -------------------------
+        // ADMIN MUST REMAIN ACTIVE
+        // -------------------------
+
         const isActiveAdmin =
             user.status === "ACTIVE" &&
-            user.roles.includes("ADMIN");
+            user.roles.includes(
+                "ADMIN"
+            );
 
 
         if (isActiveAdmin) {
 
-            const otherActiveAdmins =
-                users.filter(
-                    (otherUser) =>
-                        otherUser.id !== user.id &&
-                        otherUser.status ===
-                            "ACTIVE" &&
-                        otherUser.roles.includes(
-                            "ADMIN"
-                        )
-                );
+            setFormError(
+                "The Administrator account " +
+                "cannot be deactivated."
+            );
 
-
-            if (
-                otherActiveAdmins.length === 0
-            ) {
-
-                setFormError(
-                    "The last active administrator " +
-                    "cannot be deactivated."
-                );
-
-                return;
-            }
+            return;
         }
 
 
@@ -436,8 +497,10 @@ function AdministrationPage() {
                 (currentUser) => {
 
                     if (
-                        currentUser.id !== userId
+                        currentUser.id !==
+                            userId
                     ) {
+
                         return currentUser;
                     }
 
@@ -540,11 +603,13 @@ function AdministrationPage() {
                             handleNewStaff
                         }
                     >
+
                         <Plus size={18} />
 
                         <span>
                             New Staff Account
                         </span>
+
                     </button>
 
                 </div>
@@ -561,7 +626,9 @@ function AdministrationPage() {
 
                         <input
                             type="search"
-                            value={searchTerm}
+                            value={
+                                searchTerm
+                            }
                             onChange={(event) =>
                                 setSearchTerm(
                                     event.target.value
@@ -574,7 +641,9 @@ function AdministrationPage() {
 
 
                     <select
-                        value={roleFilter}
+                        value={
+                            roleFilter
+                        }
                         onChange={(event) =>
                             setRoleFilter(
                                 event.target.value
@@ -602,7 +671,9 @@ function AdministrationPage() {
 
 
                     <select
-                        value={statusFilter}
+                        value={
+                            statusFilter
+                        }
                         onChange={(event) =>
                             setStatusFilter(
                                 event.target.value
@@ -650,7 +721,9 @@ function AdministrationPage() {
                     Showing{" "}
 
                     <strong>
-                        {filteredUsers.length}
+                        {
+                            filteredUsers.length
+                        }
                     </strong>
 
                     {" "}of{" "}

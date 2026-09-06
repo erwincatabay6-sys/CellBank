@@ -1,37 +1,61 @@
-import { useState } from "react";
+import { useState }
+    from "react";
 
-import Header from "../components/Header.jsx";
-import Sidebar from "../components/Sidebar.jsx";
+import Header
+    from "../components/Header.jsx";
 
-function StaffLayout({ 
+import Sidebar
+    from "../components/Sidebar.jsx";
+
+
+function StaffLayout({
     children,
-    currentRole,
-    currentUserName 
+    currentRoles,
+    currentUserName
 }) {
 
-    const [sidebarCollapsed, setSidebarCollapsed] =
-        useState(false);
+    const [
+        sidebarCollapsed,
+        setSidebarCollapsed
+    ] = useState(false);
+
 
     function toggleSidebar() {
-        setSidebarCollapsed(!sidebarCollapsed);
+
+        setSidebarCollapsed(
+            !sidebarCollapsed
+        );
     }
+
 
     return (
         <div className="staff-layout">
 
             <Header />
 
+
             <div className="staff-body">
 
                 <Sidebar
-                    collapsed={sidebarCollapsed}
-                    onToggle={toggleSidebar}
-                    currentRole={currentRole}
-                    currentUserName={currentUserName}
+                    collapsed={
+                        sidebarCollapsed
+                    }
+                    onToggle={
+                        toggleSidebar
+                    }
+                    currentRoles={
+                        currentRoles
+                    }
+                    currentUserName={
+                        currentUserName
+                    }
                 />
 
+
                 <main className="main-content">
+
                     {children}
+
                 </main>
 
             </div>
@@ -39,5 +63,6 @@ function StaffLayout({
         </div>
     );
 }
+
 
 export default StaffLayout;

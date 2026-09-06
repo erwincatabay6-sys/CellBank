@@ -3,7 +3,8 @@ import {
     useState
 } from "react";
 
-import { Plus } from "lucide-react";
+import { Plus }
+    from "lucide-react";
 
 import { hasAccess }
     from "../../../config/accessControl.js";
@@ -31,7 +32,7 @@ const initialParts = [
 
 
 function RepairPartsCosts({
-    currentRole = "ADMIN",
+    currentRoles,
     estimatedCost,
     onEstimatedCostChange,
     agreedPrice,
@@ -44,19 +45,21 @@ function RepairPartsCosts({
 
     const canEditEstimatedCost =
         hasAccess(
-            currentRole,
+            currentRoles,
             "editEstimatedCost"
         );
 
+
     const canEditPartsCosts =
         hasAccess(
-            currentRole,
+            currentRoles,
             "editPartsCosts"
         );
 
+
     const canEditAgreedPrice =
         hasAccess(
-            currentRole,
+            currentRoles,
             "editAgreedPrice"
         );
 
@@ -68,16 +71,20 @@ function RepairPartsCosts({
     const [parts, setParts] =
         useState(initialParts);
 
+
     const [
         partFormOpen,
         setPartFormOpen
     ] = useState(false);
 
+
     const [partName, setPartName] =
         useState("");
 
+
     const [quantity, setQuantity] =
         useState(1);
+
 
     const [unitCost, setUnitCost] =
         useState("");
@@ -91,6 +98,7 @@ function RepairPartsCosts({
         estimateFormOpen,
         setEstimateFormOpen
     ] = useState(false);
+
 
     const [
         estimateInput,
@@ -111,6 +119,7 @@ function RepairPartsCosts({
         setPriceFormOpen
     ] = useState(false);
 
+
     const [
         priceInput,
         setPriceInput
@@ -130,24 +139,42 @@ function RepairPartsCosts({
         if (!canEditEstimatedCost) {
 
             setEstimateFormOpen(false);
+
+            setEstimateInput(
+                estimatedCost != null
+                    ? String(estimatedCost)
+                    : ""
+            );
         }
 
 
         if (!canEditPartsCosts) {
 
             setPartFormOpen(false);
+
+            setPartName("");
+            setQuantity(1);
+            setUnitCost("");
         }
 
 
         if (!canEditAgreedPrice) {
 
             setPriceFormOpen(false);
+
+            setPriceInput(
+                agreedPrice != null
+                    ? String(agreedPrice)
+                    : ""
+            );
         }
 
     }, [
         canEditEstimatedCost,
         canEditPartsCosts,
-        canEditAgreedPrice
+        canEditAgreedPrice,
+        estimatedCost,
+        agreedPrice
     ]);
 
 
@@ -174,7 +201,9 @@ function RepairPartsCosts({
     function resetPartForm() {
 
         setPartName("");
+
         setQuantity(1);
+
         setUnitCost("");
     }
 
@@ -664,11 +693,13 @@ function RepairPartsCosts({
                             handlePartFormToggle
                         }
                     >
+
                         <Plus size={18} />
 
                         <span>
                             Add Part
                         </span>
+
                     </button>
 
                 )}
@@ -806,6 +837,7 @@ function RepairPartsCosts({
                             <thead>
 
                                 <tr>
+
                                     <th>
                                         Part
                                     </th>
@@ -821,6 +853,7 @@ function RepairPartsCosts({
                                     <th>
                                         Subtotal
                                     </th>
+
                                 </tr>
 
                             </thead>

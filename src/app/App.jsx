@@ -72,15 +72,17 @@ function App() {
     // -----------------------------
     // TEMPORARY AUTHENTICATED USER
     // -----------------------------
-
     // These will eventually come from
     // the real authentication/session state.
 
-    const currentRole =
-        "FRONT_DESK";
+    const currentRoles = [
+        "ADMIN"
+        
+    ];
+
 
     const currentUserName =
-        "Angela Reyes";
+        "Administrator";
 
 
     // -----------------------------
@@ -94,17 +96,25 @@ function App() {
 
         return (
             <AccessGuard
-                currentRole={currentRole}
-                permission={permission}
+                currentRoles={
+                    currentRoles
+                }
+                permission={
+                    permission
+                }
             >
 
                 <StaffLayout
-                    currentRole={currentRole}
+                    currentRoles={
+                        currentRoles
+                    }
                     currentUserName={
                         currentUserName
                     }
                 >
+
                     {page}
+
                 </StaffLayout>
 
             </AccessGuard>
@@ -164,7 +174,15 @@ function App() {
                 element={
                     renderStaffPage(
                         "dashboard",
-                        <DashboardPage />
+
+                        <DashboardPage
+                            currentRoles={
+                                currentRoles
+                            }
+                            currentUserName={
+                                currentUserName
+                            }
+                        />
                     )
                 }
             />
@@ -179,8 +197,12 @@ function App() {
                 element={
                     renderStaffPage(
                         "repairs",
-                        <RepairListPage 
-                        currentRole={currentRole} />
+
+                        <RepairListPage
+                            currentRoles={
+                                currentRoles
+                            }
+                        />
                     )
                 }
             />
@@ -191,6 +213,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "createRepair",
+
                         <NewRepairPage />
                     )
                 }
@@ -202,8 +225,11 @@ function App() {
                 element={
                     renderStaffPage(
                         "repairs",
-                        <RepairWorkspacePage 
-                        currentRole={currentRole}
+
+                        <RepairWorkspacePage
+                            currentRoles={
+                                currentRoles
+                            }
                         />
                     )
                 }
@@ -219,6 +245,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "customers",
+
                         <CustomerListPage />
                     )
                 }
@@ -230,6 +257,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "customers",
+
                         <CustomerDetailsPage />
                     )
                 }
@@ -241,6 +269,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "customers",
+
                         <DeviceDetailsPage />
                     )
                 }
@@ -256,6 +285,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "technicians",
+
                         <TechnicianPage />
                     )
                 }
@@ -267,6 +297,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "technicians",
+
                         <TechnicianDetailsPage />
                     )
                 }
@@ -282,6 +313,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "reports",
+
                         <ReportsPage />
                     )
                 }
@@ -297,6 +329,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "administration",
+
                         <AdministrationPage />
                     )
                 }
@@ -312,6 +345,7 @@ function App() {
                 element={
                     renderStaffPage(
                         "accountSettings",
+
                         <AccountSettingsPage />
                     )
                 }

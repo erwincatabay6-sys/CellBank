@@ -1,18 +1,19 @@
-import { Navigate } from "react-router-dom";
+import { Navigate }
+    from "react-router-dom";
 
 import { hasAccess }
     from "../config/accessControl.js";
 
 
 function AccessGuard({
-    currentRole,
+    currentRoles,
     permission,
     children
 }) {
 
     const allowed =
         hasAccess(
-            currentRole,
+            currentRoles,
             permission
         );
 

@@ -6,7 +6,6 @@ import {
 import { useNavigate }
     from "react-router-dom";
 
-
 import { hasAccess }
     from "../../../config/accessControl.js";
 
@@ -17,7 +16,7 @@ import "../repairs.css";
 
 
 function RepairListPage({
-    currentRole = "ADMIN"
+    currentRoles
 }) {
 
     const navigate =
@@ -30,7 +29,7 @@ function RepairListPage({
 
     const canCreateRepair =
         hasAccess(
-            currentRole,
+            currentRoles,
             "createRepair"
         );
 
@@ -40,6 +39,11 @@ function RepairListPage({
     // -----------------------------
 
     function handleNewRepair() {
+
+        if (!canCreateRepair) {
+            return;
+        }
+
 
         navigate(
             "/repairs/new"
@@ -157,11 +161,13 @@ function RepairListPage({
                             handleNewRepair
                         }
                     >
+
                         <Plus size={18} />
 
                         <span>
                             New Repair
                         </span>
+
                     </button>
 
                 )}

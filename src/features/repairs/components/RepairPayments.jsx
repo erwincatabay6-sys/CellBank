@@ -3,7 +3,8 @@ import {
     useState
 } from "react";
 
-import { Plus } from "lucide-react";
+import { Plus }
+    from "lucide-react";
 
 
 import { hasAccess }
@@ -14,7 +15,7 @@ import { mockPayments }
 
 
 function RepairPayments({
-    currentRole = "ADMIN",
+    currentRoles,
     repairId,
     repairTotal
 }) {
@@ -25,7 +26,7 @@ function RepairPayments({
 
     const canRecordPayments =
         hasAccess(
-            currentRole,
+            currentRoles,
             "recordPayments"
         );
 
@@ -38,7 +39,8 @@ function RepairPayments({
         useState(() =>
             mockPayments.filter(
                 (payment) =>
-                    payment.repairId === repairId
+                    payment.repairId ===
+                        repairId
             )
         );
 
@@ -66,7 +68,8 @@ function RepairPayments({
         const repairPayments =
             mockPayments.filter(
                 (payment) =>
-                    payment.repairId === repairId
+                    payment.repairId ===
+                        repairId
             );
 
 
@@ -113,7 +116,8 @@ function RepairPayments({
     const totalPaid =
         payments.reduce(
             (total, payment) =>
-                total + payment.amount,
+                total +
+                    payment.amount,
             0
         );
 
@@ -169,6 +173,11 @@ function RepairPayments({
     function handleFormToggle() {
 
         if (!canRecordPayments) {
+            return;
+        }
+
+
+        if (repairTotal == null) {
             return;
         }
 
@@ -296,11 +305,13 @@ function RepairPayments({
                             repairTotal == null
                         }
                     >
+
                         <Plus size={18} />
 
                         <span>
                             Record Payment
                         </span>
+
                     </button>
 
                 )}
@@ -478,7 +489,9 @@ function RepairPayments({
                     {payments.map((payment) => (
 
                         <article
-                            key={payment.id}
+                            key={
+                                payment.id
+                            }
                             className="payment-item"
                         >
 

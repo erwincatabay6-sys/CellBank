@@ -4,6 +4,7 @@ export const ROLE_ACCESS = {
     // ADMIN
     // Full system access
     // =====================================================
+
     ADMIN: {
 
         // Main modules
@@ -37,6 +38,7 @@ export const ROLE_ACCESS = {
     // TECHNICIAN
     // Technical repair operations
     // =====================================================
+
     TECHNICIAN: {
 
         // Main modules
@@ -70,6 +72,7 @@ export const ROLE_ACCESS = {
     // FRONT DESK
     // Customer-facing operational work
     // =====================================================
+
     FRONT_DESK: {
 
         // Main modules
@@ -98,6 +101,17 @@ export const ROLE_ACCESS = {
         staffManagement: false
     }
 };
+
+
+// =====================================================
+// VALID ROLE NAMES
+// =====================================================
+
+export const VALID_ROLES = [
+    "ADMIN",
+    "TECHNICIAN",
+    "FRONT_DESK"
+];
 
 
 // =====================================================
@@ -131,8 +145,155 @@ export const REPAIR_STATUS_ACCESS = {
         "COMPLETED",
         "CANCELLED"
     ]
-
 };
+
+
+// =====================================================
+// NORMALIZE ROLES
+// Supports both:
+// "TECHNICIAN"
+// ["TECHNICIAN", "FRONT_DESK"]
+// =====================================================
+
+export function normalizeRoles(roles) {
+
+    if (typeof roles === "string") {
+
+        return [
+            roles
+        ];
+    }
+
+
+    if (!Array.isArray(roles)) {
+
+        return [];
+    }
+
+
+    return [
+        ...new Set(roles)
+    ];
+}
+
+
+// =====================================================
+// VALID ROLE COMBINATION CHECK
+// =====================================================
+
+export function isValidRoleCombination(roles) {
+
+    const normalizedRoles =
+        normalizeRoles(roles);
+
+
+    if (normalizedRoles.length === 0) {
+
+        return false;
+    }
+
+
+    const containsOnlyValidRoles =
+        normalizedRoles.every(
+            (role) =>
+                VALID_ROLES.includes(
+                    role
+                )
+        );
+
+
+    if (!containsOnlyValidRoles) {
+
+        return false;
+    }
+
+
+    // -----------------------------
+    // ADMIN IS EXCLUSIVE
+    // -----------------------------
+
+    if (
+        normalizedRoles.includes(
+            "ADMIN"
+        )
+    ) {
+
+        return (
+            normalizedRoles.length === 1
+        );
+    }
+
+
+    // -----------------------------
+    // SINGLE OPERATIONAL ROLE
+    // -----------------------------
+
+    if (
+        normalizedRoles.length === 1
+    ) {
+
+        return (
+            normalizedRoles[0] ===
+                "TECHNICIAN" ||
+
+            normalizedRoles[0] ===
+                "FRONT_DESK"
+        );
+    }
+
+
+    // -----------------------------
+    // ONLY ALLOWED MULTI-ROLE
+    // TECHNICIAN + FRONT DESK
+    // -----------------------------
+
+    if (
+        normalizedRoles.length === 2
+    ) {
+
+        return (
+            normalizedRoles.includes(
+                "TECHNICIAN"
+            ) &&
+
+            normalizedRoles.includes(
+                "FRONT_DESK"
+            )
+        );
+    }
+
+
+    return false;
+}
+
+
+// =====================================================
+// ROLE CHECK
+// =====================================================
+
+export function hasRole(
+    roles,
+    role
+) {
+
+    const normalizedRoles =
+        normalizeRoles(roles);
+
+
+    if (
+        !isValidRoleCombination(
+            normalizedRoles
+        )
+    ) {
+
+        return false;
+    }
+
+
+    return normalizedRoles.includes(
+        role
+    );
+}
 
 
 // =====================================================
@@ -140,13 +301,29 @@ export const REPAIR_STATUS_ACCESS = {
 // =====================================================
 
 export function hasAccess(
-    role,
+    roles,
     permission
 ) {
 
-    return (
-        ROLE_ACCESS[role]?.[permission] ??
-        false
+    const normalizedRoles =
+        normalizeRoles(roles);
+
+
+    if (
+        !isValidRoleCombination(
+            normalizedRoles
+        )
+    ) {
+
+        return false;
+    }
+
+
+    return normalizedRoles.some(
+        (role) =>
+            ROLE_ACCESS[role]?.[
+                permission
+            ] === true
     );
 }
 
@@ -156,13 +333,28 @@ export function hasAccess(
 // =====================================================
 
 export function canChangeRepairStatus(
-    role,
+    roles,
     status
 ) {
 
-    return (
-        REPAIR_STATUS_ACCESS[role]
-            ?.includes(status) ??
-        false
+    const normalizedRoles =
+        normalizeRoles(roles);
+
+
+    if (
+        !isValidRoleCombination(
+            normalizedRoles
+        )
+    ) {
+
+        return false;
+    }
+
+
+    return normalizedRoles.some(
+        (role) =>
+            REPAIR_STATUS_ACCESS[role]
+                ?.includes(status) ===
+                    true
     );
 }

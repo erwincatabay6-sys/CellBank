@@ -16,8 +16,11 @@ import {
     ChevronRight
 } from "lucide-react";
 
-import { hasAccess }
-    from "../config/accessControl.js";
+import {
+    hasAccess,
+    normalizeRoles,
+    isValidRoleCombination
+} from "../config/accessControl.js";
 
 
 const navItems = [
@@ -27,35 +30,30 @@ const navItems = [
         path: "/dashboard",
         permission: "dashboard"
     },
-
     {
         label: "Repairs",
         icon: Wrench,
         path: "/repairs",
         permission: "repairs"
     },
-
     {
         label: "Customers",
         icon: Users,
         path: "/customers",
         permission: "customers"
     },
-
     {
         label: "Technicians",
         icon: UserCog,
         path: "/technicians",
         permission: "technicians"
     },
-
     {
         label: "Reports",
         icon: BarChart3,
         path: "/reports",
         permission: "reports"
     },
-
     {
         label: "Administration",
         icon: Shield,
@@ -65,21 +63,11 @@ const navItems = [
 ];
 
 
-const roleLabels = {
-    ADMIN: "Administrator",
-    TECHNICIAN: "Technician",
-    FRONT_DESK: "Front Desk"
-};
-
-
 function Sidebar({
     collapsed,
     onToggle,
-
-    // Temporary defaults until authentication
-    // provides the actual logged-in user.
-    currentRole = "ADMIN",
-    currentUserName = "Administrator"
+    currentRoles,
+    currentUserName
 }) {
 
     const navigate =
@@ -90,6 +78,22 @@ function Sidebar({
 
 
     // -----------------------------
+    // NORMALIZED ROLES
+    // -----------------------------
+
+    const normalizedRoles =
+        normalizeRoles(
+            currentRoles
+        );
+
+
+    const validRoleCombination =
+        isValidRoleCombination(
+            normalizedRoles
+        );
+
+
+    // -----------------------------
     // VISIBLE NAVIGATION
     // -----------------------------
 
@@ -97,7 +101,7 @@ function Sidebar({
         navItems.filter(
             (item) =>
                 hasAccess(
-                    currentRole,
+                    currentRoles,
                     item.permission
                 )
         );
@@ -123,12 +127,65 @@ function Sidebar({
 
 
     // -----------------------------
-    // ROLE LABEL
+    // DISPLAYED USER INFORMATION
     // -----------------------------
 
-    const currentRoleLabel =
-        roleLabels[currentRole] ??
-        currentRole;
+    const displayUserName =
+        currentUserName ||
+        "Unknown User";
+
+
+    let currentRoleLabel =
+        "No Role";
+
+
+    if (validRoleCombination) {
+
+        if (
+            normalizedRoles.includes(
+                "ADMIN"
+            )
+        ) {
+
+            currentRoleLabel =
+                "Administrator";
+
+        }
+        else if (
+            normalizedRoles.includes(
+                "TECHNICIAN"
+            ) &&
+            normalizedRoles.includes(
+                "FRONT_DESK"
+            )
+        ) {
+
+            currentRoleLabel =
+                "Technician / Front Desk";
+
+        }
+        else if (
+            normalizedRoles.includes(
+                "TECHNICIAN"
+            )
+        ) {
+
+            currentRoleLabel =
+                "Technician";
+
+        }
+        else if (
+            normalizedRoles.includes(
+                "FRONT_DESK"
+            )
+        ) {
+
+            currentRoleLabel =
+                "Front Desk";
+
+        }
+
+    }
 
 
     return (
@@ -150,13 +207,16 @@ function Sidebar({
                 <button
                     className="sidebar-toggle"
                     type="button"
-                    onClick={onToggle}
+                    onClick={
+                        onToggle
+                    }
                     aria-label={
                         collapsed
                             ? "Expand sidebar"
                             : "Collapse sidebar"
                     }
                 >
+
                     {collapsed
                         ? (
                             <ChevronRight
@@ -169,6 +229,7 @@ function Sidebar({
                             />
                         )
                     }
+
                 </button>
 
             </div>
@@ -179,52 +240,59 @@ function Sidebar({
             ========================== */}
             <nav className="sidebar-nav">
 
-                {visibleNavItems.map((item) => {
+                {visibleNavItems.map(
+                    (item) => {
 
-                    const Icon =
-                        item.icon;
+                        const Icon =
+                            item.icon;
 
 
-                    return (
-                        <button
-                            key={item.label}
-                            className={
-                                `nav-item ${
-                                    isActivePath(
+                        return (
+                            <button
+                                key={
+                                    item.label
+                                }
+                                className={
+                                    `nav-item ${
+                                        isActivePath(
+                                            item.path
+                                        )
+                                            ? "active"
+                                            : ""
+                                    }`
+                                }
+                                type="button"
+                                title={
+                                    collapsed
+                                        ? item.label
+                                        : undefined
+                                }
+                                onClick={() =>
+                                    navigate(
                                         item.path
                                     )
-                                        ? "active"
-                                        : ""
-                                }`
-                            }
-                            type="button"
-                            title={
-                                collapsed
-                                    ? item.label
-                                    : undefined
-                            }
-                            onClick={() =>
-                                navigate(
-                                    item.path
-                                )
-                            }
-                        >
+                                }
+                            >
 
-                            <Icon size={20} />
+                                <Icon
+                                    size={20}
+                                />
 
 
-                            {!collapsed && (
+                                {!collapsed && (
 
-                                <span>
-                                    {item.label}
-                                </span>
+                                    <span>
+                                        {
+                                            item.label
+                                        }
+                                    </span>
 
-                            )}
+                                )}
 
-                        </button>
-                    );
-
-                })}
+                            </button>
+                        );
+                    }
+                )}
 
             </nav>
 
@@ -245,11 +313,15 @@ function Sidebar({
                     <div className="profile-details">
 
                         <strong>
-                            {currentUserName}
+                            {
+                                displayUserName
+                            }
                         </strong>
 
                         <span>
-                            {currentRoleLabel}
+                            {
+                                currentRoleLabel
+                            }
                         </span>
 
                     </div>
@@ -258,7 +330,7 @@ function Sidebar({
 
 
                 {hasAccess(
-                    currentRole,
+                    currentRoles,
                     "accountSettings"
                 ) && (
 
@@ -279,10 +351,16 @@ function Sidebar({
                                 : undefined
                         }
                         onClick={() =>
-                            navigate("/account")
+                            navigate(
+                                "/account"
+                            )
                         }
                     >
-                        <Settings size={18} />
+
+                        <Settings
+                            size={18}
+                        />
+
                     </button>
 
                 )}

@@ -86,7 +86,7 @@ const initialHistory = [
 
 
 function RepairStatusHistory({
-    currentRole = "ADMIN",
+    currentRoles,
     currentStatus,
     onStatusChange,
     suggestedStatus = "",
@@ -126,10 +126,14 @@ function RepairStatusHistory({
                     currentStatus &&
 
                 canChangeRepairStatus(
-                    currentRole,
+                    currentRoles,
                     repairStatus.value
                 )
         );
+
+
+    const canChangeStatus =
+        allowedStatuses.length > 0;
 
 
     // -----------------------------
@@ -148,7 +152,7 @@ function RepairStatusHistory({
                 currentStatus &&
 
             canChangeRepairStatus(
-                currentRole,
+                currentRoles,
                 suggestedStatus
             );
 
@@ -171,8 +175,45 @@ function RepairStatusHistory({
     }, [
         suggestedStatus,
         currentStatus,
-        currentRole,
+        currentRoles,
         onSuggestionHandled
+    ]);
+
+
+    // -----------------------------
+    // PERMISSION CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (!canChangeStatus) {
+
+            setStatus("");
+
+            setNote("");
+
+            setFormOpen(false);
+
+            return;
+        }
+
+
+        if (
+            status &&
+            !canChangeRepairStatus(
+                currentRoles,
+                status
+            )
+        ) {
+
+            setStatus("");
+        }
+
+    }, [
+        currentRoles,
+        currentStatus,
+        canChangeStatus,
+        status
     ]);
 
 
@@ -183,13 +224,20 @@ function RepairStatusHistory({
     function resetForm() {
 
         setStatus("");
+
         setNote("");
     }
 
 
     function handleFormToggle() {
 
+        if (!canChangeStatus) {
+            return;
+        }
+
+
         if (formOpen) {
+
             resetForm();
         }
 
@@ -217,6 +265,11 @@ function RepairStatusHistory({
         event.preventDefault();
 
 
+        if (!canChangeStatus) {
+            return;
+        }
+
+
         if (!status) {
             return;
         }
@@ -225,7 +278,7 @@ function RepairStatusHistory({
         if (
             status === currentStatus ||
             !canChangeRepairStatus(
-                currentRole,
+                currentRoles,
                 status
             )
         ) {
@@ -293,13 +346,19 @@ function RepairStatusHistory({
                 </div>
 
 
-                <button
-                    className="secondary-repair-button"
-                    type="button"
-                    onClick={handleFormToggle}
-                >
-                    Change Status
-                </button>
+                {canChangeStatus && (
+
+                    <button
+                        className="secondary-repair-button"
+                        type="button"
+                        onClick={
+                            handleFormToggle
+                        }
+                    >
+                        Change Status
+                    </button>
+
+                )}
 
             </div>
 
@@ -307,11 +366,14 @@ function RepairStatusHistory({
             {/* =========================
                 STATUS CHANGE FORM
             ========================== */}
-            {formOpen && (
+            {formOpen &&
+                canChangeStatus && (
 
                 <form
                     className="status-change-form"
-                    onSubmit={handleSubmit}
+                    onSubmit={
+                        handleSubmit
+                    }
                 >
 
                     {/* CURRENT STATUS */}
@@ -322,11 +384,13 @@ function RepairStatusHistory({
                         </label>
 
                         <div>
+
                             <StatusBadge
                                 status={
                                     currentStatus
                                 }
                             />
+
                         </div>
 
                     </div>
@@ -409,7 +473,9 @@ function RepairStatusHistory({
                         <button
                             className="cancel-repair-button"
                             type="button"
-                            onClick={handleCancel}
+                            onClick={
+                                handleCancel
+                            }
                         >
                             Cancel
                         </button>

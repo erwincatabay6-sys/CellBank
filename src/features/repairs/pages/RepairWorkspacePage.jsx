@@ -77,7 +77,7 @@ const workspaceTabs = [
 
 
 function RepairWorkspacePage({
-    currentRole = "ADMIN"
+    currentRoles
 }) {
 
     const { repairId } =
@@ -88,13 +88,39 @@ function RepairWorkspacePage({
 
 
     // -----------------------------
+    // ROLE PERMISSIONS
+    // -----------------------------
+
+    const canViewRepairs =
+        hasAccess(
+            currentRoles,
+            "repairs"
+        );
+
+
+    const canUseFindings =
+        hasAccess(
+            currentRoles,
+            "technicalFindings"
+        );
+
+
+    const canUseAi =
+        hasAccess(
+            currentRoles,
+            "aiTroubleshooting"
+        );
+
+
+    // -----------------------------
     // CURRENT REPAIR
     // -----------------------------
 
     const repair =
         mockRepairs.find(
             (repair) =>
-                repair.id === Number(repairId)
+                repair.id ===
+                    Number(repairId)
         );
 
 
@@ -102,8 +128,10 @@ function RepairWorkspacePage({
     // WORKSPACE STATE
     // -----------------------------
 
-    const [activeTab, setActiveTab] =
-        useState("overview");
+    const [
+        activeTab,
+        setActiveTab
+    ] = useState("overview");
 
 
     const [
@@ -147,32 +175,20 @@ function RepairWorkspacePage({
 
 
     // -----------------------------
-    // ROLE PERMISSIONS
+    // VISIBLE WORKSPACE TABS
     // -----------------------------
 
-    const canUseFindings =
-        hasAccess(
-            currentRole,
-            "technicalFindings"
-        );
-
-
-    const canUseAi =
-        hasAccess(
-            currentRole,
-            "aiTroubleshooting"
-        );
-
-
     const visibleWorkspaceTabs =
-        workspaceTabs.filter(
-            (tab) =>
-                !tab.permission ||
-                hasAccess(
-                    currentRole,
-                    tab.permission
-                )
-        );
+        canViewRepairs
+            ? workspaceTabs.filter(
+                (tab) =>
+                    !tab.permission ||
+                    hasAccess(
+                        currentRoles,
+                        tab.permission
+                    )
+            )
+            : [];
 
 
     // -----------------------------
@@ -216,6 +232,18 @@ function RepairWorkspacePage({
 
     useEffect(() => {
 
+        if (!canViewRepairs) {
+
+            setActiveTab("overview");
+
+            setAiFindingDraft("");
+
+            setAiStatusSuggestion("");
+
+            return;
+        }
+
+
         if (
             activeTab === "findings" &&
             !canUseFindings
@@ -237,6 +265,7 @@ function RepairWorkspacePage({
 
     }, [
         activeTab,
+        canViewRepairs,
         canUseFindings,
         canUseAi
     ]);
@@ -248,7 +277,10 @@ function RepairWorkspacePage({
 
     function handleUseAsFinding(text) {
 
-        if (!canUseFindings) {
+        if (
+            !canViewRepairs ||
+            !canUseFindings
+        ) {
             return;
         }
 
@@ -261,9 +293,19 @@ function RepairWorkspacePage({
 
     function handleStatusSuggestion(status) {
 
+        if (
+            !canViewRepairs ||
+            !canUseAi
+        ) {
+            return;
+        }
+
+
         setAiStatusSuggestion(status);
 
-        setActiveTab("status-history");
+        setActiveTab(
+            "status-history"
+        );
     }
 
 
@@ -273,7 +315,68 @@ function RepairWorkspacePage({
 
     function handleTabChange(tabId) {
 
+        if (!canViewRepairs) {
+            return;
+        }
+
+
+        const tabAllowed =
+            visibleWorkspaceTabs.some(
+                (tab) =>
+                    tab.id === tabId
+            );
+
+
+        if (!tabAllowed) {
+            return;
+        }
+
+
         setActiveTab(tabId);
+    }
+
+
+    // -----------------------------
+    // ACCESS DENIED
+    // -----------------------------
+
+    if (!canViewRepairs) {
+
+        return (
+            <>
+
+                <section className="page-header">
+
+                    <h2>
+                        Access Denied
+                    </h2>
+
+                    <p>
+                        You do not have permission
+                        to access repair records.
+                    </p>
+
+                </section>
+
+
+                <section className="page-content repair-overview">
+
+                    <button
+                        className="secondary-repair-button"
+                        type="button"
+                        onClick={() =>
+                            navigate(
+                                "/dashboard"
+                            )
+                        }
+                    >
+                        Back to Dashboard
+                    </button>
+
+                </section>
+
+            </>
+        );
     }
 
 
@@ -306,7 +409,9 @@ function RepairWorkspacePage({
                         className="secondary-repair-button"
                         type="button"
                         onClick={() =>
-                            navigate("/repairs")
+                            navigate(
+                                "/repairs"
+                            )
                         }
                     >
                         Back to Repairs
@@ -394,7 +499,9 @@ function RepairWorkspacePage({
                     </span>
 
                     <StatusBadge
-                        status={currentStatus}
+                        status={
+                            currentStatus
+                        }
                     />
 
                 </div>
@@ -407,28 +514,30 @@ function RepairWorkspacePage({
             ========================== */}
             <nav className="repair-workspace-tabs">
 
-                {visibleWorkspaceTabs.map((tab) => (
+                {visibleWorkspaceTabs.map(
+                    (tab) => (
 
-                    <button
-                        key={tab.id}
-                        className={
-                            `workspace-tab ${
-                                activeTab === tab.id
-                                    ? "active"
-                                    : ""
-                            }`
-                        }
-                        type="button"
-                        onClick={() =>
-                            handleTabChange(
-                                tab.id
-                            )
-                        }
-                    >
-                        {tab.label}
-                    </button>
+                        <button
+                            key={tab.id}
+                            className={
+                                `workspace-tab ${
+                                    activeTab === tab.id
+                                        ? "active"
+                                        : ""
+                                }`
+                            }
+                            type="button"
+                            onClick={() =>
+                                handleTabChange(
+                                    tab.id
+                                )
+                            }
+                        >
+                            {tab.label}
+                        </button>
 
-                ))}
+                    )
+                )}
 
             </nav>
 
@@ -457,7 +566,7 @@ function RepairWorkspacePage({
 
             {/* =========================
                 FINDINGS
-                ADMIN + TECHNICIAN ONLY
+                ADMIN + TECHNICIAN
             ========================== */}
             {canUseFindings && (
 
@@ -492,10 +601,9 @@ function RepairWorkspacePage({
             >
 
                 <RepairStatusHistory
-                    currentRole={
-                        currentRole
+                    currentRoles={
+                        currentRoles
                     }
-
                     currentStatus={
                         currentStatus
                     }
@@ -524,8 +632,8 @@ function RepairWorkspacePage({
             >
 
                 <RepairPartsCosts
-                    currentRole={
-                        currentRole
+                    currentRoles={
+                        currentRoles
                     }
                     estimatedCost={
                         estimatedCost
@@ -549,13 +657,14 @@ function RepairWorkspacePage({
             ========================== */}
             <div
                 hidden={
-                    activeTab !== "payments"
+                    activeTab !==
+                        "payments"
                 }
             >
 
                 <RepairPayments
-                    currentRole={
-                        currentRole
+                    currentRoles={
+                        currentRoles
                     }
                     repairId={
                         repair.id
@@ -570,7 +679,7 @@ function RepairWorkspacePage({
 
             {/* =========================
                 AI TROUBLESHOOTING
-                ADMIN + TECHNICIAN ONLY
+                ADMIN + TECHNICIAN
             ========================== */}
             {canUseAi && (
 
