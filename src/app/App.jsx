@@ -23,6 +23,9 @@ import TrackingPage
 import LoginPage
     from "../features/auth/pages/LoginPage.jsx";
 
+import AccessDeniedPage
+    from "../features/auth/pages/AccessDeniedPage.jsx";
+
 
 import DashboardPage
     from "../features/dashboard/pages/DashboardPage.jsx";
@@ -159,6 +162,27 @@ function App() {
                     <PublicLayout>
 
                         <LoginPage />
+
+                    </PublicLayout>
+                }
+            />
+
+
+            {/* =========================
+                ACCESS DENIED
+                MUST REMAIN UNPROTECTED
+            ========================== */}
+
+            <Route
+                path="/access-denied"
+                element={
+                    <PublicLayout>
+
+                        <AccessDeniedPage
+                            currentRoles={
+                                currentRoles
+                            }
+                        />
 
                     </PublicLayout>
                 }

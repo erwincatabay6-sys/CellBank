@@ -22,7 +22,7 @@ function AccessGuard({
 
         return (
             <Navigate
-                to="/dashboard"
+                to="/access-denied"
                 replace
             />
         );
