@@ -40,4 +40,64 @@ textarea {
 
 button {
     cursor: pointer;
+}/* =====================================================
+   NOT FOUND
+===================================================== */
+
+.not-found-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 24px;
+
+    text-align: center;
+
+}
+
+
+.not-found-code {
+
+    font-size: 4rem;
+
+    line-height: 1;
+
+    color: var(--text-secondary);
+
+}
+
+
+.not-found-actions {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    width: 100%;
+
+}
+
+
+@media (max-width: 500px) {
+
+    .not-found-actions {
+
+        flex-direction: column;
+
+    }
+
+
+    .not-found-actions button {
+
+        width: 100%;
+
+        justify-content: center;
+
+    }
+
 }

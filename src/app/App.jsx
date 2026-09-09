@@ -14,6 +14,10 @@ import AccessGuard
     from "../components/AccessGuard.jsx";
 
 
+// =====================================================
+// PUBLIC / AUTH PAGES
+// =====================================================
+
 import LandingPage
     from "../features/tracking/pages/LandingPage.jsx";
 
@@ -23,9 +27,19 @@ import TrackingPage
 import LoginPage
     from "../features/auth/pages/LoginPage.jsx";
 
+import ForgotPasswordPage
+    from "../features/auth/pages/ForgotPasswordPage.jsx";
+
+import ResetPasswordPage
+    from "../features/auth/pages/ResetPasswordPage.jsx";
+
 import AccessDeniedPage
     from "../features/auth/pages/AccessDeniedPage.jsx";
 
+
+// =====================================================
+// STAFF PAGES
+// =====================================================
 
 import DashboardPage
     from "../features/dashboard/pages/DashboardPage.jsx";
@@ -69,6 +83,8 @@ import AdministrationPage
 import AccountSettingsPage
     from "../features/account/pages/AccountSettingsPage.jsx";
 
+import NotFoundPage
+    from "../features/errors/pages/NotFoundPage.jsx";
 
 function App() {
 
@@ -80,7 +96,6 @@ function App() {
 
     const currentRoles = [
         "ADMIN"
-        
     ];
 
 
@@ -128,9 +143,9 @@ function App() {
     return (
         <Routes>
 
-            {/* =========================
+            {/* =================================================
                 PUBLIC ROUTES
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/"
@@ -156,6 +171,10 @@ function App() {
             />
 
 
+            {/* =================================================
+                AUTHENTICATION ROUTES
+            ================================================= */}
+
             <Route
                 path="/login"
                 element={
@@ -168,10 +187,34 @@ function App() {
             />
 
 
-            {/* =========================
+            <Route
+                path="/forgot-password"
+                element={
+                    <PublicLayout>
+
+                        <ForgotPasswordPage />
+
+                    </PublicLayout>
+                }
+            />
+
+
+            <Route
+                path="/reset-password"
+                element={
+                    <PublicLayout>
+
+                        <ResetPasswordPage />
+
+                    </PublicLayout>
+                }
+            />
+
+
+            {/* =================================================
                 ACCESS DENIED
                 MUST REMAIN UNPROTECTED
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/access-denied"
@@ -189,9 +232,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 DASHBOARD
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/dashboard"
@@ -212,9 +255,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 REPAIRS
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/repairs"
@@ -260,9 +303,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 CUSTOMERS & DEVICES
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/customers"
@@ -300,9 +343,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 TECHNICIANS
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/technicians"
@@ -328,9 +371,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 REPORTS
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/reports"
@@ -344,9 +387,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 ADMINISTRATION
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/administration"
@@ -360,9 +403,9 @@ function App() {
             />
 
 
-            {/* =========================
+            {/* =================================================
                 ACCOUNT SETTINGS
-            ========================== */}
+            ================================================= */}
 
             <Route
                 path="/account"
@@ -370,8 +413,29 @@ function App() {
                     renderStaffPage(
                         "accountSettings",
 
-                        <AccountSettingsPage />
+                        <AccountSettingsPage
+                            currentRoles={
+                                currentRoles
+                            }
+                            currentUserName={
+                                currentUserName
+                            }
+                        />
                     )
+                }
+            />
+            {/* =================================================
+                    NOT FOUND
+            ================================================= */}
+
+            <Route
+                path="*"
+                element={
+                        <PublicLayout>
+
+                    <NotFoundPage />
+
+                </PublicLayout>
                 }
             />
 
