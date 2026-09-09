@@ -1,4 +1,8 @@
 import {
+    useState
+} from "react";
+
+import {
     Plus,
     Search
 } from "lucide-react";
@@ -11,6 +15,12 @@ import { hasAccess }
 
 import RepairTable
     from "../components/RepairTable.jsx";
+
+import { mockRepairs }
+    from "../data/mockRepairs.js";
+
+import { mockTechnicians }
+    from "../../technicians/data/mockTechnicians.js";
 
 import "../repairs.css";
 
@@ -32,6 +42,80 @@ function RepairListPage({
             currentRoles,
             "createRepair"
         );
+
+
+    // -----------------------------
+    // FILTER STATE
+    // -----------------------------
+
+    const [searchTerm, setSearchTerm] =
+        useState("");
+
+    const [statusFilter, setStatusFilter] =
+        useState("");
+
+    const [technicianFilter, setTechnicianFilter] =
+        useState("");
+
+
+    // -----------------------------
+    // FILTERED REPAIRS
+    // -----------------------------
+
+    const normalizedSearch =
+        searchTerm
+            .trim()
+            .toLowerCase();
+
+
+    const filteredRepairs =
+        mockRepairs.filter((repair) => {
+
+            const searchableStatus =
+                repair.status
+                    .replaceAll("_", " ")
+                    .toLowerCase();
+
+
+            const matchesSearch =
+                !normalizedSearch ||
+                repair.reference
+                    .toLowerCase()
+                    .includes(normalizedSearch) ||
+                repair.customer
+                    .toLowerCase()
+                    .includes(normalizedSearch) ||
+                repair.device
+                    .toLowerCase()
+                    .includes(normalizedSearch) ||
+                (repair.technician ?? "Unassigned")
+                    .toLowerCase()
+                    .includes(normalizedSearch) ||
+                searchableStatus
+                    .includes(normalizedSearch);
+
+
+            const matchesStatus =
+                !statusFilter ||
+                repair.status === statusFilter;
+
+
+            const matchesTechnician =
+                !technicianFilter ||
+                (
+                    technicianFilter === "UNASSIGNED"
+                        ? repair.technicianId == null
+                        : repair.technicianId ===
+                            Number(technicianFilter)
+                );
+
+
+            return (
+                matchesSearch &&
+                matchesStatus &&
+                matchesTechnician
+            );
+        });
 
 
     // -----------------------------
@@ -82,8 +166,15 @@ function RepairListPage({
                     <Search size={18} />
 
                     <input
-                        type="text"
+                        type="search"
+                        value={searchTerm}
+                        onChange={(event) =>
+                            setSearchTerm(
+                                event.target.value
+                            )
+                        }
                         placeholder="Search repairs..."
+                        aria-label="Search repair records"
                     />
 
                 </div>
@@ -91,7 +182,12 @@ function RepairListPage({
 
                 {/* STATUS FILTER */}
                 <select
-                    defaultValue=""
+                    value={statusFilter}
+                    onChange={(event) =>
+                        setStatusFilter(
+                            event.target.value
+                        )
+                    }
                     aria-label="Filter by repair status"
                 >
 
@@ -132,7 +228,12 @@ function RepairListPage({
 
                 {/* TECHNICIAN FILTER */}
                 <select
-                    defaultValue=""
+                    value={technicianFilter}
+                    onChange={(event) =>
+                        setTechnicianFilter(
+                            event.target.value
+                        )
+                    }
                     aria-label="Filter by technician"
                 >
 
@@ -140,12 +241,25 @@ function RepairListPage({
                         All Technicians
                     </option>
 
-                    <option value="miguel">
-                        Miguel Santos
-                    </option>
+                    {mockTechnicians
+                        .filter(
+                            (technician) =>
+                                technician.status ===
+                                    "ACTIVE"
+                        )
+                        .map((technician) => (
 
-                    <option value="carlo">
-                        Carlo Mendoza
+                            <option
+                                key={technician.id}
+                                value={technician.id}
+                            >
+                                {technician.name}
+                            </option>
+
+                        ))}
+
+                    <option value="UNASSIGNED">
+                        Unassigned
                     </option>
 
                 </select>
@@ -176,11 +290,23 @@ function RepairListPage({
 
 
             {/* =========================
+                RESULT COUNT
+            ========================== */}
+            <div className="repair-result-count">
+                Showing {filteredRepairs.length} of {mockRepairs.length} repairs
+            </div>
+
+
+            {/* =========================
                 REPAIR TABLE
             ========================== */}
             <section className="page-content">
 
-                <RepairTable />
+                <RepairTable
+                    repairs={
+                        filteredRepairs
+                    }
+                />
 
             </section>
 

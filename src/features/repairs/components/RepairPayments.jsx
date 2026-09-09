@@ -16,6 +16,7 @@ import { mockPayments }
 
 function RepairPayments({
     currentRoles,
+    currentUserName,
     repairId,
     repairTotal
 }) {
@@ -245,7 +246,8 @@ function RepairPayments({
                 paymentAmount,
 
             recordedBy:
-                "Miguel Santos",
+                currentUserName ||
+                "Unknown User",
 
             recordedAt:
                 new Date()

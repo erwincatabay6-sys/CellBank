@@ -1,12 +1,35 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate }
+    from "react-router-dom";
 
-import StatusBadge from "../../../components/StatusBadge.jsx";
-import { mockRepairs } from "../data/mockRepairs.js";
+import StatusBadge
+    from "../../../components/StatusBadge.jsx";
 
 
-function RepairTable() {
+function RepairTable({
+    repairs = []
+}) {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
+
+
+    if (repairs.length === 0) {
+
+        return (
+            <div className="workspace-empty-state">
+
+                <strong>
+                    No repair records found
+                </strong>
+
+                <p>
+                    Try changing the search term
+                    or repair filters.
+                </p>
+
+            </div>
+        );
+    }
 
 
     return (
@@ -27,13 +50,15 @@ function RepairTable() {
 
                 <tbody>
 
-                    {mockRepairs.map((repair) => (
+                    {repairs.map((repair) => (
 
                         <tr
                             key={repair.id}
                             className="repair-row"
                             onClick={() =>
-                                navigate(`/repairs/${repair.id}`)
+                                navigate(
+                                    `/repairs/${repair.id}`
+                                )
                             }
                         >
 
@@ -50,7 +75,7 @@ function RepairTable() {
                             </td>
 
                             <td>
-                                {repair.technician}
+                                {repair.technician ?? "Unassigned"}
                             </td>
 
                             <td>

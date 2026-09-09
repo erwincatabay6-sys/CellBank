@@ -1,4 +1,8 @@
-import { useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState
+} from "react";
 
 import {
     Send,
@@ -9,22 +13,128 @@ import {
 } from "lucide-react";
 
 
-const initialMessages = [
-    {
-        id: 1,
+function getInitialMessages() {
 
-        sender: "ai",
+    return [
+        {
+            id: 1,
+            sender: "ai",
+            text:
+                "I can help troubleshoot this repair using the " +
+                "device information, reported problem, findings, " +
+                "and relevant repair history.",
+            canUseAsFinding: false,
+            suggestedStatus: null
+        }
+    ];
+}
 
-        text:
-            "I can help troubleshoot this repair using the " +
-            "device information, reported problem, findings, " +
-            "and relevant repair history.",
 
-        canUseAsFinding: false,
+function getSuggestedStatusLabel(status) {
 
-        suggestedStatus: null
+    if (!status) {
+        return "";
     }
-];
+
+
+    return status
+        .replaceAll("_", " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (letter) =>
+            letter.toUpperCase()
+        );
+}
+
+
+function getMockAiResponse(repair) {
+
+    const device =
+        repair.device;
+
+    const problem =
+        repair.reportedProblem;
+
+
+    if (
+        repair.status ===
+            "AWAITING_PARTS"
+    ) {
+
+        return {
+            text:
+                `${device} is currently waiting for parts. ` +
+                `Before resuming the repair, confirm that the required ` +
+                `replacement component matches the reported problem: ` +
+                `"${problem}". After installation, repeat functional ` +
+                `testing before moving toward release.`,
+            suggestedStatus:
+                "IN_PROGRESS"
+        };
+    }
+
+
+    if (
+        repair.status ===
+            "IN_PROGRESS"
+    ) {
+
+        return {
+            text:
+                `For ${device}, continue diagnosis around the reported ` +
+                `problem: "${problem}". Verify the suspected component ` +
+                `or subsystem with targeted testing. If a required ` +
+                `replacement component is unavailable, document the ` +
+                `finding and place the repair in Awaiting Parts.`,
+            suggestedStatus:
+                "AWAITING_PARTS"
+        };
+    }
+
+
+    if (
+        repair.status ===
+            "RECEIVED"
+    ) {
+
+        return {
+            text:
+                `Begin with a structured inspection of ${device} based on ` +
+                `the reported problem: "${problem}". Record objective ` +
+                `findings first, then prepare an estimate or customer ` +
+                `approval request when the likely repair is identified.`,
+            suggestedStatus:
+                "AWAITING_APPROVAL"
+        };
+    }
+
+
+    if (
+        repair.status ===
+            "READY_FOR_RELEASE"
+    ) {
+
+        return {
+            text:
+                `${device} is marked Ready for Release. Perform a final ` +
+                `functional check against the original reported problem: ` +
+                `"${problem}" and confirm that the device is ready for ` +
+                `customer handoff.`,
+            suggestedStatus:
+                null
+        };
+    }
+
+
+    return {
+        text:
+            `Review ${device} against the reported problem: "${problem}". ` +
+            `Use the repair history and saved findings as supporting ` +
+            `context, and confirm any official action through the normal ` +
+            `Cellbank repair workflow.`,
+        suggestedStatus:
+            null
+    };
+}
 
 
 function RepairAiTroubleshooting({
@@ -33,18 +143,61 @@ function RepairAiTroubleshooting({
     onSuggestStatus
 }) {
 
+    const responseTimeoutRef =
+        useRef(null);
+
+
     // -----------------------------
     // CONVERSATION STATE
     // -----------------------------
 
     const [messages, setMessages] =
-        useState(initialMessages);
+        useState(
+            getInitialMessages
+        );
 
     const [messageText, setMessageText] =
         useState("");
 
     const [isResponding, setIsResponding] =
         useState(false);
+
+
+    // -----------------------------
+    // REPAIR CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (responseTimeoutRef.current) {
+
+            clearTimeout(
+                responseTimeoutRef.current
+            );
+
+            responseTimeoutRef.current =
+                null;
+        }
+
+
+        setMessages(
+            getInitialMessages()
+        );
+
+        setMessageText("");
+        setIsResponding(false);
+
+
+        return () => {
+
+            if (responseTimeoutRef.current) {
+                clearTimeout(
+                    responseTimeoutRef.current
+                );
+            }
+        };
+
+    }, [repair.id]);
 
 
     // -----------------------------
@@ -68,7 +221,6 @@ function RepairAiTroubleshooting({
 
 
                 return counts;
-
             },
             {}
         );
@@ -94,22 +246,23 @@ function RepairAiTroubleshooting({
             messageText.trim();
 
 
-        if (!trimmedMessage) {
+        if (
+            !trimmedMessage ||
+            isResponding
+        ) {
             return;
         }
 
 
         const technicianMessage = {
-            id: Date.now(),
-
-            sender: "user",
-
+            id:
+                Date.now(),
+            sender:
+                "user",
             text:
                 trimmedMessage,
-
             canUseAsFinding:
                 false,
-
             suggestedStatus:
                 null
         };
@@ -122,45 +275,46 @@ function RepairAiTroubleshooting({
 
 
         setMessageText("");
-
         setIsResponding(true);
 
 
         // Temporary frontend AI simulation.
         // Later:
         // React -> Spring Boot -> AI service.
-        setTimeout(() => {
+        responseTimeoutRef.current =
+            setTimeout(() => {
 
-            const aiMessage = {
-                id: Date.now() + 1,
-
-                sender: "ai",
-
-                text:
-                    "The charging port shows signs of intermittent " +
-                    "contact. Inspect the port connection and power " +
-                    "path. If the required replacement charging port " +
-                    "is currently unavailable, the repair should wait " +
-                    "for the necessary part.",
-
-                canUseAsFinding:
-                    true,
-
-                // Temporary mock AI suggestion.
-                suggestedStatus:
-                    "AWAITING_PARTS"
-            };
+                const mockResponse =
+                    getMockAiResponse(
+                        repair
+                    );
 
 
-            setMessages((currentMessages) => [
-                ...currentMessages,
-                aiMessage
-            ]);
+                const aiMessage = {
+                    id:
+                        Date.now() + 1,
+                    sender:
+                        "ai",
+                    text:
+                        mockResponse.text,
+                    canUseAsFinding:
+                        true,
+                    suggestedStatus:
+                        mockResponse.suggestedStatus
+                };
 
 
-            setIsResponding(false);
+                setMessages((currentMessages) => [
+                    ...currentMessages,
+                    aiMessage
+                ]);
 
-        }, 700);
+
+                setIsResponding(false);
+                responseTimeoutRef.current =
+                    null;
+
+            }, 700);
     }
 
 
@@ -213,7 +367,6 @@ function RepairAiTroubleshooting({
             ========================== */}
             <div className="ai-repair-context">
 
-                {/* DEVICE */}
                 <div>
 
                     <span>
@@ -227,7 +380,6 @@ function RepairAiTroubleshooting({
                 </div>
 
 
-                {/* REPORTED PROBLEM */}
                 <div>
 
                     <span>
@@ -241,7 +393,6 @@ function RepairAiTroubleshooting({
                 </div>
 
 
-                {/* SERVICE TYPE */}
                 <div>
 
                     <span>
@@ -288,10 +439,10 @@ function RepairAiTroubleshooting({
 
 
                             {repeatedProblems.map(
-                                ([problem, count]) => (
+                                ([problemCategory, count]) => (
 
-                                    <p key={problem}>
-                                        {problem} issue appeared{" "}
+                                    <p key={problemCategory}>
+                                        {problemCategory} issue appeared{" "}
                                         {count} times in previous repairs.
                                     </p>
 
@@ -346,7 +497,6 @@ function RepairAiTroubleshooting({
                         }
                     >
 
-                        {/* MESSAGE ICON */}
                         <div className="ai-message-icon">
 
                             {message.sender === "user"
@@ -357,7 +507,6 @@ function RepairAiTroubleshooting({
                         </div>
 
 
-                        {/* MESSAGE CONTENT */}
                         <div className="ai-message-content">
 
                             <span>
@@ -373,14 +522,11 @@ function RepairAiTroubleshooting({
                             </p>
 
 
-                            {/* AI ACTIONS */}
                             {(message.canUseAsFinding ||
                                 message.suggestedStatus) && (
 
                                 <div className="ai-message-actions">
 
-
-                                    {/* USE AS FINDING */}
                                     {message.canUseAsFinding && (
 
                                         <button
@@ -402,7 +548,6 @@ function RepairAiTroubleshooting({
                                     )}
 
 
-                                    {/* SUGGEST STATUS */}
                                     {message.suggestedStatus && (
 
                                         <button
@@ -417,7 +562,10 @@ function RepairAiTroubleshooting({
                                             <ArrowRightCircle size={16} />
 
                                             <span>
-                                                Suggest Awaiting Parts
+                                                Suggest{" "}
+                                                {getSuggestedStatusLabel(
+                                                    message.suggestedStatus
+                                                )}
                                             </span>
                                         </button>
 
@@ -434,7 +582,6 @@ function RepairAiTroubleshooting({
                 ))}
 
 
-                {/* THINKING STATE */}
                 {isResponding && (
 
                     <div className="ai-message assistant-message">
@@ -483,6 +630,7 @@ function RepairAiTroubleshooting({
                         "Describe your observation or ask " +
                         "a troubleshooting question..."
                     }
+                    disabled={isResponding}
                 />
 
 

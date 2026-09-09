@@ -11,6 +11,13 @@
 
     --text-primary: #111827;
     --text-secondary: #6b7280;
+
+    /* Compatibility aliases used by feature styles. */
+    --primary-color: var(--primary);
+    --border-color: var(--border);
+    --background-color: var(--background);
+    --border-radius: 10px;
+    --error-color: #dc2626;
 }
 
 * {

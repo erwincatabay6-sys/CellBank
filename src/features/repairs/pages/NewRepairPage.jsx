@@ -8,58 +8,16 @@ import DeviceRegistrationModal
 import CustomerRegistrationModal
     from "../../customers/components/CustomerRegistrationModal.jsx";
 
+import { useCustomers }
+    from "../../customers/context/CustomersContext.jsx";
+
+import { mockRepairs }
+    from "../data/mockRepairs.js";
+
+import { mockTechnicians }
+    from "../../technicians/data/mockTechnicians.js";
+
 import "../repairs.css";
-
-
-const initialCustomers = [
-    {
-        id: 1,
-        name: "Juan Cruz",
-        devices: [
-            {
-                id: 1,
-                type: "Mobile Phone",
-                brand: "Samsung",
-                model: "Galaxy A54",
-                imei: "356789012344821",
-                serialNumber: null,
-                notes: null,
-                previousRepairs: 2
-            },
-            {
-                id: 2,
-                type: "Laptop",
-                brand: "Acer",
-                model: "Aspire 5",
-                imei: null,
-                serialNumber: "NXK72P",
-                notes: null,
-                previousRepairs: 1
-            }
-        ]
-    },
-    {
-        id: 2,
-        name: "Maria Reyes",
-        devices: [
-            {
-                id: 3,
-                type: "Mobile Phone",
-                brand: "Apple",
-                model: "iPhone 13",
-                imei: "352491857249174",
-                serialNumber: null,
-                notes: null,
-                previousRepairs: 0
-            }
-        ]
-    },
-    {
-        id: 3,
-        name: "Ana Santos",
-        devices: []
-    }
-];
 
 
 function getDeviceLabel(device) {
@@ -87,9 +45,12 @@ function NewRepairPage() {
     const navigate = useNavigate();
 
 
-    // DATA
-    const [customers, setCustomers] =
-        useState(initialCustomers);
+    // SHARED CUSTOMER DATA
+    const {
+        customers,
+        addCustomer,
+        addDevice
+    } = useCustomers();
 
 
     // MODALS
@@ -126,6 +87,16 @@ function NewRepairPage() {
     );
 
 
+    const selectedDevicePreviousRepairs =
+        selectedDevice
+            ? mockRepairs.filter(
+                (repair) =>
+                    repair.deviceId ===
+                        selectedDevice.id
+            ).length
+            : 0;
+
+
     function handleCustomerChange(event) {
 
         setSelectedCustomerId(event.target.value);
@@ -137,25 +108,10 @@ function NewRepairPage() {
 
     function handleNewCustomer(newCustomer) {
 
-        const nextCustomerId =
-            Math.max(
-                0,
-                ...customers.map(
-                    (customer) => customer.id
-                )
-            ) + 1;
-
-
-        const registeredCustomer = {
-            ...newCustomer,
-            id: nextCustomerId
-        };
-
-
-        setCustomers((currentCustomers) => [
-            ...currentCustomers,
-            registeredCustomer
-        ]);
+        const registeredCustomer =
+            addCustomer(
+                newCustomer
+            );
 
 
         setSelectedCustomerId(
@@ -163,50 +119,22 @@ function NewRepairPage() {
         );
 
         setSelectedDeviceId("");
-
         setCustomerModalOpen(false);
     }
 
 
     function handleNewDevice(newDevice) {
 
-        const allDeviceIds = customers.flatMap(
-            (customer) =>
-                customer.devices.map(
-                    (device) => device.id
-                )
-        );
+        if (!selectedCustomer) {
+            return;
+        }
 
 
-        const nextDeviceId =
-            Math.max(0, ...allDeviceIds) + 1;
-
-
-        const registeredDevice = {
-            ...newDevice,
-            id: nextDeviceId
-        };
-
-
-        setCustomers((currentCustomers) =>
-            currentCustomers.map((customer) => {
-
-                if (
-                    customer.id !==
-                    Number(selectedCustomerId)
-                ) {
-                    return customer;
-                }
-
-                return {
-                    ...customer,
-                    devices: [
-                        ...customer.devices,
-                        registeredDevice
-                    ]
-                };
-            })
-        );
+        const registeredDevice =
+            addDevice(
+                selectedCustomer.id,
+                newDevice
+            );
 
 
         setSelectedDeviceId(
@@ -448,8 +376,7 @@ function NewRepairPage() {
                                     <span>Previous Repairs</span>
                                     <strong>
                                         {
-                                            selectedDevice
-                                                .previousRepairs
+                                            selectedDevicePreviousRepairs
                                         }
                                     </strong>
                                 </div>
@@ -626,13 +553,22 @@ function NewRepairPage() {
                                     Assign later
                                 </option>
 
-                                <option value="1">
-                                    Miguel Santos
-                                </option>
+                                {mockTechnicians
+                                    .filter(
+                                        (technician) =>
+                                            technician.status ===
+                                                "ACTIVE"
+                                    )
+                                    .map((technician) => (
 
-                                <option value="2">
-                                    Carlo Mendoza
-                                </option>
+                                        <option
+                                            key={technician.id}
+                                            value={technician.id}
+                                        >
+                                            {technician.name}
+                                        </option>
+
+                                    ))}
                             </select>
 
                         </div>

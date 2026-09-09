@@ -1364,3 +1364,60 @@
     }
 
 }
+/* =====================================================
+   REPAIR LIST AUDIT POLISH
+===================================================== */
+
+.repair-result-count {
+    margin: -4px 0 12px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.finding-meta {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+}
+
+/* =====================================================
+   TECHNICIAN ASSIGNMENT
+===================================================== */
+
+.workspace-inline-action {
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.workspace-inline-action:hover {
+    text-decoration: underline;
+}
+
+.technician-assignment-panel {
+    margin-bottom: 20px;
+}
+
+.technician-assignment-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    align-items: end;
+    gap: 16px;
+}
+
+.technician-assignment-form .finding-form-actions {
+    margin: 0;
+}
+
+@media (max-width: 650px) {
+    .technician-assignment-form {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+}

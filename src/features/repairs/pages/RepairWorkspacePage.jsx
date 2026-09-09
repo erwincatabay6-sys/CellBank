@@ -36,6 +36,9 @@ import RepairAiTroubleshooting
 import { mockRepairs }
     from "../data/mockRepairs.js";
 
+import { mockTechnicians }
+    from "../../technicians/data/mockTechnicians.js";
+
 
 // =====================================================
 // WORKSPACE TABS
@@ -77,7 +80,8 @@ const workspaceTabs = [
 
 
 function RepairWorkspacePage({
-    currentRoles
+    currentRoles,
+    currentUserName
 }) {
 
     const { repairId } =
@@ -109,6 +113,13 @@ function RepairWorkspacePage({
         hasAccess(
             currentRoles,
             "aiTroubleshooting"
+        );
+
+
+    const canAssignTechnician =
+        hasAccess(
+            currentRoles,
+            "assignTechnician"
         );
 
 
@@ -158,6 +169,30 @@ function RepairWorkspacePage({
     );
 
 
+    const [
+        assignedTechnicianId,
+        setAssignedTechnicianId
+    ] = useState(
+        repair?.technicianId ?? null
+    );
+
+
+    const [
+        technicianAssignmentOpen,
+        setTechnicianAssignmentOpen
+    ] = useState(false);
+
+
+    const [
+        technicianSelection,
+        setTechnicianSelection
+    ] = useState(
+        repair?.technicianId != null
+            ? String(repair.technicianId)
+            : ""
+    );
+
+
     // -----------------------------
     // AI ASSISTANCE STATE
     // -----------------------------
@@ -172,6 +207,41 @@ function RepairWorkspacePage({
         aiStatusSuggestion,
         setAiStatusSuggestion
     ] = useState("");
+
+
+    // -----------------------------
+    // TECHNICIAN ASSIGNMENT
+    // -----------------------------
+
+    const activeTechnicians =
+        mockTechnicians.filter(
+            (technician) =>
+                technician.status ===
+                    "ACTIVE"
+        );
+
+
+    const assignedTechnician =
+        activeTechnicians.find(
+            (technician) =>
+                technician.id ===
+                    assignedTechnicianId
+        ) ?? null;
+
+
+    const assignedTechnicianName =
+        assignedTechnician?.name ??
+        "Unassigned";
+
+
+    const repairClosed =
+        currentStatus === "COMPLETED" ||
+        currentStatus === "CANCELLED";
+
+
+    const canManageTechnician =
+        canAssignTechnician &&
+        !repairClosed;
 
 
     // -----------------------------
@@ -215,6 +285,19 @@ function RepairWorkspacePage({
         setAgreedPrice(
             repair.agreedPrice ?? null
         );
+
+
+        setAssignedTechnicianId(
+            repair.technicianId ?? null
+        );
+
+        setTechnicianSelection(
+            repair.technicianId != null
+                ? String(repair.technicianId)
+                : ""
+        );
+
+        setTechnicianAssignmentOpen(false);
 
 
         setAiFindingDraft("");
@@ -269,6 +352,67 @@ function RepairWorkspacePage({
         canUseFindings,
         canUseAi
     ]);
+
+
+    // -----------------------------
+    // TECHNICIAN ASSIGNMENT HANDLERS
+    // -----------------------------
+
+    function handleTechnicianAssignmentToggle() {
+
+        if (!canManageTechnician) {
+            return;
+        }
+
+
+        setTechnicianSelection(
+            assignedTechnicianId != null
+                ? String(assignedTechnicianId)
+                : ""
+        );
+
+        setTechnicianAssignmentOpen(
+            !technicianAssignmentOpen
+        );
+    }
+
+
+    function handleTechnicianAssignmentSave(event) {
+
+        event.preventDefault();
+
+
+        if (!canManageTechnician) {
+            return;
+        }
+
+
+        const nextTechnicianId =
+            technicianSelection
+                ? Number(technicianSelection)
+                : null;
+
+
+        const technicianExists =
+            nextTechnicianId == null ||
+            activeTechnicians.some(
+                (technician) =>
+                    technician.id ===
+                        nextTechnicianId
+            );
+
+
+        if (!technicianExists) {
+            return;
+        }
+
+
+        setAssignedTechnicianId(
+            nextTechnicianId
+        );
+
+        setTechnicianAssignmentOpen(false);
+    }
 
 
     // -----------------------------
@@ -485,8 +629,25 @@ function RepairWorkspacePage({
                     </span>
 
                     <strong>
-                        {repair.technician}
+                        {assignedTechnicianName}
                     </strong>
+
+                    {canManageTechnician && (
+
+                        <button
+                            className="workspace-inline-action"
+                            type="button"
+                            onClick={
+                                handleTechnicianAssignmentToggle
+                            }
+                        >
+                            {assignedTechnicianId != null
+                                ? "Change Technician"
+                                : "Assign Technician"
+                            }
+                        </button>
+
+                    )}
 
                 </div>
 
@@ -507,6 +668,107 @@ function RepairWorkspacePage({
                 </div>
 
             </section>
+
+
+            {/* =========================
+                TECHNICIAN ASSIGNMENT
+                ADMIN + FRONT DESK
+            ========================== */}
+            {technicianAssignmentOpen &&
+                canManageTechnician && (
+
+                <section className="page-content technician-assignment-panel">
+
+                    <div className="workspace-section-header">
+
+                        <div>
+                            <h3>
+                                {assignedTechnicianId != null
+                                    ? "Reassign Technician"
+                                    : "Assign Technician"
+                                }
+                            </h3>
+
+                            <p className="workspace-section-description">
+                                Assign this repair to an active technician.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <form
+                        className="technician-assignment-form"
+                        onSubmit={
+                            handleTechnicianAssignmentSave
+                        }
+                    >
+
+                        <div className="repair-form-group">
+
+                            <label htmlFor="workspace-technician">
+                                Assigned Technician
+                            </label>
+
+                            <select
+                                id="workspace-technician"
+                                value={technicianSelection}
+                                onChange={(event) =>
+                                    setTechnicianSelection(
+                                        event.target.value
+                                    )
+                                }
+                            >
+                                <option value="">
+                                    Unassigned
+                                </option>
+
+                                {activeTechnicians.map(
+                                    (technician) => (
+
+                                        <option
+                                            key={technician.id}
+                                            value={technician.id}
+                                        >
+                                            {technician.name}
+                                        </option>
+
+                                    )
+                                )}
+
+                            </select>
+
+                        </div>
+
+
+                        <div className="finding-form-actions">
+
+                            <button
+                                className="cancel-repair-button"
+                                type="button"
+                                onClick={() =>
+                                    setTechnicianAssignmentOpen(
+                                        false
+                                    )
+                                }
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="create-repair-button"
+                                type="submit"
+                            >
+                                Save Assignment
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </section>
+
+            )}
 
 
             {/* =========================
@@ -577,6 +839,12 @@ function RepairWorkspacePage({
                 >
 
                     <RepairFindings
+                        repairId={
+                            repair.id
+                        }
+                        currentUserName={
+                            currentUserName
+                        }
                         aiDraft={
                             aiFindingDraft
                         }
@@ -601,8 +869,14 @@ function RepairWorkspacePage({
             >
 
                 <RepairStatusHistory
+                    repairId={
+                        repair.id
+                    }
                     currentRoles={
                         currentRoles
+                    }
+                    currentUserName={
+                        currentUserName
                     }
                     currentStatus={
                         currentStatus
@@ -635,6 +909,9 @@ function RepairWorkspacePage({
                     currentRoles={
                         currentRoles
                     }
+                    repairId={
+                        repair.id
+                    }
                     estimatedCost={
                         estimatedCost
                     }
@@ -666,6 +943,9 @@ function RepairWorkspacePage({
                     currentRoles={
                         currentRoles
                     }
+                    currentUserName={
+                        currentUserName
+                    }
                     repairId={
                         repair.id
                     }
@@ -690,9 +970,10 @@ function RepairWorkspacePage({
                 >
 
                     <RepairAiTroubleshooting
-                        repair={
-                            repair
-                        }
+                        repair={{
+                            ...repair,
+                            status: currentStatus
+                        }}
                         onUseAsFinding={
                             handleUseAsFinding
                         }

@@ -18,6 +18,7 @@ export const ROLE_ACCESS = {
 
         // Repair intake
         createRepair: true,
+        assignTechnician: true,
 
         // Technical repair work
         technicalFindings: true,
@@ -52,6 +53,7 @@ export const ROLE_ACCESS = {
 
         // Repair intake
         createRepair: false,
+        assignTechnician: false,
 
         // Technical repair work
         technicalFindings: true,
@@ -86,6 +88,7 @@ export const ROLE_ACCESS = {
 
         // Repair intake
         createRepair: true,
+        assignTechnician: true,
 
         // Technical repair work
         technicalFindings: false,
@@ -146,6 +149,70 @@ export const REPAIR_STATUS_ACCESS = {
         "CANCELLED"
     ]
 };
+
+
+// =====================================================
+// REPAIR STATUS TRANSITIONS
+// =====================================================
+// Frontend business-rule mirror. Spring Boot will later
+// enforce the same transition rules on the backend.
+
+export const REPAIR_STATUS_TRANSITIONS = {
+    RECEIVED: [
+        "AWAITING_APPROVAL",
+        "IN_PROGRESS",
+        "CANCELLED"
+    ],
+
+    AWAITING_APPROVAL: [
+        "IN_PROGRESS",
+        "CANCELLED"
+    ],
+
+    IN_PROGRESS: [
+        "AWAITING_APPROVAL",
+        "AWAITING_PARTS",
+        "READY_FOR_RELEASE",
+        "CANCELLED"
+    ],
+
+    AWAITING_PARTS: [
+        "IN_PROGRESS",
+        "READY_FOR_RELEASE",
+        "CANCELLED"
+    ],
+
+    READY_FOR_RELEASE: [
+        "IN_PROGRESS",
+        "COMPLETED"
+    ],
+
+    COMPLETED: [],
+    CANCELLED: []
+};
+
+
+export function canTransitionRepairStatus(
+    currentStatus,
+    nextStatus
+) {
+
+    if (
+        !currentStatus ||
+        !nextStatus ||
+        currentStatus === nextStatus
+    ) {
+        return false;
+    }
+
+
+    return (
+        REPAIR_STATUS_TRANSITIONS[
+            currentStatus
+        ]?.includes(nextStatus) ??
+        false
+    );
+}
 
 
 // =====================================================

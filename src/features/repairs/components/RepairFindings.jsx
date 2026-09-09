@@ -1,36 +1,28 @@
-import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import {
+    useEffect,
+    useState
+} from "react";
 
+import { Plus }
+    from "lucide-react";
 
-const initialFindings = [
-    {
-        id: 1,
-        finding:
-            "Charging port shows signs of wear and intermittent contact.",
-        diagnosis:
-            "Possible damaged charging port.",
-        actionTaken:
-            "Charging port inspected and connection tested."
-    },
-    {
-        id: 2,
-        finding:
-            "Battery health is within acceptable range.",
-        diagnosis:
-            "Battery is unlikely to be the primary cause.",
-        actionTaken:
-            "Battery health test completed."
-    }
-];
+import { getMockFindings }
+    from "../data/mockRepairWorkspaceData.js";
 
 
 function RepairFindings({
+    repairId,
+    currentUserName,
     aiDraft = "",
     onDraftUsed
 }) {
 
     const [findings, setFindings] =
-        useState(initialFindings);
+        useState(() =>
+            getMockFindings(
+                repairId
+            )
+        );
 
     const [findingText, setFindingText] =
         useState(aiDraft);
@@ -52,34 +44,71 @@ function RepairFindings({
         setActionTaken("");
     }
 
-useEffect(() => {
 
-    if (!aiDraft) {
-        return;
-    }
+    // -----------------------------
+    // REPAIR CHANGE SYNC
+    // -----------------------------
 
-    setFindingText(aiDraft);
+    useEffect(() => {
 
-    setFormOpen(true);
+        setFindings(
+            getMockFindings(
+                repairId
+            )
+        );
 
-}, [aiDraft]);
+        resetForm();
+        setFormOpen(false);
+
+    }, [repairId]);
+
+
+    // -----------------------------
+    // AI DRAFT SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (!aiDraft) {
+            return;
+        }
+
+        setFindingText(aiDraft);
+        setFormOpen(true);
+
+    }, [aiDraft]);
+
 
     function handleSubmit(event) {
 
         event.preventDefault();
 
 
+        const trimmedFinding =
+            findingText.trim();
+
+
+        if (!trimmedFinding) {
+            return;
+        }
+
+
         const newFinding = {
-            id: findings.length + 1,
+            id:
+                Date.now(),
 
             finding:
-                findingText.trim(),
+                trimmedFinding,
 
             diagnosis:
                 diagnosis.trim() || null,
 
             actionTaken:
-                actionTaken.trim() || null
+                actionTaken.trim() || null,
+
+            recordedBy:
+                currentUserName ||
+                "Unknown User"
         };
 
 
@@ -90,7 +119,6 @@ useEffect(() => {
 
 
         resetForm();
-
         setFormOpen(false);
 
 
@@ -103,7 +131,6 @@ useEffect(() => {
     function handleCancel() {
 
         resetForm();
-
         setFormOpen(false);
 
 
@@ -118,13 +145,11 @@ useEffect(() => {
         if (formOpen) {
 
             handleCancel();
-
             return;
         }
 
 
         resetForm();
-
         setFormOpen(true);
     }
 
@@ -279,7 +304,6 @@ useEffect(() => {
                             className="finding-item"
                         >
 
-                            {/* FINDING */}
                             <div className="finding-field">
 
                                 <span>
@@ -293,7 +317,6 @@ useEffect(() => {
                             </div>
 
 
-                            {/* DIAGNOSIS */}
                             {finding.diagnosis && (
 
                                 <div className="finding-field">
@@ -311,7 +334,6 @@ useEffect(() => {
                             )}
 
 
-                            {/* ACTION TAKEN */}
                             {finding.actionTaken && (
 
                                 <div className="finding-field">
@@ -324,6 +346,15 @@ useEffect(() => {
                                         {finding.actionTaken}
                                     </p>
 
+                                </div>
+
+                            )}
+
+
+                            {finding.recordedBy && (
+
+                                <div className="finding-meta">
+                                    Recorded by {finding.recordedBy}
                                 </div>
 
                             )}

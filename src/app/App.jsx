@@ -297,6 +297,9 @@ function App() {
                             currentRoles={
                                 currentRoles
                             }
+                            currentUserName={
+                                currentUserName
+                            }
                         />
                     )
                 }

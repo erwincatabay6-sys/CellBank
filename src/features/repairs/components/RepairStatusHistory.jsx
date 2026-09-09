@@ -6,8 +6,13 @@ import {
 import StatusBadge
     from "../../../components/StatusBadge.jsx";
 
-import { canChangeRepairStatus }
-    from "../../../config/accessControl.js";
+import {
+    canChangeRepairStatus,
+    canTransitionRepairStatus
+} from "../../../config/accessControl.js";
+
+import { getMockStatusHistory }
+    from "../data/mockRepairWorkspaceData.js";
 
 
 // =====================================================
@@ -52,41 +57,10 @@ const repairStatuses = [
 ];
 
 
-const initialHistory = [
-    {
-        id: 1,
-
-        status: "RECEIVED",
-
-        changedBy:
-            "Miguel Santos",
-
-        changedAt:
-            "September 1, 2026 - 9:15 AM",
-
-        note:
-            "Device received for inspection."
-    },
-
-    {
-        id: 2,
-
-        status: "AWAITING_APPROVAL",
-
-        changedBy:
-            "Miguel Santos",
-
-        changedAt:
-            "September 1, 2026 - 10:30 AM",
-
-        note:
-            "Inspection completed. Awaiting customer approval."
-    }
-];
-
-
 function RepairStatusHistory({
+    repairId,
     currentRoles,
+    currentUserName,
     currentStatus,
     onStatusChange,
     suggestedStatus = "",
@@ -98,7 +72,11 @@ function RepairStatusHistory({
     // -----------------------------
 
     const [history, setHistory] =
-        useState(initialHistory);
+        useState(() =>
+            getMockStatusHistory(
+                repairId
+            )
+        );
 
 
     // -----------------------------
@@ -122,8 +100,10 @@ function RepairStatusHistory({
     const allowedStatuses =
         repairStatuses.filter(
             (repairStatus) =>
-                repairStatus.value !==
-                    currentStatus &&
+                canTransitionRepairStatus(
+                    currentStatus,
+                    repairStatus.value
+                ) &&
 
                 canChangeRepairStatus(
                     currentRoles,
@@ -134,6 +114,43 @@ function RepairStatusHistory({
 
     const canChangeStatus =
         allowedStatuses.length > 0;
+
+
+    function isStatusAllowed(
+        nextStatus
+    ) {
+
+        return (
+            canTransitionRepairStatus(
+                currentStatus,
+                nextStatus
+            ) &&
+
+            canChangeRepairStatus(
+                currentRoles,
+                nextStatus
+            )
+        );
+    }
+
+
+    // -----------------------------
+    // REPAIR CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        setHistory(
+            getMockStatusHistory(
+                repairId
+            )
+        );
+
+        setStatus("");
+        setNote("");
+        setFormOpen(false);
+
+    }, [repairId]);
 
 
     // -----------------------------
@@ -147,17 +164,11 @@ function RepairStatusHistory({
         }
 
 
-        const suggestionAllowed =
-            suggestedStatus !==
-                currentStatus &&
-
-            canChangeRepairStatus(
-                currentRoles,
+        if (
+            isStatusAllowed(
                 suggestedStatus
-            );
-
-
-        if (suggestionAllowed) {
+            )
+        ) {
 
             setStatus(
                 suggestedStatus
@@ -168,7 +179,6 @@ function RepairStatusHistory({
 
 
         if (onSuggestionHandled) {
-
             onSuggestionHandled();
         }
 
@@ -181,7 +191,7 @@ function RepairStatusHistory({
 
 
     // -----------------------------
-    // PERMISSION CHANGE SYNC
+    // PERMISSION / TRANSITION SYNC
     // -----------------------------
 
     useEffect(() => {
@@ -189,9 +199,7 @@ function RepairStatusHistory({
         if (!canChangeStatus) {
 
             setStatus("");
-
             setNote("");
-
             setFormOpen(false);
 
             return;
@@ -200,12 +208,8 @@ function RepairStatusHistory({
 
         if (
             status &&
-            !canChangeRepairStatus(
-                currentRoles,
-                status
-            )
+            !isStatusAllowed(status)
         ) {
-
             setStatus("");
         }
 
@@ -224,7 +228,6 @@ function RepairStatusHistory({
     function resetForm() {
 
         setStatus("");
-
         setNote("");
     }
 
@@ -237,7 +240,6 @@ function RepairStatusHistory({
 
 
         if (formOpen) {
-
             resetForm();
         }
 
@@ -251,7 +253,6 @@ function RepairStatusHistory({
     function handleCancel() {
 
         resetForm();
-
         setFormOpen(false);
     }
 
@@ -265,22 +266,10 @@ function RepairStatusHistory({
         event.preventDefault();
 
 
-        if (!canChangeStatus) {
-            return;
-        }
-
-
-        if (!status) {
-            return;
-        }
-
-
         if (
-            status === currentStatus ||
-            !canChangeRepairStatus(
-                currentRoles,
-                status
-            )
+            !canChangeStatus ||
+            !status ||
+            !isStatusAllowed(status)
         ) {
             return;
         }
@@ -293,7 +282,8 @@ function RepairStatusHistory({
             status,
 
             changedBy:
-                "Miguel Santos",
+                currentUserName ||
+                "Unknown User",
 
             changedAt:
                 new Date()
@@ -311,15 +301,11 @@ function RepairStatusHistory({
 
 
         if (onStatusChange) {
-
-            onStatusChange(
-                status
-            );
+            onStatusChange(status);
         }
 
 
         resetForm();
-
         setFormOpen(false);
     }
 
@@ -351,9 +337,7 @@ function RepairStatusHistory({
                     <button
                         className="secondary-repair-button"
                         type="button"
-                        onClick={
-                            handleFormToggle
-                        }
+                        onClick={handleFormToggle}
                     >
                         Change Status
                     </button>
@@ -371,12 +355,9 @@ function RepairStatusHistory({
 
                 <form
                     className="status-change-form"
-                    onSubmit={
-                        handleSubmit
-                    }
+                    onSubmit={handleSubmit}
                 >
 
-                    {/* CURRENT STATUS */}
                     <div className="repair-form-group">
 
                         <label>
@@ -386,9 +367,7 @@ function RepairStatusHistory({
                         <div>
 
                             <StatusBadge
-                                status={
-                                    currentStatus
-                                }
+                                status={currentStatus}
                             />
 
                         </div>
@@ -396,7 +375,6 @@ function RepairStatusHistory({
                     </div>
 
 
-                    {/* NEW STATUS */}
                     <div className="repair-form-group">
 
                         <label htmlFor="repair-status">
@@ -423,16 +401,10 @@ function RepairStatusHistory({
                                 (repairStatus) => (
 
                                     <option
-                                        key={
-                                            repairStatus.value
-                                        }
-                                        value={
-                                            repairStatus.value
-                                        }
+                                        key={repairStatus.value}
+                                        value={repairStatus.value}
                                     >
-                                        {
-                                            repairStatus.label
-                                        }
+                                        {repairStatus.label}
                                     </option>
 
                                 )
@@ -443,7 +415,6 @@ function RepairStatusHistory({
                     </div>
 
 
-                    {/* STATUS NOTE */}
                     <div className="repair-form-group">
 
                         <label htmlFor="status-note">
@@ -459,23 +430,18 @@ function RepairStatusHistory({
                                 )
                             }
                             rows="3"
-                            placeholder={
-                                "Optional reason or status note"
-                            }
+                            placeholder="Optional reason or status note"
                         />
 
                     </div>
 
 
-                    {/* FORM ACTIONS */}
                     <div className="finding-form-actions">
 
                         <button
                             className="cancel-repair-button"
                             type="button"
-                            onClick={
-                                handleCancel
-                            }
+                            onClick={handleCancel}
                         >
                             Cancel
                         </button>
@@ -514,9 +480,7 @@ function RepairStatusHistory({
                                 <div className="status-history-top">
 
                                     <StatusBadge
-                                        status={
-                                            entry.status
-                                        }
+                                        status={entry.status}
                                     />
 
                                     <span>

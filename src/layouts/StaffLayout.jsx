@@ -31,7 +31,14 @@ function StaffLayout({
     return (
         <div className="staff-layout">
 
-            <Header />
+            <Header
+                currentRoles={
+                    currentRoles
+                }
+                currentUserName={
+                    currentUserName
+                }
+            />
 
 
             <div className="staff-body">

@@ -9,30 +9,13 @@ import { Plus }
 import { hasAccess }
     from "../../../config/accessControl.js";
 
-
-// =====================================================
-// TEMPORARY PARTS DATA
-// =====================================================
-
-const initialParts = [
-    {
-        id: 1,
-        name: "Charging Port",
-        quantity: 1,
-        unitCost: 450
-    },
-
-    {
-        id: 2,
-        name: "USB-C Cable",
-        quantity: 1,
-        unitCost: 180
-    }
-];
+import { getMockParts }
+    from "../data/mockRepairWorkspaceData.js";
 
 
 function RepairPartsCosts({
     currentRoles,
+    repairId,
     estimatedCost,
     onEstimatedCostChange,
     agreedPrice,
@@ -69,7 +52,11 @@ function RepairPartsCosts({
     // -----------------------------
 
     const [parts, setParts] =
-        useState(initialParts);
+        useState(() =>
+            getMockParts(
+                repairId
+            )
+        );
 
 
     const [
@@ -128,6 +115,29 @@ function RepairPartsCosts({
             ? String(agreedPrice)
             : ""
     );
+
+
+    // -----------------------------
+    // REPAIR CHANGE SYNC
+    // -----------------------------
+
+    useEffect(() => {
+
+        setParts(
+            getMockParts(
+                repairId
+            )
+        );
+
+        setPartFormOpen(false);
+        setPartName("");
+        setQuantity(1);
+        setUnitCost("");
+
+        setEstimateFormOpen(false);
+        setPriceFormOpen(false);
+
+    }, [repairId]);
 
 
     // -----------------------------
