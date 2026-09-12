@@ -14,6 +14,8 @@ export const mockRepairs = [
 
         reference: "CB-2026-00124",
 
+        createdAt: "2026-09-01",
+
         customer: "Juan Cruz",
 
         device: "Samsung Galaxy A54",
@@ -92,6 +94,8 @@ export const mockRepairs = [
 
         reference: "CB-2026-00125",
 
+        createdAt: "2026-09-02",
+
         customer: "Juan Cruz",
 
         device: "Acer Aspire 5",
@@ -146,6 +150,8 @@ export const mockRepairs = [
 
         reference: "CB-2026-00126",
 
+        createdAt: "2026-09-03",
+
         customer: "Maria Reyes",
 
         device: "Apple iPhone 13",
@@ -187,6 +193,8 @@ export const mockRepairs = [
         technicianId: 1,
 
         reference: "CB-2026-00108",
+
+        createdAt: "2026-08-18",
 
         customer: "Juan Cruz",
 
@@ -230,6 +238,8 @@ export const mockRepairs = [
         technicianId: 2,
 
         reference: "CB-2026-00097",
+
+        createdAt: "2026-07-28",
 
         customer: "Juan Cruz",
 

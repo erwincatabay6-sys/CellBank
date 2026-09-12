@@ -12,6 +12,8 @@ export const mockPayments = [
 
         amount: 1000,
 
+        recordedDate: "2026-09-02",
+
         recordedBy:
             "Miguel Santos",
 
@@ -35,6 +37,8 @@ export const mockPayments = [
 
         amount: 3000,
 
+        recordedDate: "2026-09-03",
+
         recordedBy:
             "Miguel Santos",
 
@@ -57,6 +61,8 @@ export const mockPayments = [
         repairId: 4,
 
         amount: 1500,
+
+        recordedDate: "2026-08-20",
 
         recordedBy:
             "Miguel Santos",

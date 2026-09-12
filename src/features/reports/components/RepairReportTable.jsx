@@ -16,6 +16,7 @@ function RepairReportTable({
 
                     <tr>
                         <th>Reference</th>
+                        <th>Date Received</th>
                         <th>Customer</th>
                         <th>Device</th>
                         <th>Technician</th>
@@ -43,6 +44,19 @@ function RepairReportTable({
                                 <strong>
                                     {repair.reference}
                                 </strong>
+                            </td>
+
+                            <td>
+                                {new Date(
+                                    `${repair.createdAt}T00:00:00`
+                                ).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    }
+                                )}
                             </td>
 
                             <td>
