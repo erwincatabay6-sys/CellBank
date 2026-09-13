@@ -9,8 +9,22 @@ import {
     Bot,
     User,
     ClipboardPlus,
-    ArrowRightCircle
+    ArrowRightCircle,
+    ImagePlus,
+    X,
+    PackageSearch
 } from "lucide-react";
+
+
+const MAX_ATTACHMENTS = 3;
+const MAX_IMAGE_SIZE_BYTES =
+    10 * 1024 * 1024;
+
+const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+];
 
 
 function getInitialMessages() {
@@ -22,9 +36,12 @@ function getInitialMessages() {
             text:
                 "I can help troubleshoot this repair using the " +
                 "device information, reported problem, findings, " +
-                "and relevant repair history.",
+                "relevant repair history, and optional images.",
             canUseAsFinding: false,
-            suggestedStatus: null
+            suggestedDiagnosis: null,
+            suggestedStatus: null,
+            recommendedParts: [],
+            attachments: []
         }
     ];
 }
@@ -46,13 +63,122 @@ function getSuggestedStatusLabel(status) {
 }
 
 
-function getMockAiResponse(repair) {
+function getMockRecommendation(repair) {
+
+    const searchableText =
+        `${repair.reportedProblem ?? ""} ` +
+        `${repair.serviceType ?? ""} ` +
+        `${repair.device ?? ""}`;
+
+    const normalized =
+        searchableText.toLowerCase();
+
+
+    if (
+        normalized.includes("charg") ||
+        normalized.includes("usb")
+    ) {
+
+        return {
+            diagnosis:
+                "Possible charging-port, connector, or charging-path fault.",
+            parts: [
+                "Charging Port Assembly"
+            ]
+        };
+    }
+
+
+    if (
+        normalized.includes("battery") ||
+        normalized.includes("power")
+    ) {
+
+        return {
+            diagnosis:
+                "Possible battery, power-delivery, or power-management fault.",
+            parts: [
+                "Replacement Battery"
+            ]
+        };
+    }
+
+
+    if (
+        normalized.includes("screen") ||
+        normalized.includes("display") ||
+        normalized.includes("lcd")
+    ) {
+
+        return {
+            diagnosis:
+                "Possible display assembly, connector, or display-path fault.",
+            parts: [
+                "Display Assembly"
+            ]
+        };
+    }
+
+
+    if (
+        normalized.includes("keyboard") ||
+        normalized.includes("key")
+    ) {
+
+        return {
+            diagnosis:
+                "Possible keyboard assembly or connector fault.",
+            parts: [
+                "Keyboard Assembly"
+            ]
+        };
+    }
+
+
+    if (
+        normalized.includes("overheat") ||
+        normalized.includes("cooling") ||
+        normalized.includes("fan")
+    ) {
+
+        return {
+            diagnosis:
+                "Possible cooling-system, fan, or thermal-transfer issue.",
+            parts: [
+                "Cooling Fan Assembly"
+            ]
+        };
+    }
+
+
+    return {
+        diagnosis:
+            "Possible hardware or subsystem fault requiring targeted confirmation.",
+        parts: []
+    };
+}
+
+
+function getMockAiResponse(
+    repair,
+    hasImageAttachments
+) {
 
     const device =
         repair.device;
 
     const problem =
         repair.reportedProblem;
+
+    const recommendation =
+        getMockRecommendation(
+            repair
+        );
+
+    const visualContextText =
+        hasImageAttachments
+            ? " I also considered the attached image context; confirm any visual observation with physical testing before acting on it."
+            : "";
 
 
     if (
@@ -66,9 +192,14 @@ function getMockAiResponse(repair) {
                 `Before resuming the repair, confirm that the required ` +
                 `replacement component matches the reported problem: ` +
                 `"${problem}". After installation, repeat functional ` +
-                `testing before moving toward release.`,
+                `testing before moving toward release.` +
+                visualContextText,
+            suggestedDiagnosis:
+                recommendation.diagnosis,
             suggestedStatus:
-                "IN_PROGRESS"
+                "IN_PROGRESS",
+            recommendedParts:
+                recommendation.parts
         };
     }
 
@@ -84,9 +215,14 @@ function getMockAiResponse(repair) {
                 `problem: "${problem}". Verify the suspected component ` +
                 `or subsystem with targeted testing. If a required ` +
                 `replacement component is unavailable, document the ` +
-                `finding and place the repair in Awaiting Parts.`,
+                `finding and place the repair in Awaiting Parts.` +
+                visualContextText,
+            suggestedDiagnosis:
+                recommendation.diagnosis,
             suggestedStatus:
-                "AWAITING_PARTS"
+                "AWAITING_PARTS",
+            recommendedParts:
+                recommendation.parts
         };
     }
 
@@ -101,9 +237,14 @@ function getMockAiResponse(repair) {
                 `Begin with a structured inspection of ${device} based on ` +
                 `the reported problem: "${problem}". Record objective ` +
                 `findings first, then prepare an estimate or customer ` +
-                `approval request when the likely repair is identified.`,
+                `approval request when the likely repair is identified.` +
+                visualContextText,
+            suggestedDiagnosis:
+                recommendation.diagnosis,
             suggestedStatus:
-                "AWAITING_APPROVAL"
+                "AWAITING_APPROVAL",
+            recommendedParts:
+                recommendation.parts
         };
     }
 
@@ -118,9 +259,13 @@ function getMockAiResponse(repair) {
                 `${device} is marked Ready for Release. Perform a final ` +
                 `functional check against the original reported problem: ` +
                 `"${problem}" and confirm that the device is ready for ` +
-                `customer handoff.`,
+                `customer handoff.` +
+                visualContextText,
+            suggestedDiagnosis:
+                null,
             suggestedStatus:
-                null
+                null,
+            recommendedParts: []
         };
     }
 
@@ -130,9 +275,14 @@ function getMockAiResponse(repair) {
             `Review ${device} against the reported problem: "${problem}". ` +
             `Use the repair history and saved findings as supporting ` +
             `context, and confirm any official action through the normal ` +
-            `Cellbank repair workflow.`,
+            `Cellbank repair workflow.` +
+            visualContextText,
+        suggestedDiagnosis:
+            recommendation.diagnosis,
         suggestedStatus:
-            null
+            null,
+        recommendedParts:
+            recommendation.parts
     };
 }
 
@@ -140,11 +290,18 @@ function getMockAiResponse(repair) {
 function RepairAiTroubleshooting({
     repair,
     onUseAsFinding,
-    onSuggestStatus
+    onSuggestStatus,
+    onSuggestPart
 }) {
 
     const responseTimeoutRef =
         useRef(null);
+
+    const fileInputRef =
+        useRef(null);
+
+    const objectUrlsRef =
+        useRef(new Set());
 
 
     // -----------------------------
@@ -161,6 +318,12 @@ function RepairAiTroubleshooting({
 
     const [isResponding, setIsResponding] =
         useState(false);
+
+    const [attachments, setAttachments] =
+        useState([]);
+
+    const [attachmentError, setAttachmentError] =
+        useState("");
 
 
     // -----------------------------
@@ -180,11 +343,21 @@ function RepairAiTroubleshooting({
         }
 
 
+        objectUrlsRef.current.forEach(
+            (url) =>
+                URL.revokeObjectURL(url)
+        );
+
+        objectUrlsRef.current.clear();
+
+
         setMessages(
             getInitialMessages()
         );
 
         setMessageText("");
+        setAttachments([]);
+        setAttachmentError("");
         setIsResponding(false);
 
 
@@ -195,6 +368,13 @@ function RepairAiTroubleshooting({
                     responseTimeoutRef.current
                 );
             }
+
+            objectUrlsRef.current.forEach(
+                (url) =>
+                    URL.revokeObjectURL(url)
+            );
+
+            objectUrlsRef.current.clear();
         };
 
     }, [repair.id]);
@@ -234,6 +414,153 @@ function RepairAiTroubleshooting({
 
 
     // -----------------------------
+    // IMAGE ATTACHMENTS
+    // -----------------------------
+
+    function handleImageChange(event) {
+
+        const files =
+            Array.from(
+                event.target.files ?? []
+            );
+
+        event.target.value = "";
+
+
+        if (files.length === 0) {
+            return;
+        }
+
+
+        const availableSlots =
+            MAX_ATTACHMENTS -
+            attachments.length;
+
+
+        if (availableSlots <= 0) {
+
+            setAttachmentError(
+                `You can attach up to ${MAX_ATTACHMENTS} images per message.`
+            );
+
+            return;
+        }
+
+
+        const validFiles = [];
+        let invalidFileFound = false;
+
+
+        files.forEach((file) => {
+
+            const validType =
+                ALLOWED_IMAGE_TYPES.includes(
+                    file.type
+                );
+
+            const validSize =
+                file.size <=
+                    MAX_IMAGE_SIZE_BYTES;
+
+
+            if (
+                validType &&
+                validSize
+            ) {
+                validFiles.push(file);
+            }
+            else {
+                invalidFileFound = true;
+            }
+        });
+
+
+        const selectedFiles =
+            validFiles.slice(
+                0,
+                availableSlots
+            );
+
+
+        const newAttachments =
+            selectedFiles.map((file) => {
+
+                const previewUrl =
+                    URL.createObjectURL(file);
+
+                objectUrlsRef.current.add(
+                    previewUrl
+                );
+
+
+                return {
+                    id:
+                        `${file.name}-${file.lastModified}-${previewUrl}`,
+                    file,
+                    previewUrl
+                };
+            });
+
+
+        if (newAttachments.length > 0) {
+
+            setAttachments((current) => [
+                ...current,
+                ...newAttachments
+            ]);
+        }
+
+
+        if (
+            invalidFileFound ||
+            validFiles.length >
+                selectedFiles.length
+        ) {
+
+            setAttachmentError(
+                "Only JPEG, PNG, or WebP images up to 10 MB are allowed, with a maximum of 3 images per message."
+            );
+        }
+        else {
+            setAttachmentError("");
+        }
+    }
+
+
+    function handleRemoveAttachment(id) {
+
+        setAttachments((current) => {
+
+            const attachment =
+                current.find(
+                    (item) =>
+                        item.id === id
+                );
+
+
+            if (attachment) {
+
+                URL.revokeObjectURL(
+                    attachment.previewUrl
+                );
+
+                objectUrlsRef.current.delete(
+                    attachment.previewUrl
+                );
+            }
+
+
+            return current.filter(
+                (item) =>
+                    item.id !== id
+            );
+        });
+
+        setAttachmentError("");
+    }
+
+
+    // -----------------------------
     // MESSAGE SUBMISSION
     // -----------------------------
 
@@ -247,11 +574,27 @@ function RepairAiTroubleshooting({
 
 
         if (
-            !trimmedMessage ||
+            (
+                !trimmedMessage &&
+                attachments.length === 0
+            ) ||
             isResponding
         ) {
             return;
         }
+
+
+        const sentAttachments =
+            attachments.map(
+                (attachment) => ({
+                    id:
+                        attachment.id,
+                    name:
+                        attachment.file.name,
+                    previewUrl:
+                        attachment.previewUrl
+                })
+            );
 
 
         const technicianMessage = {
@@ -260,11 +603,17 @@ function RepairAiTroubleshooting({
             sender:
                 "user",
             text:
-                trimmedMessage,
+                trimmedMessage ||
+                "Please review the attached image(s) for troubleshooting context.",
+            attachments:
+                sentAttachments,
             canUseAsFinding:
                 false,
+            suggestedDiagnosis:
+                null,
             suggestedStatus:
-                null
+                null,
+            recommendedParts: []
         };
 
 
@@ -274,19 +623,28 @@ function RepairAiTroubleshooting({
         ]);
 
 
+        const hasImageAttachments =
+            sentAttachments.length > 0;
+
+
         setMessageText("");
+        setAttachments([]);
+        setAttachmentError("");
         setIsResponding(true);
 
 
         // Temporary frontend AI simulation.
         // Later:
         // React -> Spring Boot -> AI service.
+        // Images will be validated by Spring Boot
+        // before being forwarded to the AI provider.
         responseTimeoutRef.current =
             setTimeout(() => {
 
                 const mockResponse =
                     getMockAiResponse(
-                        repair
+                        repair,
+                        hasImageAttachments
                     );
 
 
@@ -297,10 +655,15 @@ function RepairAiTroubleshooting({
                         "ai",
                     text:
                         mockResponse.text,
+                    attachments: [],
                     canUseAsFinding:
                         true,
+                    suggestedDiagnosis:
+                        mockResponse.suggestedDiagnosis,
                     suggestedStatus:
-                        mockResponse.suggestedStatus
+                        mockResponse.suggestedStatus,
+                    recommendedParts:
+                        mockResponse.recommendedParts ?? []
                 };
 
 
@@ -322,10 +685,14 @@ function RepairAiTroubleshooting({
     // AI ACTION HANDLERS
     // -----------------------------
 
-    function handleUseAsFinding(text) {
+    function handleUseAsFinding(message) {
 
         if (onUseAsFinding) {
-            onUseAsFinding(text);
+
+            onUseAsFinding(
+                message.suggestedDiagnosis ||
+                message.text
+            );
         }
     }
 
@@ -334,6 +701,14 @@ function RepairAiTroubleshooting({
 
         if (onSuggestStatus) {
             onSuggestStatus(status);
+        }
+    }
+
+
+    function handleSuggestPart(partName) {
+
+        if (onSuggestPart) {
+            onSuggestPart(partName);
         }
     }
 
@@ -358,6 +733,22 @@ function RepairAiTroubleshooting({
                     </p>
 
                 </div>
+
+            </div>
+
+
+            {/* =========================
+                ADVISORY NOTICE
+            ========================== */}
+            <div className="ai-advisory-note">
+
+                <Bot size={18} />
+
+                <p>
+                    AI suggestions are advisory. Review diagnoses,
+                    status recommendations, and parts before applying
+                    them through the normal repair workflow.
+                </p>
 
             </div>
 
@@ -522,8 +913,89 @@ function RepairAiTroubleshooting({
                             </p>
 
 
+                            {message.attachments?.length > 0 && (
+
+                                <div className="ai-message-attachments">
+
+                                    {message.attachments.map(
+                                        (attachment) => (
+
+                                            <img
+                                                key={attachment.id}
+                                                src={attachment.previewUrl}
+                                                alt={attachment.name}
+                                            />
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+
+                            {message.suggestedDiagnosis && (
+
+                                <div className="ai-recommendation-block">
+
+                                    <span>
+                                        Possible Diagnosis
+                                    </span>
+
+                                    <strong>
+                                        {message.suggestedDiagnosis}
+                                    </strong>
+
+                                </div>
+
+                            )}
+
+
+                            {message.recommendedParts?.length > 0 && (
+
+                                <div className="ai-recommendation-block">
+
+                                    <span>
+                                        Recommended Part
+                                    </span>
+
+                                    {message.recommendedParts.map(
+                                        (part) => (
+
+                                            <strong key={part}>
+                                                {part}
+                                            </strong>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+
+                            {message.suggestedStatus && (
+
+                                <div className="ai-recommendation-block">
+
+                                    <span>
+                                        Suggested Status
+                                    </span>
+
+                                    <strong>
+                                        {getSuggestedStatusLabel(
+                                            message.suggestedStatus
+                                        )}
+                                    </strong>
+
+                                </div>
+
+                            )}
+
+
                             {(message.canUseAsFinding ||
-                                message.suggestedStatus) && (
+                                message.suggestedStatus ||
+                                message.recommendedParts?.length > 0) && (
 
                                 <div className="ai-message-actions">
 
@@ -534,7 +1006,7 @@ function RepairAiTroubleshooting({
                                             type="button"
                                             onClick={() =>
                                                 handleUseAsFinding(
-                                                    message.text
+                                                    message
                                                 )
                                             }
                                         >
@@ -562,13 +1034,34 @@ function RepairAiTroubleshooting({
                                             <ArrowRightCircle size={16} />
 
                                             <span>
-                                                Suggest{" "}
-                                                {getSuggestedStatusLabel(
-                                                    message.suggestedStatus
-                                                )}
+                                                Review Suggested Status
                                             </span>
                                         </button>
 
+                                    )}
+
+
+                                    {message.recommendedParts?.map(
+                                        (part) => (
+
+                                            <button
+                                                key={part}
+                                                className="ai-part-button"
+                                                type="button"
+                                                onClick={() =>
+                                                    handleSuggestPart(
+                                                        part
+                                                    )
+                                                }
+                                            >
+                                                <PackageSearch size={16} />
+
+                                                <span>
+                                                    Add Recommended Part
+                                                </span>
+                                            </button>
+
+                                        )
                                     )}
 
                                 </div>
@@ -618,33 +1111,123 @@ function RepairAiTroubleshooting({
                 onSubmit={handleSubmit}
             >
 
-                <textarea
-                    value={messageText}
-                    onChange={(event) =>
-                        setMessageText(
-                            event.target.value
-                        )
-                    }
-                    rows="3"
-                    placeholder={
-                        "Describe your observation or ask " +
-                        "a troubleshooting question..."
-                    }
-                    disabled={isResponding}
-                />
+                {attachments.length > 0 && (
+
+                    <div className="ai-attachment-preview-list">
+
+                        {attachments.map(
+                            (attachment) => (
+
+                                <div
+                                    key={attachment.id}
+                                    className="ai-attachment-preview"
+                                >
+
+                                    <img
+                                        src={attachment.previewUrl}
+                                        alt={attachment.file.name}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        aria-label={
+                                            `Remove ${attachment.file.name}`
+                                        }
+                                        onClick={() =>
+                                            handleRemoveAttachment(
+                                                attachment.id
+                                            )
+                                        }
+                                    >
+                                        <X size={14} />
+                                    </button>
+
+                                </div>
+
+                            )
+                        )}
+
+                    </div>
+
+                )}
 
 
-                <button
-                    className="create-repair-button"
-                    type="submit"
-                    disabled={isResponding}
-                >
-                    <Send size={18} />
+                {attachmentError && (
 
-                    <span>
-                        Send
-                    </span>
-                </button>
+                    <p className="ai-attachment-error">
+                        {attachmentError}
+                    </p>
+
+                )}
+
+
+                <div className="ai-message-composer-row">
+
+                    <button
+                        className="ai-attachment-button"
+                        type="button"
+                        disabled={
+                            isResponding ||
+                            attachments.length >=
+                                MAX_ATTACHMENTS
+                        }
+                        onClick={() =>
+                            fileInputRef.current?.click()
+                        }
+                    >
+                        <ImagePlus size={18} />
+
+                        <span>
+                            Attach Image
+                        </span>
+                    </button>
+
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        hidden
+                        onChange={handleImageChange}
+                    />
+
+
+                    <textarea
+                        value={messageText}
+                        onChange={(event) =>
+                            setMessageText(
+                                event.target.value
+                            )
+                        }
+                        rows="3"
+                        placeholder={
+                            "Describe your observation, attach an image, " +
+                            "or ask a troubleshooting question..."
+                        }
+                        disabled={isResponding}
+                    />
+
+
+                    <button
+                        className="create-repair-button"
+                        type="submit"
+                        disabled={
+                            isResponding ||
+                            (
+                                !messageText.trim() &&
+                                attachments.length === 0
+                            )
+                        }
+                    >
+                        <Send size={18} />
+
+                        <span>
+                            Send
+                        </span>
+                    </button>
+
+                </div>
 
             </form>
 

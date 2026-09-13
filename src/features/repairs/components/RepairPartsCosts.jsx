@@ -19,7 +19,9 @@ function RepairPartsCosts({
     estimatedCost,
     onEstimatedCostChange,
     agreedPrice,
-    onAgreedPriceChange
+    onAgreedPriceChange,
+    suggestedPart = "",
+    onSuggestionHandled
 }) {
 
     // -----------------------------
@@ -185,6 +187,40 @@ function RepairPartsCosts({
         canEditAgreedPrice,
         estimatedCost,
         agreedPrice
+    ]);
+
+
+    // -----------------------------
+    // AI PART SUGGESTION
+    // -----------------------------
+
+    useEffect(() => {
+
+        if (!suggestedPart) {
+            return;
+        }
+
+
+        if (canEditPartsCosts) {
+
+            setPartName(
+                suggestedPart
+            );
+
+            setQuantity(1);
+            setUnitCost("");
+            setPartFormOpen(true);
+        }
+
+
+        if (onSuggestionHandled) {
+            onSuggestionHandled();
+        }
+
+    }, [
+        suggestedPart,
+        canEditPartsCosts,
+        onSuggestionHandled
     ]);
 
 

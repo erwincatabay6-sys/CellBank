@@ -123,6 +123,13 @@ function RepairWorkspacePage({
         );
 
 
+    const canEditPartsCosts =
+        hasAccess(
+            currentRoles,
+            "editPartsCosts"
+        );
+
+
     // -----------------------------
     // CURRENT REPAIR
     // -----------------------------
@@ -206,6 +213,12 @@ function RepairWorkspacePage({
     const [
         aiStatusSuggestion,
         setAiStatusSuggestion
+    ] = useState("");
+
+
+    const [
+        aiPartSuggestion,
+        setAiPartSuggestion
     ] = useState("");
 
 
@@ -303,6 +316,8 @@ function RepairWorkspacePage({
         setAiFindingDraft("");
 
         setAiStatusSuggestion("");
+
+        setAiPartSuggestion("");
 
         setActiveTab("overview");
 
@@ -449,6 +464,27 @@ function RepairWorkspacePage({
 
         setActiveTab(
             "status-history"
+        );
+    }
+
+
+    function handlePartSuggestion(partName) {
+
+        if (
+            !canViewRepairs ||
+            !canUseAi ||
+            !canEditPartsCosts
+        ) {
+            return;
+        }
+
+
+        setAiPartSuggestion(
+            partName
+        );
+
+        setActiveTab(
+            "parts-costs"
         );
     }
 
@@ -924,6 +960,12 @@ function RepairWorkspacePage({
                     onAgreedPriceChange={
                         setAgreedPrice
                     }
+                    suggestedPart={
+                        aiPartSuggestion
+                    }
+                    onSuggestionHandled={() =>
+                        setAiPartSuggestion("")
+                    }
                 />
 
             </div>
@@ -979,6 +1021,9 @@ function RepairWorkspacePage({
                         }
                         onSuggestStatus={
                             handleStatusSuggestion
+                        }
+                        onSuggestPart={
+                            handlePartSuggestion
                         }
                     />
 
