@@ -505,6 +505,11 @@
 .notification-list {
     display: flex;
     flex-direction: column;
+
+    max-height: min(360px, calc(100vh - 160px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .notification-item {
