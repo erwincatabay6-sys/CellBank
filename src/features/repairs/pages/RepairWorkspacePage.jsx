@@ -1,1039 +1,578 @@
-import {
-    useEffect,
-    useState
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-    useNavigate,
-    useParams
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
+import { hasAccess } from "../../../config/accessControl.js";
 
-import { hasAccess }
-    from "../../../config/accessControl.js";
+import StatusBadge from "../../../components/StatusBadge.jsx";
 
-import StatusBadge
-    from "../../../components/StatusBadge.jsx";
+import RepairOverview from "../components/RepairOverview.jsx";
 
-import RepairOverview
-    from "../components/RepairOverview.jsx";
+import RepairFindings from "../components/RepairFindings.jsx";
 
-import RepairFindings
-    from "../components/RepairFindings.jsx";
+import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 
-import RepairStatusHistory
-    from "../components/RepairStatusHistory.jsx";
+import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
 
-import RepairPartsCosts
-    from "../components/RepairPartsCosts.jsx";
+import RepairPayments from "../components/RepairPayments.jsx";
 
-import RepairPayments
-    from "../components/RepairPayments.jsx";
+import RepairAiTroubleshooting from "../components/RepairAiTroubleshooting.jsx";
 
-import RepairAiTroubleshooting
-    from "../components/RepairAiTroubleshooting.jsx";
+import { mockRepairs } from "../data/mockRepairs.js";
 
-import { mockRepairs }
-    from "../data/mockRepairs.js";
-
-import { mockTechnicians }
-    from "../../technicians/data/mockTechnicians.js";
-
+import { mockTechnicians } from "../../technicians/data/mockTechnicians.js";
 
 // =====================================================
 // WORKSPACE TABS
 // =====================================================
 
 const workspaceTabs = [
-    {
-        id: "overview",
-        label: "Overview"
-    },
+  {
+    id: "overview",
+    label: "Overview",
+  },
 
-    {
-        id: "findings",
-        label: "Findings",
-        permission: "technicalFindings"
-    },
+  {
+    id: "findings",
+    label: "Findings",
+    permission: "technicalFindings",
+  },
 
-    {
-        id: "status-history",
-        label: "Status History"
-    },
+  {
+    id: "status-history",
+    label: "Status History",
+  },
 
-    {
-        id: "parts-costs",
-        label: "Parts & Costs"
-    },
+  {
+    id: "parts-costs",
+    label: "Parts & Costs",
+  },
 
-    {
-        id: "payments",
-        label: "Payments"
-    },
+  {
+    id: "payments",
+    label: "Payments",
+  },
 
-    {
-        id: "ai",
-        label: "AI Troubleshooting",
-        permission: "aiTroubleshooting"
-    }
+  {
+    id: "ai",
+    label: "AI Troubleshooting",
+    permission: "aiTroubleshooting",
+  },
 ];
 
+function RepairWorkspacePage({ currentRoles, currentUserName }) {
+  const { repairId } = useParams();
 
-function RepairWorkspacePage({
-    currentRoles,
-    currentUserName
-}) {
+  const navigate = useNavigate();
 
-    const { repairId } =
-        useParams();
+  // -----------------------------
+  // ROLE PERMISSIONS
+  // -----------------------------
 
-    const navigate =
-        useNavigate();
+  const canViewRepairs = hasAccess(currentRoles, "repairs");
 
+  const canUseFindings = hasAccess(currentRoles, "technicalFindings");
 
-    // -----------------------------
-    // ROLE PERMISSIONS
-    // -----------------------------
+  const canUseAi = hasAccess(currentRoles, "aiTroubleshooting");
 
-    const canViewRepairs =
-        hasAccess(
-            currentRoles,
-            "repairs"
-        );
+  const canAssignTechnician = hasAccess(currentRoles, "assignTechnician");
 
+  const canEditPartsCosts = hasAccess(currentRoles, "editPartsCosts");
 
-    const canUseFindings =
-        hasAccess(
-            currentRoles,
-            "technicalFindings"
-        );
+  // -----------------------------
+  // CURRENT REPAIR
+  // -----------------------------
 
+  const repair = mockRepairs.find((repair) => repair.id === Number(repairId));
 
-    const canUseAi =
-        hasAccess(
-            currentRoles,
-            "aiTroubleshooting"
-        );
+  // -----------------------------
+  // WORKSPACE STATE
+  // -----------------------------
 
+  const [activeTab, setActiveTab] = useState("overview");
 
-    const canAssignTechnician =
-        hasAccess(
-            currentRoles,
-            "assignTechnician"
-        );
+  const [currentStatus, setCurrentStatus] = useState(repair?.status ?? "");
 
+  const [estimatedCost, setEstimatedCost] = useState(
+    repair?.estimatedCost ?? null,
+  );
 
-    const canEditPartsCosts =
-        hasAccess(
-            currentRoles,
-            "editPartsCosts"
-        );
+  const [agreedPrice, setAgreedPrice] = useState(repair?.agreedPrice ?? null);
 
+  const [assignedTechnicianId, setAssignedTechnicianId] = useState(
+    repair?.technicianId ?? null,
+  );
 
-    // -----------------------------
-    // CURRENT REPAIR
-    // -----------------------------
+  const [technicianAssignmentOpen, setTechnicianAssignmentOpen] =
+    useState(false);
 
-    const repair =
-        mockRepairs.find(
-            (repair) =>
-                repair.id ===
-                    Number(repairId)
-        );
+  const [technicianSelection, setTechnicianSelection] = useState(
+    repair?.technicianId != null ? String(repair.technicianId) : "",
+  );
 
+  // -----------------------------
+  // AI ASSISTANCE STATE
+  // -----------------------------
 
-    // -----------------------------
-    // WORKSPACE STATE
-    // -----------------------------
+  const [aiFindingDraft, setAiFindingDraft] = useState("");
 
-    const [
-        activeTab,
-        setActiveTab
-    ] = useState("overview");
+  const [aiStatusSuggestion, setAiStatusSuggestion] = useState("");
 
+  const [aiPartSuggestion, setAiPartSuggestion] = useState("");
 
-    const [
-        currentStatus,
-        setCurrentStatus
-    ] = useState(
-        repair?.status ?? ""
-    );
+  // -----------------------------
+  // TECHNICIAN ASSIGNMENT
+  // -----------------------------
 
+  const activeTechnicians = mockTechnicians.filter(
+    (technician) => technician.status === "ACTIVE",
+  );
 
-    const [
-        estimatedCost,
-        setEstimatedCost
-    ] = useState(
-        repair?.estimatedCost ?? null
-    );
+  const assignedTechnician =
+    activeTechnicians.find(
+      (technician) => technician.id === assignedTechnicianId,
+    ) ?? null;
 
+  const assignedTechnicianName = assignedTechnician?.name ?? "Unassigned";
 
-    const [
-        agreedPrice,
-        setAgreedPrice
-    ] = useState(
-        repair?.agreedPrice ?? null
-    );
+  const repairClosed =
+    currentStatus === "COMPLETED" || currentStatus === "CANCELLED";
 
+  const canManageTechnician = canAssignTechnician && !repairClosed;
 
-    const [
-        assignedTechnicianId,
-        setAssignedTechnicianId
-    ] = useState(
-        repair?.technicianId ?? null
-    );
+  // -----------------------------
+  // VISIBLE WORKSPACE TABS
+  // -----------------------------
 
+  const visibleWorkspaceTabs = canViewRepairs
+    ? workspaceTabs.filter(
+        (tab) => !tab.permission || hasAccess(currentRoles, tab.permission),
+      )
+    : [];
 
-    const [
-        technicianAssignmentOpen,
-        setTechnicianAssignmentOpen
-    ] = useState(false);
+  // -----------------------------
+  // REPAIR CHANGE SYNC
+  // -----------------------------
 
-
-    const [
-        technicianSelection,
-        setTechnicianSelection
-    ] = useState(
-        repair?.technicianId != null
-            ? String(repair.technicianId)
-            : ""
-    );
-
-
-    // -----------------------------
-    // AI ASSISTANCE STATE
-    // -----------------------------
-
-    const [
-        aiFindingDraft,
-        setAiFindingDraft
-    ] = useState("");
-
-
-    const [
-        aiStatusSuggestion,
-        setAiStatusSuggestion
-    ] = useState("");
-
-
-    const [
-        aiPartSuggestion,
-        setAiPartSuggestion
-    ] = useState("");
-
-
-    // -----------------------------
-    // TECHNICIAN ASSIGNMENT
-    // -----------------------------
-
-    const activeTechnicians =
-        mockTechnicians.filter(
-            (technician) =>
-                technician.status ===
-                    "ACTIVE"
-        );
-
-
-    const assignedTechnician =
-        activeTechnicians.find(
-            (technician) =>
-                technician.id ===
-                    assignedTechnicianId
-        ) ?? null;
-
-
-    const assignedTechnicianName =
-        assignedTechnician?.name ??
-        "Unassigned";
-
-
-    const repairClosed =
-        currentStatus === "COMPLETED" ||
-        currentStatus === "CANCELLED";
-
-
-    const canManageTechnician =
-        canAssignTechnician &&
-        !repairClosed;
-
-
-    // -----------------------------
-    // VISIBLE WORKSPACE TABS
-    // -----------------------------
-
-    const visibleWorkspaceTabs =
-        canViewRepairs
-            ? workspaceTabs.filter(
-                (tab) =>
-                    !tab.permission ||
-                    hasAccess(
-                        currentRoles,
-                        tab.permission
-                    )
-            )
-            : [];
-
-
-    // -----------------------------
-    // REPAIR CHANGE SYNC
-    // -----------------------------
-
-    useEffect(() => {
-
-        if (!repair) {
-            return;
-        }
-
-
-        setCurrentStatus(
-            repair.status
-        );
-
-
-        setEstimatedCost(
-            repair.estimatedCost ?? null
-        );
-
-
-        setAgreedPrice(
-            repair.agreedPrice ?? null
-        );
-
-
-        setAssignedTechnicianId(
-            repair.technicianId ?? null
-        );
-
-        setTechnicianSelection(
-            repair.technicianId != null
-                ? String(repair.technicianId)
-                : ""
-        );
-
-        setTechnicianAssignmentOpen(false);
-
-
-        setAiFindingDraft("");
-
-        setAiStatusSuggestion("");
-
-        setAiPartSuggestion("");
-
-        setActiveTab("overview");
-
-    }, [repair]);
-
-
-    // -----------------------------
-    // ROLE CHANGE SYNC
-    // -----------------------------
-
-    useEffect(() => {
-
-        if (!canViewRepairs) {
-
-            setActiveTab("overview");
-
-            setAiFindingDraft("");
-
-            setAiStatusSuggestion("");
-
-            return;
-        }
-
-
-        if (
-            activeTab === "findings" &&
-            !canUseFindings
-        ) {
-
-            setActiveTab("overview");
-
-            return;
-        }
-
-
-        if (
-            activeTab === "ai" &&
-            !canUseAi
-        ) {
-
-            setActiveTab("overview");
-        }
-
-    }, [
-        activeTab,
-        canViewRepairs,
-        canUseFindings,
-        canUseAi
-    ]);
-
-
-    // -----------------------------
-    // TECHNICIAN ASSIGNMENT HANDLERS
-    // -----------------------------
-
-    function handleTechnicianAssignmentToggle() {
-
-        if (!canManageTechnician) {
-            return;
-        }
-
-
-        setTechnicianSelection(
-            assignedTechnicianId != null
-                ? String(assignedTechnicianId)
-                : ""
-        );
-
-        setTechnicianAssignmentOpen(
-            !technicianAssignmentOpen
-        );
-    }
-
-
-    function handleTechnicianAssignmentSave(event) {
-
-        event.preventDefault();
-
-
-        if (!canManageTechnician) {
-            return;
-        }
-
-
-        const nextTechnicianId =
-            technicianSelection
-                ? Number(technicianSelection)
-                : null;
-
-
-        const technicianExists =
-            nextTechnicianId == null ||
-            activeTechnicians.some(
-                (technician) =>
-                    technician.id ===
-                        nextTechnicianId
-            );
-
-
-        if (!technicianExists) {
-            return;
-        }
-
-
-        setAssignedTechnicianId(
-            nextTechnicianId
-        );
-
-        setTechnicianAssignmentOpen(false);
-    }
-
-
-    // -----------------------------
-    // AI ACTION HANDLERS
-    // -----------------------------
-
-    function handleUseAsFinding(text) {
-
-        if (
-            !canViewRepairs ||
-            !canUseFindings
-        ) {
-            return;
-        }
-
-
-        setAiFindingDraft(text);
-
-        setActiveTab("findings");
-    }
-
-
-    function handleStatusSuggestion(status) {
-
-        if (
-            !canViewRepairs ||
-            !canUseAi
-        ) {
-            return;
-        }
-
-
-        setAiStatusSuggestion(status);
-
-        setActiveTab(
-            "status-history"
-        );
-    }
-
-
-    function handlePartSuggestion(partName) {
-
-        if (
-            !canViewRepairs ||
-            !canUseAi ||
-            !canEditPartsCosts
-        ) {
-            return;
-        }
-
-
-        setAiPartSuggestion(
-            partName
-        );
-
-        setActiveTab(
-            "parts-costs"
-        );
-    }
-
-
-    // -----------------------------
-    // TAB NAVIGATION
-    // -----------------------------
-
-    function handleTabChange(tabId) {
-
-        if (!canViewRepairs) {
-            return;
-        }
-
-
-        const tabAllowed =
-            visibleWorkspaceTabs.some(
-                (tab) =>
-                    tab.id === tabId
-            );
-
-
-        if (!tabAllowed) {
-            return;
-        }
-
-
-        setActiveTab(tabId);
-    }
-
-
-    // -----------------------------
-    // ACCESS DENIED
-    // -----------------------------
-
-    if (!canViewRepairs) {
-
-        return (
-            <>
-
-                <section className="page-header">
-
-                    <h2>
-                        Access Denied
-                    </h2>
-
-                    <p>
-                        You do not have permission
-                        to access repair records.
-                    </p>
-
-                </section>
-
-
-                <section className="page-content repair-overview">
-
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={() =>
-                            navigate(
-                                "/dashboard"
-                            )
-                        }
-                    >
-                        Back to Dashboard
-                    </button>
-
-                </section>
-
-            </>
-        );
-    }
-
-
-    // -----------------------------
-    // REPAIR NOT FOUND
-    // -----------------------------
-
+  useEffect(() => {
     if (!repair) {
-
-        return (
-            <>
-
-                <section className="page-header">
-
-                    <h2>
-                        Repair Not Found
-                    </h2>
-
-                    <p>
-                        The requested repair record
-                        does not exist.
-                    </p>
-
-                </section>
-
-
-                <section className="page-content repair-overview">
-
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={() =>
-                            navigate(
-                                "/repairs"
-                            )
-                        }
-                    >
-                        Back to Repairs
-                    </button>
-
-                </section>
-
-            </>
-        );
+      return;
     }
 
+    setCurrentStatus(repair.status);
 
+    setEstimatedCost(repair.estimatedCost ?? null);
+
+    setAgreedPrice(repair.agreedPrice ?? null);
+
+    setAssignedTechnicianId(repair.technicianId ?? null);
+
+    setTechnicianSelection(
+      repair.technicianId != null ? String(repair.technicianId) : "",
+    );
+
+    setTechnicianAssignmentOpen(false);
+
+    setAiFindingDraft("");
+
+    setAiStatusSuggestion("");
+
+    setAiPartSuggestion("");
+
+    setActiveTab("overview");
+  }, [repair]);
+
+  // -----------------------------
+  // ROLE CHANGE SYNC
+  // -----------------------------
+
+  useEffect(() => {
+    if (!canViewRepairs) {
+      setActiveTab("overview");
+
+      setAiFindingDraft("");
+
+      setAiStatusSuggestion("");
+
+      return;
+    }
+
+    if (activeTab === "findings" && !canUseFindings) {
+      setActiveTab("overview");
+
+      return;
+    }
+
+    if (activeTab === "ai" && !canUseAi) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canViewRepairs, canUseFindings, canUseAi]);
+
+  // -----------------------------
+  // TECHNICIAN ASSIGNMENT HANDLERS
+  // -----------------------------
+
+  function handleTechnicianAssignmentToggle() {
+    if (!canManageTechnician) {
+      return;
+    }
+
+    setTechnicianSelection(
+      assignedTechnicianId != null ? String(assignedTechnicianId) : "",
+    );
+
+    setTechnicianAssignmentOpen(!technicianAssignmentOpen);
+  }
+
+  function handleTechnicianAssignmentSave(event) {
+    event.preventDefault();
+
+    if (!canManageTechnician) {
+      return;
+    }
+
+    const nextTechnicianId = technicianSelection
+      ? Number(technicianSelection)
+      : null;
+
+    const technicianExists =
+      nextTechnicianId == null ||
+      activeTechnicians.some(
+        (technician) => technician.id === nextTechnicianId,
+      );
+
+    if (!technicianExists) {
+      return;
+    }
+
+    setAssignedTechnicianId(nextTechnicianId);
+
+    setTechnicianAssignmentOpen(false);
+  }
+
+  // -----------------------------
+  // AI ACTION HANDLERS
+  // -----------------------------
+
+  function handleUseAsFinding(text) {
+    if (!canViewRepairs || !canUseFindings) {
+      return;
+    }
+
+    setAiFindingDraft(text);
+
+    setActiveTab("findings");
+  }
+
+  function handleStatusSuggestion(status) {
+    if (!canViewRepairs || !canUseAi) {
+      return;
+    }
+
+    setAiStatusSuggestion(status);
+
+    setActiveTab("status-history");
+  }
+
+  function handlePartSuggestion(partName) {
+    if (!canViewRepairs || !canUseAi || !canEditPartsCosts) {
+      return;
+    }
+
+    setAiPartSuggestion(partName);
+
+    setActiveTab("parts-costs");
+  }
+
+  // -----------------------------
+  // TAB NAVIGATION
+  // -----------------------------
+
+  function handleTabChange(tabId) {
+    if (!canViewRepairs) {
+      return;
+    }
+
+    const tabAllowed = visibleWorkspaceTabs.some((tab) => tab.id === tabId);
+
+    if (!tabAllowed) {
+      return;
+    }
+
+    setActiveTab(tabId);
+  }
+
+  // -----------------------------
+  // ACCESS DENIED
+  // -----------------------------
+
+  if (!canViewRepairs) {
     return (
-        <>
+      <>
+        <section className="page-header">
+          <h2>Access Denied</h2>
 
-            {/* =========================
+          <p>You do not have permission to access repair records.</p>
+        </section>
+
+        <section className="page-content repair-overview">
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={() => navigate("/dashboard")}
+          >
+            Back to Dashboard
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  // -----------------------------
+  // REPAIR NOT FOUND
+  // -----------------------------
+
+  if (!repair) {
+    return (
+      <>
+        <section className="page-header">
+          <h2>Repair Not Found</h2>
+
+          <p>The requested repair record does not exist.</p>
+        </section>
+
+        <section className="page-content repair-overview">
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={() => navigate("/repairs")}
+          >
+            Back to Repairs
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* =========================
                 PAGE HEADER
             ========================== */}
-            <section className="page-header">
+      <section className="page-header">
+        <h2>{repair.reference}</h2>
 
-                <h2>
-                    {repair.reference}
-                </h2>
+        <p>Repair workspace for {repair.device}.</p>
+      </section>
 
-                <p>
-                    Repair workspace for{" "}
-                    {repair.device}.
-                </p>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 REPAIR SUMMARY
             ========================== */}
-            <section className="repair-workspace-header">
+      <section className="repair-workspace-header">
+        {/* CUSTOMER */}
+        <div>
+          <span className="workspace-label">Customer</span>
 
-                {/* CUSTOMER */}
-                <div>
+          <strong>{repair.customer}</strong>
+        </div>
 
-                    <span className="workspace-label">
-                        Customer
-                    </span>
+        {/* DEVICE */}
+        <div>
+          <span className="workspace-label">Device</span>
 
-                    <strong>
-                        {repair.customer}
-                    </strong>
+          <strong>{repair.device}</strong>
+        </div>
 
-                </div>
+        {/* TECHNICIAN */}
+        <div>
+          <span className="workspace-label">Technician</span>
 
+          <strong>{assignedTechnicianName}</strong>
 
-                {/* DEVICE */}
-                <div>
+          {canManageTechnician && (
+            <button
+              className="workspace-inline-action"
+              type="button"
+              onClick={handleTechnicianAssignmentToggle}
+            >
+              {assignedTechnicianId != null
+                ? "Change Technician"
+                : "Assign Technician"}
+            </button>
+          )}
+        </div>
 
-                    <span className="workspace-label">
-                        Device
-                    </span>
+        {/* CURRENT STATUS */}
+        <div>
+          <span className="workspace-label">Status</span>
 
-                    <strong>
-                        {repair.device}
-                    </strong>
+          <StatusBadge status={currentStatus} />
+        </div>
+      </section>
 
-                </div>
-
-
-                {/* TECHNICIAN */}
-                <div>
-
-                    <span className="workspace-label">
-                        Technician
-                    </span>
-
-                    <strong>
-                        {assignedTechnicianName}
-                    </strong>
-
-                    {canManageTechnician && (
-
-                        <button
-                            className="workspace-inline-action"
-                            type="button"
-                            onClick={
-                                handleTechnicianAssignmentToggle
-                            }
-                        >
-                            {assignedTechnicianId != null
-                                ? "Change Technician"
-                                : "Assign Technician"
-                            }
-                        </button>
-
-                    )}
-
-                </div>
-
-
-                {/* CURRENT STATUS */}
-                <div>
-
-                    <span className="workspace-label">
-                        Status
-                    </span>
-
-                    <StatusBadge
-                        status={
-                            currentStatus
-                        }
-                    />
-
-                </div>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 TECHNICIAN ASSIGNMENT
                 ADMIN + FRONT DESK
             ========================== */}
-            {technicianAssignmentOpen &&
-                canManageTechnician && (
+      {technicianAssignmentOpen && canManageTechnician && (
+        <section className="page-content technician-assignment-panel">
+          <div className="workspace-section-header">
+            <div>
+              <h3>
+                {assignedTechnicianId != null
+                  ? "Reassign Technician"
+                  : "Assign Technician"}
+              </h3>
 
-                <section className="page-content technician-assignment-panel">
+              <p className="workspace-section-description">
+                Assign this repair to an active technician.
+              </p>
+            </div>
+          </div>
 
-                    <div className="workspace-section-header">
+          <form
+            className="technician-assignment-form"
+            onSubmit={handleTechnicianAssignmentSave}
+          >
+            <div className="repair-form-group">
+              <label htmlFor="workspace-technician">Assigned Technician</label>
 
-                        <div>
-                            <h3>
-                                {assignedTechnicianId != null
-                                    ? "Reassign Technician"
-                                    : "Assign Technician"
-                                }
-                            </h3>
+              <select
+                id="workspace-technician"
+                value={technicianSelection}
+                onChange={(event) => setTechnicianSelection(event.target.value)}
+              >
+                <option value="">Unassigned</option>
 
-                            <p className="workspace-section-description">
-                                Assign this repair to an active technician.
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <form
-                        className="technician-assignment-form"
-                        onSubmit={
-                            handleTechnicianAssignmentSave
-                        }
-                    >
-
-                        <div className="repair-form-group">
-
-                            <label htmlFor="workspace-technician">
-                                Assigned Technician
-                            </label>
-
-                            <select
-                                id="workspace-technician"
-                                value={technicianSelection}
-                                onChange={(event) =>
-                                    setTechnicianSelection(
-                                        event.target.value
-                                    )
-                                }
-                            >
-                                <option value="">
-                                    Unassigned
-                                </option>
-
-                                {activeTechnicians.map(
-                                    (technician) => (
-
-                                        <option
-                                            key={technician.id}
-                                            value={technician.id}
-                                        >
-                                            {technician.name}
-                                        </option>
-
-                                    )
-                                )}
-
-                            </select>
-
-                        </div>
-
-
-                        <div className="finding-form-actions">
-
-                            <button
-                                className="cancel-repair-button"
-                                type="button"
-                                onClick={() =>
-                                    setTechnicianAssignmentOpen(
-                                        false
-                                    )
-                                }
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                className="create-repair-button"
-                                type="submit"
-                            >
-                                Save Assignment
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-            )}
-
-
-            {/* =========================
-                WORKSPACE TABS
-            ========================== */}
-            <nav className="repair-workspace-tabs">
-
-                {visibleWorkspaceTabs.map(
-                    (tab) => (
-
-                        <button
-                            key={tab.id}
-                            className={
-                                `workspace-tab ${
-                                    activeTab === tab.id
-                                        ? "active"
-                                        : ""
-                                }`
-                            }
-                            type="button"
-                            onClick={() =>
-                                handleTabChange(
-                                    tab.id
-                                )
-                            }
-                        >
-                            {tab.label}
-                        </button>
-
-                    )
-                )}
-
-            </nav>
-
-
-            {/* =========================
-                OVERVIEW
-            ========================== */}
-            <div
-                hidden={
-                    activeTab !== "overview"
-                }
-            >
-
-                <RepairOverview
-                    repair={repair}
-                    estimatedCost={
-                        estimatedCost
-                    }
-                    agreedPrice={
-                        agreedPrice
-                    }
-                />
-
+                {activeTechnicians.map((technician) => (
+                  <option key={technician.id} value={technician.id}>
+                    {technician.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
+            <div className="finding-form-actions">
+              <button
+                className="cancel-repair-button"
+                type="button"
+                onClick={() => setTechnicianAssignmentOpen(false)}
+              >
+                Cancel
+              </button>
 
-            {/* =========================
+              <button className="create-repair-button" type="submit">
+                Save Assignment
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* =========================
+                WORKSPACE TABS
+            ========================== */}
+      <nav className="repair-workspace-tabs">
+        {visibleWorkspaceTabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`workspace-tab ${activeTab === tab.id ? "active" : ""}`}
+            type="button"
+            onClick={() => handleTabChange(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* =========================
+                OVERVIEW
+            ========================== */}
+      <div hidden={activeTab !== "overview"}>
+        <RepairOverview
+          repair={repair}
+          estimatedCost={estimatedCost}
+          agreedPrice={agreedPrice}
+        />
+      </div>
+
+      {/* =========================
                 FINDINGS
                 ADMIN + TECHNICIAN
             ========================== */}
-            {canUseFindings && (
+      {canUseFindings && (
+        <div hidden={activeTab !== "findings"}>
+          <RepairFindings
+            repairId={repair.id}
+            currentUserName={currentUserName}
+            aiDraft={aiFindingDraft}
+            onDraftUsed={() => setAiFindingDraft("")}
+          />
+        </div>
+      )}
 
-                <div
-                    hidden={
-                        activeTab !== "findings"
-                    }
-                >
-
-                    <RepairFindings
-                        repairId={
-                            repair.id
-                        }
-                        currentUserName={
-                            currentUserName
-                        }
-                        aiDraft={
-                            aiFindingDraft
-                        }
-                        onDraftUsed={() =>
-                            setAiFindingDraft("")
-                        }
-                    />
-
-                </div>
-
-            )}
-
-
-            {/* =========================
+      {/* =========================
                 STATUS HISTORY
             ========================== */}
-            <div
-                hidden={
-                    activeTab !==
-                        "status-history"
-                }
-            >
+      <div hidden={activeTab !== "status-history"}>
+        <RepairStatusHistory
+          repairId={repair.id}
+          currentRoles={currentRoles}
+          currentUserName={currentUserName}
+          currentStatus={currentStatus}
+          onStatusChange={setCurrentStatus}
+          suggestedStatus={aiStatusSuggestion}
+          onSuggestionHandled={() => setAiStatusSuggestion("")}
+        />
+      </div>
 
-                <RepairStatusHistory
-                    repairId={
-                        repair.id
-                    }
-                    currentRoles={
-                        currentRoles
-                    }
-                    currentUserName={
-                        currentUserName
-                    }
-                    currentStatus={
-                        currentStatus
-                    }
-                    onStatusChange={
-                        setCurrentStatus
-                    }
-                    suggestedStatus={
-                        aiStatusSuggestion
-                    }
-                    onSuggestionHandled={() =>
-                        setAiStatusSuggestion("")
-                    }
-                />
-
-            </div>
-
-
-            {/* =========================
+      {/* =========================
                 PARTS & COSTS
             ========================== */}
-            <div
-                hidden={
-                    activeTab !==
-                        "parts-costs"
-                }
-            >
+      <div hidden={activeTab !== "parts-costs"}>
+        <RepairPartsCosts
+          currentRoles={currentRoles}
+          repairId={repair.id}
+          estimatedCost={estimatedCost}
+          onEstimatedCostChange={setEstimatedCost}
+          agreedPrice={agreedPrice}
+          onAgreedPriceChange={setAgreedPrice}
+          suggestedPart={aiPartSuggestion}
+          onSuggestionHandled={() => setAiPartSuggestion("")}
+        />
+      </div>
 
-                <RepairPartsCosts
-                    currentRoles={
-                        currentRoles
-                    }
-                    repairId={
-                        repair.id
-                    }
-                    estimatedCost={
-                        estimatedCost
-                    }
-                    onEstimatedCostChange={
-                        setEstimatedCost
-                    }
-                    agreedPrice={
-                        agreedPrice
-                    }
-                    onAgreedPriceChange={
-                        setAgreedPrice
-                    }
-                    suggestedPart={
-                        aiPartSuggestion
-                    }
-                    onSuggestionHandled={() =>
-                        setAiPartSuggestion("")
-                    }
-                />
-
-            </div>
-
-
-            {/* =========================
+      {/* =========================
                 PAYMENTS
             ========================== */}
-            <div
-                hidden={
-                    activeTab !==
-                        "payments"
-                }
-            >
+      <div hidden={activeTab !== "payments"}>
+        <RepairPayments
+          currentRoles={currentRoles}
+          currentUserName={currentUserName}
+          repairId={repair.id}
+          repairTotal={agreedPrice}
+        />
+      </div>
 
-                <RepairPayments
-                    currentRoles={
-                        currentRoles
-                    }
-                    currentUserName={
-                        currentUserName
-                    }
-                    repairId={
-                        repair.id
-                    }
-                    repairTotal={
-                        agreedPrice
-                    }
-                />
-
-            </div>
-
-
-            {/* =========================
+      {/* =========================
                 AI TROUBLESHOOTING
                 ADMIN + TECHNICIAN
             ========================== */}
-            {canUseAi && (
-
-                <div
-                    hidden={
-                        activeTab !== "ai"
-                    }
-                >
-
-                    <RepairAiTroubleshooting
-                        repair={{
-                            ...repair,
-                            status: currentStatus
-                        }}
-                        onUseAsFinding={
-                            handleUseAsFinding
-                        }
-                        onSuggestStatus={
-                            handleStatusSuggestion
-                        }
-                        onSuggestPart={
-                            handlePartSuggestion
-                        }
-                    />
-
-                </div>
-
-            )}
-
-        </>
-    );
+      {canUseAi && (
+        <div hidden={activeTab !== "ai"}>
+          <RepairAiTroubleshooting
+            repair={{
+              ...repair,
+              status: currentStatus,
+            }}
+            onUseAsFinding={handleUseAsFinding}
+            onSuggestStatus={handleStatusSuggestion}
+            onSuggestPart={handlePartSuggestion}
+          />
+        </div>
+      )}
+    </>
+  );
 }
-
 
 export default RepairWorkspacePage;

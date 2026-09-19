@@ -1,414 +1,202 @@
-import { useState }
-    from "react";
+import { useState } from "react";
 
-import {
-    Eye,
-    EyeOff,
-    LockKeyhole
-} from "lucide-react";
-
+import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 function PasswordSettings() {
+  // -----------------------------
+  // PASSWORD STATE
+  // -----------------------------
 
-    // -----------------------------
-    // PASSWORD STATE
-    // -----------------------------
+  const [currentPassword, setCurrentPassword] = useState("");
 
-    const [
-        currentPassword,
-        setCurrentPassword
-    ] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-    const [
-        newPassword,
-        setNewPassword
-    ] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
-    const [
-        confirmPassword,
-        setConfirmPassword
-    ] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [message, setMessage] = useState("");
 
-    const [
-        showCurrentPassword,
-        setShowCurrentPassword
-    ] = useState(false);
+  // -----------------------------
+  // FORM RESET
+  // -----------------------------
 
+  function resetForm() {
+    setCurrentPassword("");
 
-    const [
-        showNewPassword,
-        setShowNewPassword
-    ] = useState(false);
+    setNewPassword("");
 
+    setConfirmPassword("");
+  }
 
-    const [
-        showConfirmPassword,
-        setShowConfirmPassword
-    ] = useState(false);
+  // -----------------------------
+  // PASSWORD SUBMISSION
+  // -----------------------------
 
+  function handleSubmit(event) {
+    event.preventDefault();
 
-    const [
-        message,
-        setMessage
-    ] = useState("");
+    setMessage("");
 
+    if (newPassword !== confirmPassword) {
+      setMessage("New passwords do not match.");
 
-    // -----------------------------
-    // FORM RESET
-    // -----------------------------
-
-    function resetForm() {
-
-        setCurrentPassword("");
-
-        setNewPassword("");
-
-        setConfirmPassword("");
+      return;
     }
 
+    if (newPassword.length < 8) {
+      setMessage("New password must contain at least 8 characters.");
 
-    // -----------------------------
-    // PASSWORD SUBMISSION
-    // -----------------------------
-
-    function handleSubmit(event) {
-
-        event.preventDefault();
-
-
-        setMessage("");
-
-
-        if (
-            newPassword !==
-            confirmPassword
-        ) {
-
-            setMessage(
-                "New passwords do not match."
-            );
-
-            return;
-        }
-
-
-        if (
-            newPassword.length < 8
-        ) {
-
-            setMessage(
-                "New password must contain at least 8 characters."
-            );
-
-            return;
-        }
-
-
-        // Frontend shell only.
-        // Spring Boot will later verify the
-        // current password and update the
-        // stored password securely.
-
-        setMessage(
-            "Password change is ready for backend integration."
-        );
-
-
-        resetForm();
+      return;
     }
 
+    // Frontend shell only.
+    // Spring Boot will later verify the
+    // current password and update the
+    // stored password securely.
 
-    return (
-        <section className="page-content">
+    setMessage("Password change is ready for backend integration.");
 
-            {/* =========================
+    resetForm();
+  }
+
+  return (
+    <section className="page-content">
+      {/* =========================
                 HEADER
             ========================== */}
-            <div className="workspace-section-header">
+      <div className="workspace-section-header">
+        <div>
+          <h3>Change Password</h3>
 
-                <div>
+          <p className="workspace-section-description">
+            Update the password used to access your Cellbank account.
+          </p>
+        </div>
+      </div>
 
-                    <h3>
-                        Change Password
-                    </h3>
+      <div className="account-security-heading">
+        <LockKeyhole size={22} />
 
-                    <p className="workspace-section-description">
-                        Update the password used
-                        to access your Cellbank account.
-                    </p>
+        <div>
+          <strong>Account Password</strong>
 
-                </div>
+          <p>Use a strong password that you do not reuse elsewhere.</p>
+        </div>
+      </div>
 
-            </div>
-
-
-            <div className="account-security-heading">
-
-                <LockKeyhole
-                    size={22}
-                />
-
-                <div>
-
-                    <strong>
-                        Account Password
-                    </strong>
-
-                    <p>
-                        Use a strong password that
-                        you do not reuse elsewhere.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <form
-                className="account-settings-form"
-                onSubmit={
-                    handleSubmit
-                }
-            >
-
-                {/* =========================
+      <form className="account-settings-form" onSubmit={handleSubmit}>
+        {/* =========================
                     CURRENT PASSWORD
                 ========================== */}
-                <div className="repair-form-group">
+        <div className="repair-form-group">
+          <label htmlFor="current-password">Current Password</label>
 
-                    <label htmlFor="current-password">
-                        Current Password
-                    </label>
+          <div className="account-password-input">
+            <input
+              id="current-password"
+              type={showCurrentPassword ? "text" : "password"}
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
 
+            <button
+              type="button"
+              aria-label={
+                showCurrentPassword
+                  ? "Hide current password"
+                  : "Show current password"
+              }
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            >
+              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
 
-                    <div className="account-password-input">
-
-                        <input
-                            id="current-password"
-                            type={
-                                showCurrentPassword
-                                    ? "text"
-                                    : "password"
-                            }
-                            value={
-                                currentPassword
-                            }
-                            onChange={(event) =>
-                                setCurrentPassword(
-                                    event.target.value
-                                )
-                            }
-                            autoComplete="current-password"
-                            required
-                        />
-
-
-                        <button
-                            type="button"
-                            aria-label={
-                                showCurrentPassword
-                                    ? "Hide current password"
-                                    : "Show current password"
-                            }
-                            onClick={() =>
-                                setShowCurrentPassword(
-                                    !showCurrentPassword
-                                )
-                            }
-                        >
-
-                            {showCurrentPassword
-                                ? (
-                                    <EyeOff
-                                        size={18}
-                                    />
-                                )
-                                : (
-                                    <Eye
-                                        size={18}
-                                    />
-                                )
-                            }
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                {/* =========================
+        {/* =========================
                     NEW PASSWORD
                 ========================== */}
-                <div className="repair-form-group">
+        <div className="repair-form-group">
+          <label htmlFor="new-password">New Password</label>
 
-                    <label htmlFor="new-password">
-                        New Password
-                    </label>
+          <div className="account-password-input">
+            <input
+              id="new-password"
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
 
+            <button
+              type="button"
+              aria-label={
+                showNewPassword ? "Hide new password" : "Show new password"
+              }
+              onClick={() => setShowNewPassword(!showNewPassword)}
+            >
+              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
-                    <div className="account-password-input">
+          <small className="account-field-hint">Minimum of 8 characters.</small>
+        </div>
 
-                        <input
-                            id="new-password"
-                            type={
-                                showNewPassword
-                                    ? "text"
-                                    : "password"
-                            }
-                            value={
-                                newPassword
-                            }
-                            onChange={(event) =>
-                                setNewPassword(
-                                    event.target.value
-                                )
-                            }
-                            minLength={8}
-                            autoComplete="new-password"
-                            required
-                        />
-
-
-                        <button
-                            type="button"
-                            aria-label={
-                                showNewPassword
-                                    ? "Hide new password"
-                                    : "Show new password"
-                            }
-                            onClick={() =>
-                                setShowNewPassword(
-                                    !showNewPassword
-                                )
-                            }
-                        >
-
-                            {showNewPassword
-                                ? (
-                                    <EyeOff
-                                        size={18}
-                                    />
-                                )
-                                : (
-                                    <Eye
-                                        size={18}
-                                    />
-                                )
-                            }
-
-                        </button>
-
-                    </div>
-
-
-                    <small className="account-field-hint">
-                        Minimum of 8 characters.
-                    </small>
-
-                </div>
-
-
-                {/* =========================
+        {/* =========================
                     CONFIRM PASSWORD
                 ========================== */}
-                <div className="repair-form-group">
+        <div className="repair-form-group">
+          <label htmlFor="confirm-password">Confirm New Password</label>
 
-                    <label htmlFor="confirm-password">
-                        Confirm New Password
-                    </label>
+          <div className="account-password-input">
+            <input
+              id="confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
 
+            <button
+              type="button"
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirmed password"
+                  : "Show confirmed password"
+              }
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
 
-                    <div className="account-password-input">
-
-                        <input
-                            id="confirm-password"
-                            type={
-                                showConfirmPassword
-                                    ? "text"
-                                    : "password"
-                            }
-                            value={
-                                confirmPassword
-                            }
-                            onChange={(event) =>
-                                setConfirmPassword(
-                                    event.target.value
-                                )
-                            }
-                            autoComplete="new-password"
-                            required
-                        />
-
-
-                        <button
-                            type="button"
-                            aria-label={
-                                showConfirmPassword
-                                    ? "Hide confirmed password"
-                                    : "Show confirmed password"
-                            }
-                            onClick={() =>
-                                setShowConfirmPassword(
-                                    !showConfirmPassword
-                                )
-                            }
-                        >
-
-                            {showConfirmPassword
-                                ? (
-                                    <EyeOff
-                                        size={18}
-                                    />
-                                )
-                                : (
-                                    <Eye
-                                        size={18}
-                                    />
-                                )
-                            }
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                {/* =========================
+        {/* =========================
                     MESSAGE
                 ========================== */}
-                {message && (
+        {message && <p className="account-form-message">{message}</p>}
 
-                    <p className="account-form-message">
-                        {message}
-                    </p>
-
-                )}
-
-
-                {/* =========================
+        {/* =========================
                     ACTION
                 ========================== */}
-                <div className="finding-form-actions">
-
-                    <button
-                        className="create-repair-button"
-                        type="submit"
-                    >
-                        Change Password
-                    </button>
-
-                </div>
-
-            </form>
-
-        </section>
-    );
+        <div className="finding-form-actions">
+          <button className="create-repair-button" type="submit">
+            Change Password
+          </button>
+        </div>
+      </form>
+    </section>
+  );
 }
-
 
 export default PasswordSettings;

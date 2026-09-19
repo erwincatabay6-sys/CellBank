@@ -1,155 +1,134 @@
 export const ROLE_ACCESS = {
+  // =====================================================
+  // ADMIN
+  // Full system access
+  // =====================================================
 
-    // =====================================================
-    // ADMIN
-    // Full system access
-    // =====================================================
+  ADMIN: {
+    // Main modules
+    dashboard: true,
+    repairs: true,
+    customers: true,
+    technicians: true,
+    reports: true,
+    administration: true,
+    accountSettings: true,
 
-    ADMIN: {
+    // Repair intake
+    createRepair: true,
+    assignTechnician: true,
 
-        // Main modules
-        dashboard: true,
-        repairs: true,
-        customers: true,
-        technicians: true,
-        reports: true,
-        administration: true,
-        accountSettings: true,
+    // Technical repair work
+    technicalFindings: true,
+    aiTroubleshooting: true,
+    editEstimatedCost: true,
+    editPartsCosts: true,
 
-        // Repair intake
-        createRepair: true,
-        assignTechnician: true,
+    // Customer-facing financial work
+    editAgreedPrice: true,
+    recordPayments: true,
 
-        // Technical repair work
-        technicalFindings: true,
-        aiTroubleshooting: true,
-        editEstimatedCost: true,
-        editPartsCosts: true,
+    // Administration
+    staffManagement: true,
+  },
 
-        // Customer-facing financial work
-        editAgreedPrice: true,
-        recordPayments: true,
+  // =====================================================
+  // TECHNICIAN
+  // Technical repair operations
+  // =====================================================
 
-        // Administration
-        staffManagement: true
-    },
+  TECHNICIAN: {
+    // Main modules
+    dashboard: true,
+    repairs: true,
+    customers: true,
+    technicians: true,
+    reports: false,
+    administration: false,
+    accountSettings: true,
 
+    // Repair intake
+    createRepair: false,
+    assignTechnician: false,
 
-    // =====================================================
-    // TECHNICIAN
-    // Technical repair operations
-    // =====================================================
+    // Technical repair work
+    technicalFindings: true,
+    aiTroubleshooting: true,
+    editEstimatedCost: true,
+    editPartsCosts: true,
 
-    TECHNICIAN: {
+    // Customer-facing financial work
+    editAgreedPrice: false,
+    recordPayments: false,
 
-        // Main modules
-        dashboard: true,
-        repairs: true,
-        customers: true,
-        technicians: true,
-        reports: false,
-        administration: false,
-        accountSettings: true,
+    // Administration
+    staffManagement: false,
+  },
 
-        // Repair intake
-        createRepair: false,
-        assignTechnician: false,
+  // =====================================================
+  // FRONT DESK
+  // Customer-facing operational work
+  // =====================================================
 
-        // Technical repair work
-        technicalFindings: true,
-        aiTroubleshooting: true,
-        editEstimatedCost: true,
-        editPartsCosts: true,
+  FRONT_DESK: {
+    // Main modules
+    dashboard: true,
+    repairs: true,
+    customers: true,
+    technicians: true,
+    reports: false,
+    administration: false,
+    accountSettings: true,
 
-        // Customer-facing financial work
-        editAgreedPrice: false,
-        recordPayments: false,
+    // Repair intake
+    createRepair: true,
+    assignTechnician: true,
 
-        // Administration
-        staffManagement: false
-    },
+    // Technical repair work
+    technicalFindings: false,
+    aiTroubleshooting: false,
+    editEstimatedCost: false,
+    editPartsCosts: false,
 
+    // Customer-facing financial work
+    editAgreedPrice: true,
+    recordPayments: true,
 
-    // =====================================================
-    // FRONT DESK
-    // Customer-facing operational work
-    // =====================================================
-
-    FRONT_DESK: {
-
-        // Main modules
-        dashboard: true,
-        repairs: true,
-        customers: true,
-        technicians: true,
-        reports: false,
-        administration: false,
-        accountSettings: true,
-
-        // Repair intake
-        createRepair: true,
-        assignTechnician: true,
-
-        // Technical repair work
-        technicalFindings: false,
-        aiTroubleshooting: false,
-        editEstimatedCost: false,
-        editPartsCosts: false,
-
-        // Customer-facing financial work
-        editAgreedPrice: true,
-        recordPayments: true,
-
-        // Administration
-        staffManagement: false
-    }
+    // Administration
+    staffManagement: false,
+  },
 };
-
 
 // =====================================================
 // VALID ROLE NAMES
 // =====================================================
 
-export const VALID_ROLES = [
-    "ADMIN",
-    "TECHNICIAN",
-    "FRONT_DESK"
-];
-
+export const VALID_ROLES = ["ADMIN", "TECHNICIAN", "FRONT_DESK"];
 
 // =====================================================
 // REPAIR STATUS PERMISSIONS
 // =====================================================
 
 export const REPAIR_STATUS_ACCESS = {
+  ADMIN: [
+    "RECEIVED",
+    "AWAITING_APPROVAL",
+    "IN_PROGRESS",
+    "AWAITING_PARTS",
+    "READY_FOR_RELEASE",
+    "COMPLETED",
+    "CANCELLED",
+  ],
 
-    ADMIN: [
-        "RECEIVED",
-        "AWAITING_APPROVAL",
-        "IN_PROGRESS",
-        "AWAITING_PARTS",
-        "READY_FOR_RELEASE",
-        "COMPLETED",
-        "CANCELLED"
-    ],
+  TECHNICIAN: [
+    "AWAITING_APPROVAL",
+    "IN_PROGRESS",
+    "AWAITING_PARTS",
+    "READY_FOR_RELEASE",
+  ],
 
-
-    TECHNICIAN: [
-        "AWAITING_APPROVAL",
-        "IN_PROGRESS",
-        "AWAITING_PARTS",
-        "READY_FOR_RELEASE"
-    ],
-
-
-    FRONT_DESK: [
-        "RECEIVED",
-        "AWAITING_APPROVAL",
-        "COMPLETED",
-        "CANCELLED"
-    ]
+  FRONT_DESK: ["RECEIVED", "AWAITING_APPROVAL", "COMPLETED", "CANCELLED"],
 };
-
 
 // =====================================================
 // REPAIR STATUS TRANSITIONS
@@ -158,62 +137,34 @@ export const REPAIR_STATUS_ACCESS = {
 // enforce the same transition rules on the backend.
 
 export const REPAIR_STATUS_TRANSITIONS = {
-    RECEIVED: [
-        "AWAITING_APPROVAL",
-        "IN_PROGRESS",
-        "CANCELLED"
-    ],
+  RECEIVED: ["AWAITING_APPROVAL", "IN_PROGRESS", "CANCELLED"],
 
-    AWAITING_APPROVAL: [
-        "IN_PROGRESS",
-        "CANCELLED"
-    ],
+  AWAITING_APPROVAL: ["IN_PROGRESS", "CANCELLED"],
 
-    IN_PROGRESS: [
-        "AWAITING_APPROVAL",
-        "AWAITING_PARTS",
-        "READY_FOR_RELEASE",
-        "CANCELLED"
-    ],
+  IN_PROGRESS: [
+    "AWAITING_APPROVAL",
+    "AWAITING_PARTS",
+    "READY_FOR_RELEASE",
+    "CANCELLED",
+  ],
 
-    AWAITING_PARTS: [
-        "IN_PROGRESS",
-        "READY_FOR_RELEASE",
-        "CANCELLED"
-    ],
+  AWAITING_PARTS: ["IN_PROGRESS", "READY_FOR_RELEASE", "CANCELLED"],
 
-    READY_FOR_RELEASE: [
-        "IN_PROGRESS",
-        "COMPLETED"
-    ],
+  READY_FOR_RELEASE: ["IN_PROGRESS", "COMPLETED"],
 
-    COMPLETED: [],
-    CANCELLED: []
+  COMPLETED: [],
+  CANCELLED: [],
 };
 
+export function canTransitionRepairStatus(currentStatus, nextStatus) {
+  if (!currentStatus || !nextStatus || currentStatus === nextStatus) {
+    return false;
+  }
 
-export function canTransitionRepairStatus(
-    currentStatus,
-    nextStatus
-) {
-
-    if (
-        !currentStatus ||
-        !nextStatus ||
-        currentStatus === nextStatus
-    ) {
-        return false;
-    }
-
-
-    return (
-        REPAIR_STATUS_TRANSITIONS[
-            currentStatus
-        ]?.includes(nextStatus) ??
-        false
-    );
+  return (
+    REPAIR_STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus) ?? false
+  );
 }
-
 
 // =====================================================
 // NORMALIZE ROLES
@@ -223,205 +174,111 @@ export function canTransitionRepairStatus(
 // =====================================================
 
 export function normalizeRoles(roles) {
+  if (typeof roles === "string") {
+    return [roles];
+  }
 
-    if (typeof roles === "string") {
+  if (!Array.isArray(roles)) {
+    return [];
+  }
 
-        return [
-            roles
-        ];
-    }
-
-
-    if (!Array.isArray(roles)) {
-
-        return [];
-    }
-
-
-    return [
-        ...new Set(roles)
-    ];
+  return [...new Set(roles)];
 }
-
 
 // =====================================================
 // VALID ROLE COMBINATION CHECK
 // =====================================================
 
 export function isValidRoleCombination(roles) {
+  const normalizedRoles = normalizeRoles(roles);
 
-    const normalizedRoles =
-        normalizeRoles(roles);
-
-
-    if (normalizedRoles.length === 0) {
-
-        return false;
-    }
-
-
-    const containsOnlyValidRoles =
-        normalizedRoles.every(
-            (role) =>
-                VALID_ROLES.includes(
-                    role
-                )
-        );
-
-
-    if (!containsOnlyValidRoles) {
-
-        return false;
-    }
-
-
-    // -----------------------------
-    // ADMIN IS EXCLUSIVE
-    // -----------------------------
-
-    if (
-        normalizedRoles.includes(
-            "ADMIN"
-        )
-    ) {
-
-        return (
-            normalizedRoles.length === 1
-        );
-    }
-
-
-    // -----------------------------
-    // SINGLE OPERATIONAL ROLE
-    // -----------------------------
-
-    if (
-        normalizedRoles.length === 1
-    ) {
-
-        return (
-            normalizedRoles[0] ===
-                "TECHNICIAN" ||
-
-            normalizedRoles[0] ===
-                "FRONT_DESK"
-        );
-    }
-
-
-    // -----------------------------
-    // ONLY ALLOWED MULTI-ROLE
-    // TECHNICIAN + FRONT DESK
-    // -----------------------------
-
-    if (
-        normalizedRoles.length === 2
-    ) {
-
-        return (
-            normalizedRoles.includes(
-                "TECHNICIAN"
-            ) &&
-
-            normalizedRoles.includes(
-                "FRONT_DESK"
-            )
-        );
-    }
-
-
+  if (normalizedRoles.length === 0) {
     return false;
-}
+  }
 
+  const containsOnlyValidRoles = normalizedRoles.every((role) =>
+    VALID_ROLES.includes(role),
+  );
+
+  if (!containsOnlyValidRoles) {
+    return false;
+  }
+
+  // -----------------------------
+  // ADMIN IS EXCLUSIVE
+  // -----------------------------
+
+  if (normalizedRoles.includes("ADMIN")) {
+    return normalizedRoles.length === 1;
+  }
+
+  // -----------------------------
+  // SINGLE OPERATIONAL ROLE
+  // -----------------------------
+
+  if (normalizedRoles.length === 1) {
+    return (
+      normalizedRoles[0] === "TECHNICIAN" || normalizedRoles[0] === "FRONT_DESK"
+    );
+  }
+
+  // -----------------------------
+  // ONLY ALLOWED MULTI-ROLE
+  // TECHNICIAN + FRONT DESK
+  // -----------------------------
+
+  if (normalizedRoles.length === 2) {
+    return (
+      normalizedRoles.includes("TECHNICIAN") &&
+      normalizedRoles.includes("FRONT_DESK")
+    );
+  }
+
+  return false;
+}
 
 // =====================================================
 // ROLE CHECK
 // =====================================================
 
-export function hasRole(
-    roles,
-    role
-) {
+export function hasRole(roles, role) {
+  const normalizedRoles = normalizeRoles(roles);
 
-    const normalizedRoles =
-        normalizeRoles(roles);
+  if (!isValidRoleCombination(normalizedRoles)) {
+    return false;
+  }
 
-
-    if (
-        !isValidRoleCombination(
-            normalizedRoles
-        )
-    ) {
-
-        return false;
-    }
-
-
-    return normalizedRoles.includes(
-        role
-    );
+  return normalizedRoles.includes(role);
 }
-
 
 // =====================================================
 // GENERAL PERMISSION CHECK
 // =====================================================
 
-export function hasAccess(
-    roles,
-    permission
-) {
+export function hasAccess(roles, permission) {
+  const normalizedRoles = normalizeRoles(roles);
 
-    const normalizedRoles =
-        normalizeRoles(roles);
+  if (!isValidRoleCombination(normalizedRoles)) {
+    return false;
+  }
 
-
-    if (
-        !isValidRoleCombination(
-            normalizedRoles
-        )
-    ) {
-
-        return false;
-    }
-
-
-    return normalizedRoles.some(
-        (role) =>
-            ROLE_ACCESS[role]?.[
-                permission
-            ] === true
-    );
+  return normalizedRoles.some(
+    (role) => ROLE_ACCESS[role]?.[permission] === true,
+  );
 }
-
 
 // =====================================================
 // REPAIR STATUS CHECK
 // =====================================================
 
-export function canChangeRepairStatus(
-    roles,
-    status
-) {
+export function canChangeRepairStatus(roles, status) {
+  const normalizedRoles = normalizeRoles(roles);
 
-    const normalizedRoles =
-        normalizeRoles(roles);
+  if (!isValidRoleCombination(normalizedRoles)) {
+    return false;
+  }
 
-
-    if (
-        !isValidRoleCombination(
-            normalizedRoles
-        )
-    ) {
-
-        return false;
-    }
-
-
-    return normalizedRoles.some(
-        (role) =>
-            REPAIR_STATUS_ACCESS[role]
-                ?.includes(status) ===
-                    true
-    );
+  return normalizedRoles.some(
+    (role) => REPAIR_STATUS_ACCESS[role]?.includes(status) === true,
+  );
 }

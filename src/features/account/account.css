@@ -2,222 +2,164 @@
    ACCOUNT SETTINGS
 ===================================================== */
 
-
 /* =====================================================
    PROFILE FORM
 ===================================================== */
 
 .account-settings-form {
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
-
-    gap: 24px;
-
+  gap: 24px;
 }
-
 
 /* =====================================================
    PROFILE PICTURE
 ===================================================== */
 
 .profile-picture-section {
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  gap: 24px;
 
-    gap: 24px;
+  padding-bottom: 24px;
 
-    padding-bottom: 24px;
-
-    border-bottom: 1px solid var(--border-color);
-
+  border-bottom: 1px solid var(--border-color);
 }
-
 
 .profile-picture-preview {
+  width: 96px;
 
-    width: 96px;
+  height: 96px;
 
-    height: 96px;
+  flex-shrink: 0;
 
-    flex-shrink: 0;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  overflow: hidden;
 
-    overflow: hidden;
+  border: 1px solid var(--border-color);
 
-    border: 1px solid var(--border-color);
+  border-radius: 50%;
 
-    border-radius: 50%;
-
-    background: var(--background-color);
-
+  background: var(--background-color);
 }
-
 
 .profile-picture-preview img {
+  width: 100%;
 
-    width: 100%;
+  height: 100%;
 
-    height: 100%;
-
-    object-fit: cover;
-
+  object-fit: cover;
 }
-
 
 .profile-picture-preview svg {
-
-    color: var(--text-secondary);
-
+  color: var(--text-secondary);
 }
-
 
 .profile-picture-section > div:last-child {
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
+  align-items: flex-start;
 
-    align-items: flex-start;
-
-    gap: 8px;
-
+  gap: 8px;
 }
-
 
 .profile-picture-section p {
+  margin: 0;
 
-    margin: 0;
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.9rem;
-
+  font-size: 0.9rem;
 }
-
 
 /* =====================================================
    ACCOUNT INFORMATION
 ===================================================== */
 
 .account-information-grid {
+  display: grid;
 
-    display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    grid-template-columns:
-        repeat(
-            2,
-            minmax(0, 1fr)
-        );
-
-    gap: 16px;
-
+  gap: 16px;
 }
-
 
 .account-information-item {
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
+  gap: 6px;
 
-    gap: 6px;
+  padding: 18px;
 
-    padding: 18px;
+  border: 1px solid var(--border-color);
 
-    border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 
-    border-radius: var(--border-radius);
-
-    background: var(--background-color);
-
+  background: var(--background-color);
 }
-
 
 .account-information-item > span {
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
+  font-size: 0.85rem;
 
-    font-size: 0.85rem;
-
-    font-weight: 500;
-
+  font-weight: 500;
 }
-
 
 .account-information-item > strong {
+  color: var(--text-primary);
 
-    color: var(--text-primary);
-
-    font-size: 1rem;
-
+  font-size: 1rem;
 }
-
 
 .account-information-item > small {
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.78rem;
-
+  font-size: 0.78rem;
 }
-
 
 /* =====================================================
    PROFILE FILE BUTTON
 ===================================================== */
 
-.profile-picture-section
-.secondary-repair-button {
-
-    cursor: pointer;
-
+.profile-picture-section .secondary-repair-button {
+  cursor: pointer;
 }
-
 
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
 @media (max-width: 900px) {
-
-    .account-information-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
+  .account-information-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-
 @media (max-width: 600px) {
+  .profile-picture-section {
+    align-items: flex-start;
 
-    .profile-picture-section {
+    flex-direction: column;
+  }
 
-        align-items: flex-start;
+  .profile-picture-preview {
+    width: 84px;
 
-        flex-direction: column;
-
-    }
-
-
-    .profile-picture-preview {
-
-        width: 84px;
-
-        height: 84px;
-
-    }
-
+    height: 84px;
+  }
 }
 
 /* =====================================================
@@ -225,111 +167,85 @@
 ===================================================== */
 
 .account-security-heading {
+  display: flex;
 
-    display: flex;
+  align-items: flex-start;
 
-    align-items: flex-start;
+  gap: 12px;
 
-    gap: 12px;
-
-    margin-bottom: 24px;
-
+  margin-bottom: 24px;
 }
-
 
 .account-security-heading svg {
+  flex-shrink: 0;
 
-    flex-shrink: 0;
-
-    color: var(--text-secondary);
-
+  color: var(--text-secondary);
 }
-
 
 .account-security-heading p {
+  margin: 4px 0 0;
 
-    margin: 4px 0 0;
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.9rem;
-
+  font-size: 0.9rem;
 }
-
 
 /* =====================================================
    PASSWORD INPUT
 ===================================================== */
 
 .account-password-input {
-
-    position: relative;
-
+  position: relative;
 }
-
 
 .account-password-input input {
+  width: 100%;
 
-    width: 100%;
-
-    padding-right: 46px;
-
+  padding-right: 46px;
 }
-
 
 .account-password-input button {
+  position: absolute;
 
-    position: absolute;
+  top: 50%;
 
-    top: 50%;
+  right: 12px;
 
-    right: 12px;
+  transform: translateY(-50%);
 
-    transform: translateY(-50%);
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  padding: 4px;
 
-    padding: 4px;
+  border: none;
 
-    border: none;
+  background: transparent;
 
-    background: transparent;
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    cursor: pointer;
-
+  cursor: pointer;
 }
-
 
 .account-password-input button:hover {
-
-    color: var(--text-primary);
-
+  color: var(--text-primary);
 }
-
 
 .account-field-hint {
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.8rem;
-
+  font-size: 0.8rem;
 }
 
-
 .account-form-message {
+  margin: 0;
 
-    margin: 0;
+  font-size: 0.9rem;
 
-    font-size: 0.9rem;
-
-    color: var(--text-secondary);
-
+  color: var(--text-secondary);
 }
 
 /* =====================================================
@@ -337,124 +253,93 @@
 ===================================================== */
 
 .email-verification-card {
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  gap: 18px;
 
-    gap: 18px;
+  padding: 20px;
 
-    padding: 20px;
+  border: 1px solid var(--border-color);
 
-    border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 
-    border-radius: var(--border-radius);
-
-    background: var(--background-color);
-
+  background: var(--background-color);
 }
-
 
 .email-verification-icon {
+  flex-shrink: 0;
 
-    flex-shrink: 0;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
-
-    justify-content: center;
-
+  justify-content: center;
 }
-
 
 .email-verification-details {
+  flex: 1;
 
-    flex: 1;
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
-
-    gap: 5px;
-
+  gap: 5px;
 }
-
 
 .email-verification-details > span {
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.85rem;
-
+  font-size: 0.85rem;
 }
-
 
 .email-verification-details > strong {
-
-    color: var(--text-primary);
-
+  color: var(--text-primary);
 }
-
 
 .email-verification-details p {
+  margin: 4px 0 0;
 
-    margin: 4px 0 0;
+  color: var(--text-secondary);
 
-    color: var(--text-secondary);
-
-    font-size: 0.88rem;
-
+  font-size: 0.88rem;
 }
-
 
 .email-verification-status span {
+  display: inline-flex;
 
-    display: inline-flex;
+  align-items: center;
 
-    align-items: center;
+  padding: 4px 9px;
 
-    padding: 4px 9px;
+  border-radius: 999px;
 
-    border-radius: 999px;
+  font-size: 0.78rem;
 
-    font-size: 0.78rem;
-
-    font-weight: 600;
-
+  font-weight: 600;
 }
-
 
 .email-verification-status .verified {
+  background: #e8f5e9;
 
-    background: #e8f5e9;
-
-    color: #2e7d32;
-
+  color: #2e7d32;
 }
-
 
 .email-verification-status .unverified {
+  background: #fff3e0;
 
-    background: #fff3e0;
-
-    color: #b26a00;
-
+  color: #b26a00;
 }
-
 
 /* =====================================================
    EMAIL VERIFICATION RESPONSIVE
 ===================================================== */
 
 @media (max-width: 700px) {
+  .email-verification-card {
+    align-items: flex-start;
 
-    .email-verification-card {
-
-        align-items: flex-start;
-
-        flex-direction: column;
-
-    }
-
+    flex-direction: column;
+  }
 }

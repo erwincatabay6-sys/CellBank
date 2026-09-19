@@ -1,144 +1,75 @@
-import { mockUsers }
-    from "../../administration/data/mockUsers.js";
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 
-import ProfileSettings
-    from "../components/ProfileSettings.jsx";
+import ProfileSettings from "../components/ProfileSettings.jsx";
 
-import AccountInformation
-    from "../components/AccountInformation.jsx";
+import AccountInformation from "../components/AccountInformation.jsx";
 
-import PasswordSettings
-    from "../components/PasswordSettings.jsx";
+import PasswordSettings from "../components/PasswordSettings.jsx";
 
-import EmailVerificationSettings
-    from "../components/EmailVerificationSettings.jsx";
+import EmailVerificationSettings from "../components/EmailVerificationSettings.jsx";
 
 import "../account.css";
 
+function AccountSettingsPage() {
+  const { user: currentUser } = useAuth();
+  const currentRoles = currentUser?.roles ?? [];
 
-function AccountSettingsPage({
-    currentRoles,
-    currentUserName
-}) {
+  // -----------------------------
+  // ACCOUNT NOT FOUND
+  // -----------------------------
 
-    // -----------------------------
-    // CURRENT MOCK USER
-    // -----------------------------
-
-    const currentUser =
-        mockUsers.find(
-            (user) =>
-                user.name ===
-                    currentUserName
-        );
-
-
-    // -----------------------------
-    // ACCOUNT NOT FOUND
-    // -----------------------------
-
-    if (!currentUser) {
-
-        return (
-            <>
-
-                <section className="page-header">
-
-                    <h2>
-                        Account Settings
-                    </h2>
-
-                    <p>
-                        Manage your personal account
-                        information and security.
-                    </p>
-
-                </section>
-
-
-                <section className="page-content">
-
-                    <div className="workspace-empty-state">
-
-                        <strong>
-                            Account unavailable
-                        </strong>
-
-                        <p>
-                            Your account information
-                            could not be loaded.
-                        </p>
-
-                    </div>
-
-                </section>
-
-            </>
-        );
-    }
-
-
+  if (!currentUser) {
     return (
-        <>
+      <>
+        <section className="page-header">
+          <h2>Account Settings</h2>
 
-            {/* =========================
+          <p>Manage your personal account information and security.</p>
+        </section>
+
+        <section className="page-content">
+          <div className="workspace-empty-state">
+            <strong>Account unavailable</strong>
+
+            <p>Your account information could not be loaded.</p>
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* =========================
                 PAGE HEADER
             ========================== */}
-            <section className="page-header">
+      <section className="page-header">
+        <h2>Account Settings</h2>
 
-                <h2>
-                    Account Settings
-                </h2>
+        <p>Manage your personal account information and security.</p>
+      </section>
 
-                <p>
-                    Manage your personal account
-                    information and security.
-                </p>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 PROFILE
             ========================== */}
-            <ProfileSettings
-                user={
-                    currentUser
-                }
-            />
+      <ProfileSettings user={currentUser} />
 
-
-            {/* =========================
+      {/* =========================
                 ACCOUNT INFORMATION
             ========================== */}
-            <AccountInformation
-                user={
-                    currentUser
-                }
-                currentRoles={
-                    currentRoles
-                }
-            />
+      <AccountInformation user={currentUser} currentRoles={currentRoles} />
 
-
-            {/* =========================
+      {/* =========================
                 CHANGE PASSWORD
             ========================== */}
-            <PasswordSettings />
+      <PasswordSettings />
 
-
-            {/* =========================
+      {/* =========================
                 EMAIL VERIFICATION
             ========================== */}
-            <EmailVerificationSettings
-                user={
-                    currentUser
-                }
-            />
-
-        </>
-    );
+      <EmailVerificationSettings user={currentUser} />
+    </>
+  );
 }
-
 
 export default AccountSettingsPage;

@@ -1,138 +1,71 @@
 const roleLabels = {
+  ADMIN: "Administrator",
 
-    ADMIN:
-        "Administrator",
+  TECHNICIAN: "Technician",
 
-    TECHNICIAN:
-        "Technician",
-
-    FRONT_DESK:
-        "Front Desk"
-
+  FRONT_DESK: "Front Desk",
 };
 
+function AccountInformation({ user, currentRoles }) {
+  // -----------------------------
+  // DISPLAYED ROLES
+  // -----------------------------
 
-function AccountInformation({
-    user,
-    currentRoles
-}) {
+  const roleText = currentRoles
+    .map((role) => roleLabels[role] ?? role)
+    .join(" / ");
 
-    // -----------------------------
-    // DISPLAYED ROLES
-    // -----------------------------
+  return (
+    <section className="page-content">
+      <div className="workspace-section-header">
+        <div>
+          <h3>Account Information</h3>
 
-    const roleText =
-        currentRoles
-            .map(
-                (role) =>
-                    roleLabels[role] ??
-                    role
-            )
-            .join(" / ");
+          <p className="workspace-section-description">
+            Review your system account and assigned access.
+          </p>
+        </div>
+      </div>
 
+      <div className="account-information-grid">
+        {/* USERNAME */}
+        <div className="account-information-item">
+          <span>Username</span>
 
-    return (
-        <section className="page-content">
+          <strong>{user.username}</strong>
 
-            <div className="workspace-section-header">
+          <small>Managed by the Administrator</small>
+        </div>
 
-                <div>
+        {/* REGISTERED EMAIL */}
+        <div className="account-information-item">
+          <span>Registered Email</span>
 
-                    <h3>
-                        Account Information
-                    </h3>
+          <strong>{user.email}</strong>
 
-                    <p className="workspace-section-description">
-                        Review your system account
-                        and assigned access.
-                    </p>
+          <small>Managed by the Administrator</small>
+        </div>
 
-                </div>
+        {/* ROLES */}
+        <div className="account-information-item">
+          <span>Role(s)</span>
 
-            </div>
+          <strong>{roleText}</strong>
 
+          <small>Assigned through Administration</small>
+        </div>
 
-            <div className="account-information-grid">
+        {/* STATUS */}
+        <div className="account-information-item">
+          <span>Account Status</span>
 
-                {/* USERNAME */}
-                <div className="account-information-item">
+          <strong>{user.status === "ACTIVE" ? "Active" : "Inactive"}</strong>
 
-                    <span>
-                        Username
-                    </span>
-
-                    <strong>
-                        {user.username}
-                    </strong>
-
-                    <small>
-                        Managed by the Administrator
-                    </small>
-
-                </div>
-
-
-                {/* REGISTERED EMAIL */}
-                <div className="account-information-item">
-
-                    <span>
-                        Registered Email
-                    </span>
-
-                    <strong>
-                        {user.email}
-                    </strong>
-
-                    <small>
-                        Managed by the Administrator
-                    </small>
-
-                </div>
-
-
-                {/* ROLES */}
-                <div className="account-information-item">
-
-                    <span>
-                        Role(s)
-                    </span>
-
-                    <strong>
-                        {roleText}
-                    </strong>
-
-                    <small>
-                        Assigned through Administration
-                    </small>
-
-                </div>
-
-
-                {/* STATUS */}
-                <div className="account-information-item">
-
-                    <span>
-                        Account Status
-                    </span>
-
-                    <strong>
-                        {user.status === "ACTIVE"
-                            ? "Active"
-                            : "Inactive"
-                        }
-                    </strong>
-
-                    <small>
-                        Managed by the Administrator
-                    </small>
-
-                </div>
-
-            </div>
-
-        </section>
-    );
+          <small>Managed by the Administrator</small>
+        </div>
+      </div>
+    </section>
+  );
 }
-
 
 export default AccountInformation;

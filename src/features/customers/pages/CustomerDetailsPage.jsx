@@ -1,440 +1,254 @@
 import { useState } from "react";
 
-import {
-    useNavigate,
-    useParams
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
+import CustomerDeviceList from "../components/CustomerDeviceList.jsx";
 
-import CustomerDeviceList
-    from "../components/CustomerDeviceList.jsx";
+import CustomerRepairHistory from "../components/CustomerRepairHistory.jsx";
 
-import CustomerRepairHistory
-    from "../components/CustomerRepairHistory.jsx";
+import CustomerRegistrationModal from "../components/CustomerRegistrationModal.jsx";
 
-import CustomerRegistrationModal
-    from "../components/CustomerRegistrationModal.jsx";
+import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
 
-import DeviceRegistrationModal
-    from "../components/DeviceRegistrationModal.jsx";
+import { useCustomers } from "../context/CustomersContext.jsx";
 
-import { useCustomers }
-    from "../context/CustomersContext.jsx";
-
-import { mockRepairs }
-    from "../../repairs/data/mockRepairs.js";
-
+import { mockRepairs } from "../../repairs/data/mockRepairs.js";
 
 function CustomerDetailsPage() {
+  const { customerId } = useParams();
 
-    const { customerId } =
-        useParams();
+  const navigate = useNavigate();
 
-    const navigate =
-        useNavigate();
+  // -----------------------------
+  // SHARED CUSTOMER STATE
+  // -----------------------------
 
+  const { customers, addDevice, updateCustomer } = useCustomers();
 
-    // -----------------------------
-    // SHARED CUSTOMER STATE
-    // -----------------------------
+  // -----------------------------
+  // PAGE STATE
+  // -----------------------------
 
-    const {
-        customers,
-        addDevice,
-        updateCustomer
-    } = useCustomers();
+  const [customerEditOpen, setCustomerEditOpen] = useState(false);
 
+  const [deviceModalOpen, setDeviceModalOpen] = useState(false);
 
-    // -----------------------------
-    // PAGE STATE
-    // -----------------------------
+  // -----------------------------
+  // CUSTOMER
+  // -----------------------------
 
-    const [
-        customerEditOpen,
-        setCustomerEditOpen
-    ] = useState(false);
+  const customer = customers.find(
+    (customer) => customer.id === Number(customerId),
+  );
 
-    const [
-        deviceModalOpen,
-        setDeviceModalOpen
-    ] = useState(false);
+  // -----------------------------
+  // CUSTOMER NOT FOUND
+  // -----------------------------
 
-
-    // -----------------------------
-    // CUSTOMER
-    // -----------------------------
-
-    const customer =
-        customers.find(
-            (customer) =>
-                customer.id === Number(customerId)
-        );
-
-
-    // -----------------------------
-    // CUSTOMER NOT FOUND
-    // -----------------------------
-
-    if (!customer) {
-
-        return (
-            <>
-
-                <section className="page-header">
-
-                    <h2>
-                        Customer Not Found
-                    </h2>
-
-                    <p>
-                        The requested customer record
-                        does not exist.
-                    </p>
-
-                </section>
-
-
-                <section className="page-content">
-
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={() =>
-                            navigate("/customers")
-                        }
-                    >
-                        Back to Customers
-                    </button>
-
-                </section>
-
-            </>
-        );
-    }
-
-
-    // -----------------------------
-    // DERIVED CUSTOMER DATA
-    // -----------------------------
-
-    const customerDeviceIds =
-        customer.devices.map(
-            (device) => device.id
-        );
-
-
-    const customerRepairs =
-        mockRepairs.filter(
-            (repair) =>
-                customerDeviceIds.includes(
-                    repair.deviceId
-                )
-        );
-
-
-    // -----------------------------
-    // NAVIGATION
-    // -----------------------------
-
-    function handleDeviceClick(deviceId) {
-
-        navigate(
-            `/customers/${customer.id}/devices/${deviceId}`
-        );
-    }
-
-
-    function handleRepairClick(repairId) {
-
-        navigate(
-            `/repairs/${repairId}`
-        );
-    }
-
-
-    // -----------------------------
-    // CUSTOMER EDITING
-    // -----------------------------
-
-    function handleEditCustomer() {
-
-        setCustomerEditOpen(true);
-    }
-
-
-    function handleCustomerUpdate(
-        updatedCustomer
-    ) {
-
-        updateCustomer(
-            customer.id,
-            updatedCustomer
-        );
-
-
-        setCustomerEditOpen(false);
-    }
-
-
-    function handleCustomerEditClose() {
-
-        setCustomerEditOpen(false);
-    }
-
-
-    // -----------------------------
-    // DEVICE REGISTRATION
-    // -----------------------------
-
-    function handleNewDevice() {
-
-        setDeviceModalOpen(true);
-    }
-
-
-    function handleDeviceSave(newDevice) {
-
-        addDevice(
-            customer.id,
-            newDevice
-        );
-
-
-        setDeviceModalOpen(false);
-    }
-
-
-    function handleDeviceModalClose() {
-
-        setDeviceModalOpen(false);
-    }
-
-
+  if (!customer) {
     return (
-        <>
+      <>
+        <section className="page-header">
+          <h2>Customer Not Found</h2>
 
-            {/* =========================
+          <p>The requested customer record does not exist.</p>
+        </section>
+
+        <section className="page-content">
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={() => navigate("/customers")}
+          >
+            Back to Customers
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  // -----------------------------
+  // DERIVED CUSTOMER DATA
+  // -----------------------------
+
+  const customerDeviceIds = customer.devices.map((device) => device.id);
+
+  const customerRepairs = mockRepairs.filter((repair) =>
+    customerDeviceIds.includes(repair.deviceId),
+  );
+
+  // -----------------------------
+  // NAVIGATION
+  // -----------------------------
+
+  function handleDeviceClick(deviceId) {
+    navigate(`/customers/${customer.id}/devices/${deviceId}`);
+  }
+
+  function handleRepairClick(repairId) {
+    navigate(`/repairs/${repairId}`);
+  }
+
+  // -----------------------------
+  // CUSTOMER EDITING
+  // -----------------------------
+
+  function handleEditCustomer() {
+    setCustomerEditOpen(true);
+  }
+
+  function handleCustomerUpdate(updatedCustomer) {
+    updateCustomer(customer.id, updatedCustomer);
+
+    setCustomerEditOpen(false);
+  }
+
+  function handleCustomerEditClose() {
+    setCustomerEditOpen(false);
+  }
+
+  // -----------------------------
+  // DEVICE REGISTRATION
+  // -----------------------------
+
+  function handleNewDevice() {
+    setDeviceModalOpen(true);
+  }
+
+  function handleDeviceSave(newDevice) {
+    addDevice(customer.id, newDevice);
+
+    setDeviceModalOpen(false);
+  }
+
+  function handleDeviceModalClose() {
+    setDeviceModalOpen(false);
+  }
+
+  return (
+    <>
+      {/* =========================
                 PAGE HEADER
             ========================== */}
-            <section className="page-header">
+      <section className="page-header">
+        <h2>{customer.name}</h2>
 
-                <h2>
-                    {customer.name}
-                </h2>
+        <p>
+          View customer information, registered devices, and repair history.
+        </p>
+      </section>
 
-                <p>
-                    View customer information,
-                    registered devices, and repair history.
-                </p>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 CUSTOMER INFORMATION
             ========================== */}
-            <section className="page-content">
+      <section className="page-content">
+        <div className="workspace-section-header">
+          <div>
+            <h3>Customer Information</h3>
 
-                <div className="workspace-section-header">
+            <p className="workspace-section-description">
+              Contact and account information for this customer.
+            </p>
+          </div>
 
-                    <div>
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={handleEditCustomer}
+          >
+            Edit Customer
+          </button>
+        </div>
 
-                        <h3>
-                            Customer Information
-                        </h3>
+        <div className="customer-info-grid">
+          {/* FULL NAME */}
+          <div>
+            <span>Full Name</span>
 
-                        <p className="workspace-section-description">
-                            Contact and account information
-                            for this customer.
-                        </p>
+            <strong>{customer.name}</strong>
+          </div>
 
-                    </div>
+          {/* PHONE */}
+          <div>
+            <span>Phone</span>
 
+            <strong>{customer.phone}</strong>
+          </div>
 
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={handleEditCustomer}
-                    >
-                        Edit Customer
-                    </button>
+          {/* EMAIL */}
+          <div>
+            <span>Email</span>
 
-                </div>
+            <strong>{customer.email || "Not recorded"}</strong>
+          </div>
 
+          {/* ADDRESS */}
+          <div>
+            <span>Address</span>
 
-                <div className="customer-info-grid">
+            <strong>{customer.address || "Not recorded"}</strong>
+          </div>
 
-                    {/* FULL NAME */}
-                    <div>
+          {/* REGISTERED DEVICES */}
+          <div>
+            <span>Registered Devices</span>
 
-                        <span>
-                            Full Name
-                        </span>
+            <strong>{customer.devices.length}</strong>
+          </div>
 
-                        <strong>
-                            {customer.name}
-                        </strong>
+          {/* REPAIR RECORDS */}
+          <div>
+            <span>Repair Records</span>
 
-                    </div>
+            <strong>{customerRepairs.length}</strong>
+          </div>
+        </div>
+      </section>
 
-
-                    {/* PHONE */}
-                    <div>
-
-                        <span>
-                            Phone
-                        </span>
-
-                        <strong>
-                            {customer.phone}
-                        </strong>
-
-                    </div>
-
-
-                    {/* EMAIL */}
-                    <div>
-
-                        <span>
-                            Email
-                        </span>
-
-                        <strong>
-                            {customer.email ||
-                                "Not recorded"
-                            }
-                        </strong>
-
-                    </div>
-
-
-                    {/* ADDRESS */}
-                    <div>
-
-                        <span>
-                            Address
-                        </span>
-
-                        <strong>
-                            {customer.address ||
-                                "Not recorded"
-                            }
-                        </strong>
-
-                    </div>
-
-
-                    {/* REGISTERED DEVICES */}
-                    <div>
-
-                        <span>
-                            Registered Devices
-                        </span>
-
-                        <strong>
-                            {customer.devices.length}
-                        </strong>
-
-                    </div>
-
-
-                    {/* REPAIR RECORDS */}
-                    <div>
-
-                        <span>
-                            Repair Records
-                        </span>
-
-                        <strong>
-                            {customerRepairs.length}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 REGISTERED DEVICES
             ========================== */}
-            <section className="page-content">
+      <section className="page-content">
+        <CustomerDeviceList
+          devices={customer.devices}
+          onDeviceClick={handleDeviceClick}
+          onNewDevice={handleNewDevice}
+        />
+      </section>
 
-                <CustomerDeviceList
-                    devices={
-                        customer.devices
-                    }
-                    onDeviceClick={
-                        handleDeviceClick
-                    }
-                    onNewDevice={
-                        handleNewDevice
-                    }
-                />
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 CUSTOMER REPAIR HISTORY
             ========================== */}
-            <section className="page-content">
+      <section className="page-content">
+        <CustomerRepairHistory
+          repairs={customerRepairs}
+          onRepairClick={handleRepairClick}
+        />
+      </section>
 
-                <CustomerRepairHistory
-                    repairs={
-                        customerRepairs
-                    }
-                    onRepairClick={
-                        handleRepairClick
-                    }
-                />
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 EDIT CUSTOMER MODAL
             ========================== */}
-            {customerEditOpen && (
+      {customerEditOpen && (
+        <CustomerRegistrationModal
+          initialCustomer={customer}
+          onClose={handleCustomerEditClose}
+          onSave={handleCustomerUpdate}
+        />
+      )}
 
-                <CustomerRegistrationModal
-                    initialCustomer={
-                        customer
-                    }
-                    onClose={
-                        handleCustomerEditClose
-                    }
-                    onSave={
-                        handleCustomerUpdate
-                    }
-                />
-
-            )}
-
-
-            {/* =========================
+      {/* =========================
                 NEW DEVICE MODAL
             ========================== */}
-            {deviceModalOpen && (
-
-                <DeviceRegistrationModal
-                    customerName={
-                        customer.name
-                    }
-                    onClose={
-                        handleDeviceModalClose
-                    }
-                    onSave={
-                        handleDeviceSave
-                    }
-                />
-
-            )}
-
-        </>
-    );
+      {deviceModalOpen && (
+        <DeviceRegistrationModal
+          customerName={customer.name}
+          onClose={handleDeviceModalClose}
+          onSave={handleDeviceSave}
+        />
+      )}
+    </>
+  );
 }
-
 
 export default CustomerDetailsPage;

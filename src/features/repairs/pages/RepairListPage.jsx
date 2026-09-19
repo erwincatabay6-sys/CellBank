@@ -1,318 +1,179 @@
-import {
-    useState
-} from "react";
+import { useState } from "react";
 
-import {
-    Plus,
-    Search
-} from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
-import { useNavigate }
-    from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { hasAccess }
-    from "../../../config/accessControl.js";
+import { hasAccess } from "../../../config/accessControl.js";
 
-import RepairTable
-    from "../components/RepairTable.jsx";
+import RepairTable from "../components/RepairTable.jsx";
 
-import { mockRepairs }
-    from "../data/mockRepairs.js";
+import { mockRepairs } from "../data/mockRepairs.js";
 
-import { mockTechnicians }
-    from "../../technicians/data/mockTechnicians.js";
+import { mockTechnicians } from "../../technicians/data/mockTechnicians.js";
 
 import "../repairs.css";
 
+function RepairListPage({ currentRoles }) {
+  const navigate = useNavigate();
 
-function RepairListPage({
-    currentRoles
-}) {
+  // -----------------------------
+  // ROLE PERMISSIONS
+  // -----------------------------
 
-    const navigate =
-        useNavigate();
+  const canCreateRepair = hasAccess(currentRoles, "createRepair");
 
+  // -----------------------------
+  // FILTER STATE
+  // -----------------------------
 
-    // -----------------------------
-    // ROLE PERMISSIONS
-    // -----------------------------
+  const [searchTerm, setSearchTerm] = useState("");
 
-    const canCreateRepair =
-        hasAccess(
-            currentRoles,
-            "createRepair"
-        );
+  const [statusFilter, setStatusFilter] = useState("");
 
+  const [technicianFilter, setTechnicianFilter] = useState("");
 
-    // -----------------------------
-    // FILTER STATE
-    // -----------------------------
+  // -----------------------------
+  // FILTERED REPAIRS
+  // -----------------------------
 
-    const [searchTerm, setSearchTerm] =
-        useState("");
+  const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    const [statusFilter, setStatusFilter] =
-        useState("");
+  const filteredRepairs = mockRepairs.filter((repair) => {
+    const searchableStatus = repair.status.replaceAll("_", " ").toLowerCase();
 
-    const [technicianFilter, setTechnicianFilter] =
-        useState("");
+    const matchesSearch =
+      !normalizedSearch ||
+      repair.reference.toLowerCase().includes(normalizedSearch) ||
+      repair.customer.toLowerCase().includes(normalizedSearch) ||
+      repair.device.toLowerCase().includes(normalizedSearch) ||
+      (repair.technician ?? "Unassigned")
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      searchableStatus.includes(normalizedSearch);
 
+    const matchesStatus = !statusFilter || repair.status === statusFilter;
 
-    // -----------------------------
-    // FILTERED REPAIRS
-    // -----------------------------
+    const matchesTechnician =
+      !technicianFilter ||
+      (technicianFilter === "UNASSIGNED"
+        ? repair.technicianId == null
+        : repair.technicianId === Number(technicianFilter));
 
-    const normalizedSearch =
-        searchTerm
-            .trim()
-            .toLowerCase();
+    return matchesSearch && matchesStatus && matchesTechnician;
+  });
 
+  // -----------------------------
+  // NAVIGATION
+  // -----------------------------
 
-    const filteredRepairs =
-        mockRepairs.filter((repair) => {
-
-            const searchableStatus =
-                repair.status
-                    .replaceAll("_", " ")
-                    .toLowerCase();
-
-
-            const matchesSearch =
-                !normalizedSearch ||
-                repair.reference
-                    .toLowerCase()
-                    .includes(normalizedSearch) ||
-                repair.customer
-                    .toLowerCase()
-                    .includes(normalizedSearch) ||
-                repair.device
-                    .toLowerCase()
-                    .includes(normalizedSearch) ||
-                (repair.technician ?? "Unassigned")
-                    .toLowerCase()
-                    .includes(normalizedSearch) ||
-                searchableStatus
-                    .includes(normalizedSearch);
-
-
-            const matchesStatus =
-                !statusFilter ||
-                repair.status === statusFilter;
-
-
-            const matchesTechnician =
-                !technicianFilter ||
-                (
-                    technicianFilter === "UNASSIGNED"
-                        ? repair.technicianId == null
-                        : repair.technicianId ===
-                            Number(technicianFilter)
-                );
-
-
-            return (
-                matchesSearch &&
-                matchesStatus &&
-                matchesTechnician
-            );
-        });
-
-
-    // -----------------------------
-    // NAVIGATION
-    // -----------------------------
-
-    function handleNewRepair() {
-
-        if (!canCreateRepair) {
-            return;
-        }
-
-
-        navigate(
-            "/repairs/new"
-        );
+  function handleNewRepair() {
+    if (!canCreateRepair) {
+      return;
     }
 
+    navigate("/repairs/new");
+  }
 
-    return (
-        <>
-
-            {/* =========================
+  return (
+    <>
+      {/* =========================
                 PAGE HEADER
             ========================== */}
-            <section className="page-header">
+      <section className="page-header">
+        <h2>Repairs</h2>
 
-                <h2>
-                    Repairs
-                </h2>
+        <p>Manage and monitor Cellbank repair jobs.</p>
+      </section>
 
-                <p>
-                    Manage and monitor
-                    Cellbank repair jobs.
-                </p>
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 REPAIR TOOLBAR
             ========================== */}
-            <section className="repair-toolbar">
+      <section className="repair-toolbar">
+        {/* SEARCH */}
+        <div className="repair-search">
+          <Search size={18} />
 
-                {/* SEARCH */}
-                <div className="repair-search">
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search repairs..."
+            aria-label="Search repair records"
+          />
+        </div>
 
-                    <Search size={18} />
+        {/* STATUS FILTER */}
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          aria-label="Filter by repair status"
+        >
+          <option value="">All Statuses</option>
 
-                    <input
-                        type="search"
-                        value={searchTerm}
-                        onChange={(event) =>
-                            setSearchTerm(
-                                event.target.value
-                            )
-                        }
-                        placeholder="Search repairs..."
-                        aria-label="Search repair records"
-                    />
+          <option value="RECEIVED">Received</option>
 
-                </div>
+          <option value="AWAITING_APPROVAL">Awaiting Approval</option>
 
+          <option value="IN_PROGRESS">In Progress</option>
 
-                {/* STATUS FILTER */}
-                <select
-                    value={statusFilter}
-                    onChange={(event) =>
-                        setStatusFilter(
-                            event.target.value
-                        )
-                    }
-                    aria-label="Filter by repair status"
-                >
+          <option value="AWAITING_PARTS">Awaiting Parts</option>
 
-                    <option value="">
-                        All Statuses
-                    </option>
+          <option value="READY_FOR_RELEASE">Ready for Release</option>
 
-                    <option value="RECEIVED">
-                        Received
-                    </option>
+          <option value="COMPLETED">Completed</option>
 
-                    <option value="AWAITING_APPROVAL">
-                        Awaiting Approval
-                    </option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
 
-                    <option value="IN_PROGRESS">
-                        In Progress
-                    </option>
+        {/* TECHNICIAN FILTER */}
+        <select
+          value={technicianFilter}
+          onChange={(event) => setTechnicianFilter(event.target.value)}
+          aria-label="Filter by technician"
+        >
+          <option value="">All Technicians</option>
 
-                    <option value="AWAITING_PARTS">
-                        Awaiting Parts
-                    </option>
+          {mockTechnicians
+            .filter((technician) => technician.status === "ACTIVE")
+            .map((technician) => (
+              <option key={technician.id} value={technician.id}>
+                {technician.name}
+              </option>
+            ))}
 
-                    <option value="READY_FOR_RELEASE">
-                        Ready for Release
-                    </option>
+          <option value="UNASSIGNED">Unassigned</option>
+        </select>
 
-                    <option value="COMPLETED">
-                        Completed
-                    </option>
+        {/* NEW REPAIR */}
+        {canCreateRepair && (
+          <button
+            className="new-repair-button"
+            type="button"
+            onClick={handleNewRepair}
+          >
+            <Plus size={18} />
 
-                    <option value="CANCELLED">
-                        Cancelled
-                    </option>
+            <span>New Repair</span>
+          </button>
+        )}
+      </section>
 
-                </select>
-
-
-                {/* TECHNICIAN FILTER */}
-                <select
-                    value={technicianFilter}
-                    onChange={(event) =>
-                        setTechnicianFilter(
-                            event.target.value
-                        )
-                    }
-                    aria-label="Filter by technician"
-                >
-
-                    <option value="">
-                        All Technicians
-                    </option>
-
-                    {mockTechnicians
-                        .filter(
-                            (technician) =>
-                                technician.status ===
-                                    "ACTIVE"
-                        )
-                        .map((technician) => (
-
-                            <option
-                                key={technician.id}
-                                value={technician.id}
-                            >
-                                {technician.name}
-                            </option>
-
-                        ))}
-
-                    <option value="UNASSIGNED">
-                        Unassigned
-                    </option>
-
-                </select>
-
-
-                {/* NEW REPAIR */}
-                {canCreateRepair && (
-
-                    <button
-                        className="new-repair-button"
-                        type="button"
-                        onClick={
-                            handleNewRepair
-                        }
-                    >
-
-                        <Plus size={18} />
-
-                        <span>
-                            New Repair
-                        </span>
-
-                    </button>
-
-                )}
-
-            </section>
-
-
-            {/* =========================
+      {/* =========================
                 RESULT COUNT
             ========================== */}
-            <div className="repair-result-count">
-                Showing {filteredRepairs.length} of {mockRepairs.length} repairs
-            </div>
+      <div className="repair-result-count">
+        Showing {filteredRepairs.length} of {mockRepairs.length} repairs
+      </div>
 
-
-            {/* =========================
+      {/* =========================
                 REPAIR TABLE
             ========================== */}
-            <section className="page-content">
-
-                <RepairTable
-                    repairs={
-                        filteredRepairs
-                    }
-                />
-
-            </section>
-
-        </>
-    );
+      <section className="page-content">
+        <RepairTable repairs={filteredRepairs} />
+      </section>
+    </>
+  );
 }
-
 
 export default RepairListPage;

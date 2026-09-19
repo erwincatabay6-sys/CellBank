@@ -1,77 +1,64 @@
 export const mockPayments = [
+  // =====================================================
+  // REPAIR 1
+  // CB-2026-00124
+  // Partial payment / deposit
+  // =====================================================
+  {
+    id: 1,
 
-    // =====================================================
-    // REPAIR 1
-    // CB-2026-00124
-    // Partial payment / deposit
-    // =====================================================
-    {
-        id: 1,
+    repairId: 1,
 
-        repairId: 1,
+    amount: 1000,
 
-        amount: 1000,
+    recordedDate: "2026-09-02",
 
-        recordedDate: "2026-09-02",
+    recordedBy: "Miguel Santos",
 
-        recordedBy:
-            "Miguel Santos",
+    recordedAt: "September 2, 2026 - 2:30 PM",
 
-        recordedAt:
-            "September 2, 2026 - 2:30 PM",
+    note: "Customer deposit.",
+  },
 
-        note:
-            "Customer deposit."
-    },
+  // =====================================================
+  // REPAIR 3
+  // CB-2026-00126
+  // Fully paid
+  // =====================================================
+  {
+    id: 2,
 
+    repairId: 3,
 
-    // =====================================================
-    // REPAIR 3
-    // CB-2026-00126
-    // Fully paid
-    // =====================================================
-    {
-        id: 2,
+    amount: 3000,
 
-        repairId: 3,
+    recordedDate: "2026-09-03",
 
-        amount: 3000,
+    recordedBy: "Miguel Santos",
 
-        recordedDate: "2026-09-03",
+    recordedAt: "September 3, 2026 - 4:15 PM",
 
-        recordedBy:
-            "Miguel Santos",
+    note: "Full repair payment.",
+  },
 
-        recordedAt:
-            "September 3, 2026 - 4:15 PM",
+  // =====================================================
+  // REPAIR 4
+  // CB-2026-00108
+  // Historical completed repair
+  // =====================================================
+  {
+    id: 3,
 
-        note:
-            "Full repair payment."
-    },
+    repairId: 4,
 
+    amount: 1500,
 
-    // =====================================================
-    // REPAIR 4
-    // CB-2026-00108
-    // Historical completed repair
-    // =====================================================
-    {
-        id: 3,
+    recordedDate: "2026-08-20",
 
-        repairId: 4,
+    recordedBy: "Miguel Santos",
 
-        amount: 1500,
+    recordedAt: "August 20, 2026 - 3:40 PM",
 
-        recordedDate: "2026-08-20",
-
-        recordedBy:
-            "Miguel Santos",
-
-        recordedAt:
-            "August 20, 2026 - 3:40 PM",
-
-        note:
-            "Full payment upon device release."
-    }
-
+    note: "Full payment upon device release.",
+  },
 ];

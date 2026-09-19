@@ -1,75 +1,32 @@
-import { useState }
-    from "react";
+import { useState } from "react";
 
-import Header
-    from "../components/Header.jsx";
+import Header from "../components/Header.jsx";
 
-import Sidebar
-    from "../components/Sidebar.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
+function StaffLayout({ children, currentRoles, currentUserName }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-function StaffLayout({
-    children,
-    currentRoles,
-    currentUserName
-}) {
+  function toggleSidebar() {
+    setSidebarCollapsed(!sidebarCollapsed);
+  }
 
-    const [
-        sidebarCollapsed,
-        setSidebarCollapsed
-    ] = useState(false);
+  return (
+    <div className="staff-layout">
+      <Header currentRoles={currentRoles} currentUserName={currentUserName} />
 
+      <div className="staff-body">
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+          currentRoles={currentRoles}
+          currentUserName={currentUserName}
+        />
 
-    function toggleSidebar() {
-
-        setSidebarCollapsed(
-            !sidebarCollapsed
-        );
-    }
-
-
-    return (
-        <div className="staff-layout">
-
-            <Header
-                currentRoles={
-                    currentRoles
-                }
-                currentUserName={
-                    currentUserName
-                }
-            />
-
-
-            <div className="staff-body">
-
-                <Sidebar
-                    collapsed={
-                        sidebarCollapsed
-                    }
-                    onToggle={
-                        toggleSidebar
-                    }
-                    currentRoles={
-                        currentRoles
-                    }
-                    currentUserName={
-                        currentUserName
-                    }
-                />
-
-
-                <main className="main-content">
-
-                    {children}
-
-                </main>
-
-            </div>
-
-        </div>
-    );
+        <main className="main-content">{children}</main>
+      </div>
+    </div>
+  );
 }
-
 
 export default StaffLayout;

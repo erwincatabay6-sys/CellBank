@@ -1,82 +1,69 @@
 export const mockUsers = [
+  // =====================================================
+  // TECHNICIAN
+  // =====================================================
+  {
+    id: 1,
 
-    // =====================================================
-    // TECHNICIAN
-    // =====================================================
-    {
-        id: 1,
+    name: "Miguel Santos",
 
-        name: "Miguel Santos",
+    username: "miguel.santos",
 
-        username: "miguel.santos",
+    email: "miguel.santos@cellbank.local",
 
-        email: "miguel.santos@cellbank.local",
+    roles: ["TECHNICIAN"],
 
-        roles: [
-            "TECHNICIAN"
-        ],
+    status: "ACTIVE",
+  },
 
-        status: "ACTIVE"
-    },
+  // =====================================================
+  // TECHNICIAN
+  // =====================================================
+  {
+    id: 2,
 
+    name: "Carlo Mendoza",
 
-    // =====================================================
-    // TECHNICIAN
-    // =====================================================
-    {
-        id: 2,
+    username: "carlo.mendoza",
 
-        name: "Carlo Mendoza",
+    email: "carlo.mendoza@cellbank.local",
 
-        username: "carlo.mendoza",
+    roles: ["TECHNICIAN"],
 
-        email: "carlo.mendoza@cellbank.local",
+    status: "ACTIVE",
+  },
 
-        roles: [
-            "TECHNICIAN"
-        ],
+  // =====================================================
+  // ADMINISTRATOR
+  // =====================================================
+  {
+    id: 3,
 
-        status: "ACTIVE"
-    },
+    name: "Administrator",
 
+    username: "admin",
 
-    // =====================================================
-    // ADMINISTRATOR
-    // =====================================================
-    {
-        id: 3,
+    email: "admin@cellbank.local",
 
-        name: "Administrator",
+    roles: ["ADMIN"],
 
-        username: "admin",
+    status: "ACTIVE",
+  },
 
-        email: "admin@cellbank.local",
+  // =====================================================
+  // FRONT DESK
+  // =====================================================
+  {
+    id: 4,
 
-        roles: [
-            "ADMIN"
-        ],
+    name: "Angela Reyes",
 
-        status: "ACTIVE"
-    },
+    username: "angela.reyes",
 
+    email: "angela.reyes@cellbank.local",
 
-    // =====================================================
-    // FRONT DESK
-    // =====================================================
-    {
-        id: 4,
+    roles: ["FRONT_DESK"],
 
-        name: "Angela Reyes",
-
-        username: "angela.reyes",
-
-        email: "angela.reyes@cellbank.local",
-
-        roles: [
-            "FRONT_DESK"
-        ],
-
-        status: "ACTIVE"
-    }
-
+    status: "ACTIVE",
+  },
 ];

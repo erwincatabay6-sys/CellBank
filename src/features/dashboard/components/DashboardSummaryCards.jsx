@@ -1,67 +1,36 @@
 function DashboardSummaryCards({
-    totalRepairs,
-    activeRepairs,
-    readyForRelease,
-    completedRepairs
+  totalRepairs,
+  activeRepairs,
+  readyForRelease,
+  completedRepairs,
 }) {
+  return (
+    <section className="dashboard-summary-grid">
+      <div className="dashboard-summary-card">
+        <span>Total Repairs</span>
 
-    return (
-        <section className="dashboard-summary-grid">
+        <strong>{totalRepairs}</strong>
+      </div>
 
-            <div className="dashboard-summary-card">
+      <div className="dashboard-summary-card">
+        <span>Active Repairs</span>
 
-                <span>
-                    Total Repairs
-                </span>
+        <strong>{activeRepairs}</strong>
+      </div>
 
-                <strong>
-                    {totalRepairs}
-                </strong>
+      <div className="dashboard-summary-card">
+        <span>Ready for Release</span>
 
-            </div>
+        <strong>{readyForRelease}</strong>
+      </div>
 
+      <div className="dashboard-summary-card">
+        <span>Completed</span>
 
-            <div className="dashboard-summary-card">
-
-                <span>
-                    Active Repairs
-                </span>
-
-                <strong>
-                    {activeRepairs}
-                </strong>
-
-            </div>
-
-
-            <div className="dashboard-summary-card">
-
-                <span>
-                    Ready for Release
-                </span>
-
-                <strong>
-                    {readyForRelease}
-                </strong>
-
-            </div>
-
-
-            <div className="dashboard-summary-card">
-
-                <span>
-                    Completed
-                </span>
-
-                <strong>
-                    {completedRepairs}
-                </strong>
-
-            </div>
-
-        </section>
-    );
+        <strong>{completedRepairs}</strong>
+      </div>
+    </section>
+  );
 }
-
 
 export default DashboardSummaryCards;

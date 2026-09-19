@@ -1,110 +1,94 @@
 :root {
-    --primary: #d95c5c;
-    --primary-dark: #b94444;
-    --primary-soft: #fdecec;
+  --primary: #d95c5c;
+  --primary-dark: #b94444;
+  --primary-soft: #fdecec;
 
-    --surface-dark: #1f2937;
-    --background: #f8fafc;
-    --surface: #ffffff;
+  --surface-dark: #1f2937;
+  --background: #f8fafc;
+  --surface: #ffffff;
 
-    --border: #e5e7eb;
+  --border: #e5e7eb;
 
-    --text-primary: #111827;
-    --text-secondary: #6b7280;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
 
-    /* Compatibility aliases used by feature styles. */
-    --primary-color: var(--primary);
-    --border-color: var(--border);
-    --background-color: var(--background);
-    --border-radius: 10px;
-    --error-color: #dc2626;
+  /* Compatibility aliases used by feature styles. */
+  --primary-color: var(--primary);
+  --border-color: var(--border);
+  --background-color: var(--background);
+  --border-radius: 10px;
+  --error-color: #dc2626;
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-    min-height: 100%;
+  min-height: 100%;
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: var(--background);
-    color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
 }
 
 button,
 input,
 select,
 textarea {
-    font: inherit;
+  font: inherit;
 }
 
 button {
-    cursor: pointer;
-}/* =====================================================
+  cursor: pointer;
+} /* =====================================================
    NOT FOUND
 ===================================================== */
 
 .not-found-content {
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
+  align-items: center;
 
-    align-items: center;
+  gap: 24px;
 
-    gap: 24px;
-
-    text-align: center;
-
+  text-align: center;
 }
-
 
 .not-found-code {
+  font-size: 4rem;
 
-    font-size: 4rem;
+  line-height: 1;
 
-    line-height: 1;
-
-    color: var(--text-secondary);
-
+  color: var(--text-secondary);
 }
-
 
 .not-found-actions {
+  display: flex;
 
-    display: flex;
+  justify-content: center;
 
-    justify-content: center;
+  gap: 12px;
 
-    gap: 12px;
-
-    width: 100%;
-
+  width: 100%;
 }
 
-
 @media (max-width: 500px) {
+  .not-found-actions {
+    flex-direction: column;
+  }
 
-    .not-found-actions {
+  .not-found-actions button {
+    width: 100%;
 
-        flex-direction: column;
-
-    }
-
-
-    .not-found-actions button {
-
-        width: 100%;
-
-        justify-content: center;
-
-    }
-
+    justify-content: center;
+  }
 }

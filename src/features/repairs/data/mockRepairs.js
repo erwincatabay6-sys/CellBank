@@ -1,270 +1,239 @@
 export const mockRepairs = [
+  // =====================================================
+  // REPAIR 1
+  // Samsung Galaxy A54
+  // Juan Cruz
+  // Miguel Santos
+  // =====================================================
+  {
+    id: 1,
 
-    // =====================================================
-    // REPAIR 1
-    // Samsung Galaxy A54
-    // Juan Cruz
-    // Miguel Santos
-    // =====================================================
-    {
-        id: 1,
+    deviceId: 1,
+    technicianId: 1,
 
-        deviceId: 1,
-        technicianId: 1,
+    reference: "CB-2026-00124",
 
-        reference: "CB-2026-00124",
+    createdAt: "2026-09-01",
 
-        createdAt: "2026-09-01",
+    customer: "Juan Cruz",
 
-        customer: "Juan Cruz",
+    device: "Samsung Galaxy A54",
 
-        device: "Samsung Galaxy A54",
+    technician: "Miguel Santos",
 
-        technician: "Miguel Santos",
+    status: "AWAITING_PARTS",
 
-        status: "AWAITING_PARTS",
+    reportedProblem: "Device is not charging consistently.",
 
-        reportedProblem:
-            "Device is not charging consistently.",
+    serviceType: "Hardware Repair",
 
-        serviceType:
-            "Hardware Repair",
+    accessoriesReceived: "USB-C charger",
 
-        accessoriesReceived:
-            "USB-C charger",
+    intakeNotes: "Minor scratches on the rear cover.",
 
-        intakeNotes:
-            "Minor scratches on the rear cover.",
+    estimatedCost: 2500,
 
-        estimatedCost: 2500,
+    agreedPrice: 2500,
 
-        agreedPrice: 2500,
+    previousRepairs: [
+      {
+        id: 101,
 
-        previousRepairs: [
-            {
-                id: 101,
+        date: "2026-04-12",
 
-                date: "2026-04-12",
+        problemCategory: "Charging",
 
-                problemCategory:
-                    "Charging",
+        problem: "Phone only charges when the cable is positioned at an angle.",
+      },
 
-                problem:
-                    "Phone only charges when the cable is positioned at an angle."
-            },
+      {
+        id: 102,
 
-            {
-                id: 102,
+        date: "2026-06-18",
 
-                date: "2026-06-18",
+        problemCategory: "Charging",
 
-                problemCategory:
-                    "Charging",
+        problem: "Intermittent charging connection.",
+      },
 
-                problem:
-                    "Intermittent charging connection."
-            },
+      {
+        id: 103,
 
-            {
-                id: 103,
+        date: "2026-07-29",
 
-                date: "2026-07-29",
+        problemCategory: "Battery",
 
-                problemCategory:
-                    "Battery",
+        problem: "Battery drains faster than normal.",
+      },
+    ],
+  },
 
-                problem:
-                    "Battery drains faster than normal."
-            }
-        ]
-    },
+  // =====================================================
+  // REPAIR 2
+  // Acer Aspire 5
+  // Juan Cruz
+  // Carlo Mendoza
+  // =====================================================
+  {
+    id: 2,
 
+    deviceId: 2,
+    technicianId: 2,
 
-    // =====================================================
-    // REPAIR 2
-    // Acer Aspire 5
-    // Juan Cruz
-    // Carlo Mendoza
-    // =====================================================
-    {
-        id: 2,
+    reference: "CB-2026-00125",
 
-        deviceId: 2,
-        technicianId: 2,
+    createdAt: "2026-09-02",
 
-        reference: "CB-2026-00125",
+    customer: "Juan Cruz",
 
-        createdAt: "2026-09-02",
+    device: "Acer Aspire 5",
 
-        customer: "Juan Cruz",
+    technician: "Carlo Mendoza",
 
-        device: "Acer Aspire 5",
+    status: "IN_PROGRESS",
 
-        technician: "Carlo Mendoza",
+    reportedProblem: "Laptop overheats and shuts down.",
 
-        status: "IN_PROGRESS",
+    serviceType: "Maintenance / Cleaning",
 
-        reportedProblem:
-            "Laptop overheats and shuts down.",
+    accessoriesReceived: "Laptop charger and carrying bag",
 
-        serviceType:
-            "Maintenance / Cleaning",
+    intakeNotes: "Device has visible dust buildup near the cooling vents.",
 
-        accessoriesReceived:
-            "Laptop charger and carrying bag",
+    estimatedCost: 1800,
 
-        intakeNotes:
-            "Device has visible dust buildup near the cooling vents.",
+    agreedPrice: null,
 
-        estimatedCost: 1800,
+    previousRepairs: [
+      {
+        id: 201,
 
-        agreedPrice: null,
+        date: "2026-05-16",
 
-        previousRepairs: [
-            {
-                id: 201,
+        problemCategory: "Cooling",
 
-                date: "2026-05-16",
+        problem:
+          "Laptop temperature becomes unusually high during extended use.",
+      },
+    ],
+  },
 
-                problemCategory:
-                    "Cooling",
+  // =====================================================
+  // REPAIR 3
+  // Apple iPhone 13
+  // Maria Reyes
+  // Miguel Santos
+  // =====================================================
+  {
+    id: 3,
 
-                problem:
-                    "Laptop temperature becomes unusually high during extended use."
-            }
-        ]
-    },
+    deviceId: 3,
+    technicianId: 1,
 
+    reference: "CB-2026-00126",
 
-    // =====================================================
-    // REPAIR 3
-    // Apple iPhone 13
-    // Maria Reyes
-    // Miguel Santos
-    // =====================================================
-    {
-        id: 3,
+    createdAt: "2026-09-03",
 
-        deviceId: 3,
-        technicianId: 1,
+    customer: "Maria Reyes",
 
-        reference: "CB-2026-00126",
+    device: "Apple iPhone 13",
 
-        createdAt: "2026-09-03",
+    technician: "Miguel Santos",
 
-        customer: "Maria Reyes",
+    status: "READY_FOR_RELEASE",
 
-        device: "Apple iPhone 13",
+    reportedProblem: "Cracked display and intermittent touch response.",
 
-        technician: "Miguel Santos",
+    serviceType: "Hardware Repair",
 
-        status: "READY_FOR_RELEASE",
+    accessoriesReceived: null,
 
-        reportedProblem:
-            "Cracked display and intermittent touch response.",
+    intakeNotes: "Cracked front glass observed during intake.",
 
-        serviceType:
-            "Hardware Repair",
+    estimatedCost: 3200,
 
-        accessoriesReceived: null,
+    agreedPrice: 3000,
 
-        intakeNotes:
-            "Cracked front glass observed during intake.",
+    previousRepairs: [],
+  },
 
-        estimatedCost: 3200,
+  // =====================================================
+  // REPAIR 4
+  // HISTORICAL COMPLETED REPAIR
+  // Samsung Galaxy A54
+  // Juan Cruz
+  // Miguel Santos
+  // =====================================================
+  {
+    id: 4,
 
-        agreedPrice: 3000,
+    deviceId: 1,
+    technicianId: 1,
 
-        previousRepairs: []
-    },
+    reference: "CB-2026-00108",
 
+    createdAt: "2026-08-18",
 
-    // =====================================================
-    // REPAIR 4
-    // HISTORICAL COMPLETED REPAIR
-    // Samsung Galaxy A54
-    // Juan Cruz
-    // Miguel Santos
-    // =====================================================
-    {
-        id: 4,
+    customer: "Juan Cruz",
 
-        deviceId: 1,
-        technicianId: 1,
+    device: "Samsung Galaxy A54",
 
-        reference: "CB-2026-00108",
+    technician: "Miguel Santos",
 
-        createdAt: "2026-08-18",
+    status: "COMPLETED",
 
-        customer: "Juan Cruz",
+    reportedProblem: "Battery drains unusually fast.",
 
-        device: "Samsung Galaxy A54",
+    serviceType: "Hardware Repair",
 
-        technician: "Miguel Santos",
+    accessoriesReceived: "USB-C charger",
 
-        status: "COMPLETED",
+    intakeNotes: "Battery performance checked during intake.",
 
-        reportedProblem:
-            "Battery drains unusually fast.",
+    estimatedCost: 1500,
 
-        serviceType:
-            "Hardware Repair",
+    agreedPrice: 1500,
 
-        accessoriesReceived:
-            "USB-C charger",
+    previousRepairs: [],
+  },
 
-        intakeNotes:
-            "Battery performance checked during intake.",
+  // =====================================================
+  // REPAIR 5
+  // HISTORICAL CANCELLED REPAIR
+  // Acer Aspire 5
+  // Juan Cruz
+  // Carlo Mendoza
+  // =====================================================
+  {
+    id: 5,
 
-        estimatedCost: 1500,
+    deviceId: 2,
+    technicianId: 2,
 
-        agreedPrice: 1500,
+    reference: "CB-2026-00097",
 
-        previousRepairs: []
-    },
+    createdAt: "2026-07-28",
 
+    customer: "Juan Cruz",
 
-    // =====================================================
-    // REPAIR 5
-    // HISTORICAL CANCELLED REPAIR
-    // Acer Aspire 5
-    // Juan Cruz
-    // Carlo Mendoza
-    // =====================================================
-    {
-        id: 5,
+    device: "Acer Aspire 5",
 
-        deviceId: 2,
-        technicianId: 2,
+    technician: "Carlo Mendoza",
 
-        reference: "CB-2026-00097",
+    status: "CANCELLED",
 
-        createdAt: "2026-07-28",
+    reportedProblem: "Laptop keyboard has several unresponsive keys.",
 
-        customer: "Juan Cruz",
+    serviceType: "Hardware Repair",
 
-        device: "Acer Aspire 5",
+    accessoriesReceived: "Laptop charger",
 
-        technician: "Carlo Mendoza",
+    intakeNotes: "Customer decided not to proceed with repair.",
 
-        status: "CANCELLED",
+    estimatedCost: 2200,
 
-        reportedProblem:
-            "Laptop keyboard has several unresponsive keys.",
+    agreedPrice: null,
 
-        serviceType:
-            "Hardware Repair",
-
-        accessoriesReceived:
-            "Laptop charger",
-
-        intakeNotes:
-            "Customer decided not to proceed with repair.",
-
-        estimatedCost: 2200,
-
-        agreedPrice: null,
-
-        previousRepairs: []
-    }
+    previousRepairs: [],
+  },
 ];

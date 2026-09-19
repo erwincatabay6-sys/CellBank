@@ -1,538 +1,323 @@
-import {
-    useEffect,
-    useState
-} from "react";
+import { useEffect, useState } from "react";
 
-import StatusBadge
-    from "../../../components/StatusBadge.jsx";
+import StatusBadge from "../../../components/StatusBadge.jsx";
 
 import {
-    canChangeRepairStatus,
-    canTransitionRepairStatus
+  canChangeRepairStatus,
+  canTransitionRepairStatus,
 } from "../../../config/accessControl.js";
 
-import { getMockStatusHistory }
-    from "../data/mockRepairWorkspaceData.js";
-
+import { getMockStatusHistory } from "../data/mockRepairWorkspaceData.js";
 
 // =====================================================
 // AVAILABLE REPAIR STATUSES
 // =====================================================
 
 const repairStatuses = [
-    {
-        value: "RECEIVED",
-        label: "Received"
-    },
+  {
+    value: "RECEIVED",
+    label: "Received",
+  },
 
-    {
-        value: "AWAITING_APPROVAL",
-        label: "Awaiting Approval"
-    },
+  {
+    value: "AWAITING_APPROVAL",
+    label: "Awaiting Approval",
+  },
 
-    {
-        value: "IN_PROGRESS",
-        label: "In Progress"
-    },
+  {
+    value: "IN_PROGRESS",
+    label: "In Progress",
+  },
 
-    {
-        value: "AWAITING_PARTS",
-        label: "Awaiting Parts"
-    },
+  {
+    value: "AWAITING_PARTS",
+    label: "Awaiting Parts",
+  },
 
-    {
-        value: "READY_FOR_RELEASE",
-        label: "Ready for Release"
-    },
+  {
+    value: "READY_FOR_RELEASE",
+    label: "Ready for Release",
+  },
 
-    {
-        value: "COMPLETED",
-        label: "Completed"
-    },
+  {
+    value: "COMPLETED",
+    label: "Completed",
+  },
 
-    {
-        value: "CANCELLED",
-        label: "Cancelled"
-    }
+  {
+    value: "CANCELLED",
+    label: "Cancelled",
+  },
 ];
 
-
 function RepairStatusHistory({
-    repairId,
-    currentRoles,
-    currentUserName,
-    currentStatus,
-    onStatusChange,
-    suggestedStatus = "",
-    onSuggestionHandled
+  repairId,
+  currentRoles,
+  currentUserName,
+  currentStatus,
+  onStatusChange,
+  suggestedStatus = "",
+  onSuggestionHandled,
 }) {
+  // -----------------------------
+  // HISTORY STATE
+  // -----------------------------
 
-    // -----------------------------
-    // HISTORY STATE
-    // -----------------------------
+  const [history, setHistory] = useState(() => getMockStatusHistory(repairId));
 
-    const [history, setHistory] =
-        useState(() =>
-            getMockStatusHistory(
-                repairId
-            )
-        );
+  // -----------------------------
+  // FORM STATE
+  // -----------------------------
 
+  const [status, setStatus] = useState("");
 
-    // -----------------------------
-    // FORM STATE
-    // -----------------------------
+  const [note, setNote] = useState("");
 
-    const [status, setStatus] =
-        useState("");
+  const [formOpen, setFormOpen] = useState(false);
 
-    const [note, setNote] =
-        useState("");
+  // -----------------------------
+  // ALLOWED STATUSES
+  // -----------------------------
 
-    const [formOpen, setFormOpen] =
-        useState(false);
+  const allowedStatuses = repairStatuses.filter(
+    (repairStatus) =>
+      canTransitionRepairStatus(currentStatus, repairStatus.value) &&
+      canChangeRepairStatus(currentRoles, repairStatus.value),
+  );
 
+  const canChangeStatus = allowedStatuses.length > 0;
 
-    // -----------------------------
-    // ALLOWED STATUSES
-    // -----------------------------
-
-    const allowedStatuses =
-        repairStatuses.filter(
-            (repairStatus) =>
-                canTransitionRepairStatus(
-                    currentStatus,
-                    repairStatus.value
-                ) &&
-
-                canChangeRepairStatus(
-                    currentRoles,
-                    repairStatus.value
-                )
-        );
-
-
-    const canChangeStatus =
-        allowedStatuses.length > 0;
-
-
-    function isStatusAllowed(
-        nextStatus
-    ) {
-
-        return (
-            canTransitionRepairStatus(
-                currentStatus,
-                nextStatus
-            ) &&
-
-            canChangeRepairStatus(
-                currentRoles,
-                nextStatus
-            )
-        );
-    }
-
-
-    // -----------------------------
-    // REPAIR CHANGE SYNC
-    // -----------------------------
-
-    useEffect(() => {
-
-        setHistory(
-            getMockStatusHistory(
-                repairId
-            )
-        );
-
-        setStatus("");
-        setNote("");
-        setFormOpen(false);
-
-    }, [repairId]);
-
-
-    // -----------------------------
-    // AI STATUS SUGGESTION
-    // -----------------------------
-
-    useEffect(() => {
-
-        if (!suggestedStatus) {
-            return;
-        }
-
-
-        if (
-            isStatusAllowed(
-                suggestedStatus
-            )
-        ) {
-
-            setStatus(
-                suggestedStatus
-            );
-
-            setFormOpen(true);
-        }
-
-
-        if (onSuggestionHandled) {
-            onSuggestionHandled();
-        }
-
-    }, [
-        suggestedStatus,
-        currentStatus,
-        currentRoles,
-        onSuggestionHandled
-    ]);
-
-
-    // -----------------------------
-    // PERMISSION / TRANSITION SYNC
-    // -----------------------------
-
-    useEffect(() => {
-
-        if (!canChangeStatus) {
-
-            setStatus("");
-            setNote("");
-            setFormOpen(false);
-
-            return;
-        }
-
-
-        if (
-            status &&
-            !isStatusAllowed(status)
-        ) {
-            setStatus("");
-        }
-
-    }, [
-        currentRoles,
-        currentStatus,
-        canChangeStatus,
-        status
-    ]);
-
-
-    // -----------------------------
-    // FORM HELPERS
-    // -----------------------------
-
-    function resetForm() {
-
-        setStatus("");
-        setNote("");
-    }
-
-
-    function handleFormToggle() {
-
-        if (!canChangeStatus) {
-            return;
-        }
-
-
-        if (formOpen) {
-            resetForm();
-        }
-
-
-        setFormOpen(
-            !formOpen
-        );
-    }
-
-
-    function handleCancel() {
-
-        resetForm();
-        setFormOpen(false);
-    }
-
-
-    // -----------------------------
-    // STATUS SUBMISSION
-    // -----------------------------
-
-    function handleSubmit(event) {
-
-        event.preventDefault();
-
-
-        if (
-            !canChangeStatus ||
-            !status ||
-            !isStatusAllowed(status)
-        ) {
-            return;
-        }
-
-
-        const newEntry = {
-            id:
-                Date.now(),
-
-            status,
-
-            changedBy:
-                currentUserName ||
-                "Unknown User",
-
-            changedAt:
-                new Date()
-                    .toLocaleString(),
-
-            note:
-                note.trim() || null
-        };
-
-
-        setHistory((currentHistory) => [
-            ...currentHistory,
-            newEntry
-        ]);
-
-
-        if (onStatusChange) {
-            onStatusChange(status);
-        }
-
-
-        resetForm();
-        setFormOpen(false);
-    }
-
-
+  function isStatusAllowed(nextStatus) {
     return (
-        <section className="page-content">
+      canTransitionRepairStatus(currentStatus, nextStatus) &&
+      canChangeRepairStatus(currentRoles, nextStatus)
+    );
+  }
 
-            {/* =========================
+  // -----------------------------
+  // REPAIR CHANGE SYNC
+  // -----------------------------
+
+  useEffect(() => {
+    setHistory(getMockStatusHistory(repairId));
+
+    setStatus("");
+    setNote("");
+    setFormOpen(false);
+  }, [repairId]);
+
+  // -----------------------------
+  // AI STATUS SUGGESTION
+  // -----------------------------
+
+  useEffect(() => {
+    if (!suggestedStatus) {
+      return;
+    }
+
+    if (isStatusAllowed(suggestedStatus)) {
+      setStatus(suggestedStatus);
+
+      setFormOpen(true);
+    }
+
+    if (onSuggestionHandled) {
+      onSuggestionHandled();
+    }
+  }, [suggestedStatus, currentStatus, currentRoles, onSuggestionHandled]);
+
+  // -----------------------------
+  // PERMISSION / TRANSITION SYNC
+  // -----------------------------
+
+  useEffect(() => {
+    if (!canChangeStatus) {
+      setStatus("");
+      setNote("");
+      setFormOpen(false);
+
+      return;
+    }
+
+    if (status && !isStatusAllowed(status)) {
+      setStatus("");
+    }
+  }, [currentRoles, currentStatus, canChangeStatus, status]);
+
+  // -----------------------------
+  // FORM HELPERS
+  // -----------------------------
+
+  function resetForm() {
+    setStatus("");
+    setNote("");
+  }
+
+  function handleFormToggle() {
+    if (!canChangeStatus) {
+      return;
+    }
+
+    if (formOpen) {
+      resetForm();
+    }
+
+    setFormOpen(!formOpen);
+  }
+
+  function handleCancel() {
+    resetForm();
+    setFormOpen(false);
+  }
+
+  // -----------------------------
+  // STATUS SUBMISSION
+  // -----------------------------
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!canChangeStatus || !status || !isStatusAllowed(status)) {
+      return;
+    }
+
+    const newEntry = {
+      id: Date.now(),
+
+      status,
+
+      changedBy: currentUserName || "Unknown User",
+
+      changedAt: new Date().toLocaleString(),
+
+      note: note.trim() || null,
+    };
+
+    setHistory((currentHistory) => [...currentHistory, newEntry]);
+
+    if (onStatusChange) {
+      onStatusChange(status);
+    }
+
+    resetForm();
+    setFormOpen(false);
+  }
+
+  return (
+    <section className="page-content">
+      {/* =========================
                 HEADER
             ========================== */}
-            <div className="workspace-section-header">
+      <div className="workspace-section-header">
+        <div>
+          <h3>Status History</h3>
 
-                <div>
+          <p className="workspace-section-description">
+            Review repair progress and record approved status changes.
+          </p>
+        </div>
 
-                    <h3>
-                        Status History
-                    </h3>
+        {canChangeStatus && (
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={handleFormToggle}
+          >
+            Change Status
+          </button>
+        )}
+      </div>
 
-                    <p className="workspace-section-description">
-                        Review repair progress and
-                        record approved status changes.
-                    </p>
-
-                </div>
-
-
-                {canChangeStatus && (
-
-                    <button
-                        className="secondary-repair-button"
-                        type="button"
-                        onClick={handleFormToggle}
-                    >
-                        Change Status
-                    </button>
-
-                )}
-
-            </div>
-
-
-            {/* =========================
+      {/* =========================
                 STATUS CHANGE FORM
             ========================== */}
-            {formOpen &&
-                canChangeStatus && (
+      {formOpen && canChangeStatus && (
+        <form className="status-change-form" onSubmit={handleSubmit}>
+          <div className="repair-form-group">
+            <label>Current Status</label>
 
-                <form
-                    className="status-change-form"
-                    onSubmit={handleSubmit}
-                >
+            <div>
+              <StatusBadge status={currentStatus} />
+            </div>
+          </div>
 
-                    <div className="repair-form-group">
+          <div className="repair-form-group">
+            <label htmlFor="repair-status">New Status</label>
 
-                        <label>
-                            Current Status
-                        </label>
+            <select
+              id="repair-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              required
+            >
+              <option value="">Select status</option>
 
-                        <div>
+              {allowedStatuses.map((repairStatus) => (
+                <option key={repairStatus.value} value={repairStatus.value}>
+                  {repairStatus.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                            <StatusBadge
-                                status={currentStatus}
-                            />
+          <div className="repair-form-group">
+            <label htmlFor="status-note">Status Note</label>
 
-                        </div>
+            <textarea
+              id="status-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              rows="3"
+              placeholder="Optional reason or status note"
+            />
+          </div>
 
-                    </div>
+          <div className="finding-form-actions">
+            <button
+              className="cancel-repair-button"
+              type="button"
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
 
+            <button className="create-repair-button" type="submit">
+              Confirm Status Change
+            </button>
+          </div>
+        </form>
+      )}
 
-                    <div className="repair-form-group">
-
-                        <label htmlFor="repair-status">
-                            New Status
-                        </label>
-
-                        <select
-                            id="repair-status"
-                            value={status}
-                            onChange={(event) =>
-                                setStatus(
-                                    event.target.value
-                                )
-                            }
-                            required
-                        >
-
-                            <option value="">
-                                Select status
-                            </option>
-
-
-                            {allowedStatuses.map(
-                                (repairStatus) => (
-
-                                    <option
-                                        key={repairStatus.value}
-                                        value={repairStatus.value}
-                                    >
-                                        {repairStatus.label}
-                                    </option>
-
-                                )
-                            )}
-
-                        </select>
-
-                    </div>
-
-
-                    <div className="repair-form-group">
-
-                        <label htmlFor="status-note">
-                            Status Note
-                        </label>
-
-                        <textarea
-                            id="status-note"
-                            value={note}
-                            onChange={(event) =>
-                                setNote(
-                                    event.target.value
-                                )
-                            }
-                            rows="3"
-                            placeholder="Optional reason or status note"
-                        />
-
-                    </div>
-
-
-                    <div className="finding-form-actions">
-
-                        <button
-                            className="cancel-repair-button"
-                            type="button"
-                            onClick={handleCancel}
-                        >
-                            Cancel
-                        </button>
-
-
-                        <button
-                            className="create-repair-button"
-                            type="submit"
-                        >
-                            Confirm Status Change
-                        </button>
-
-                    </div>
-
-                </form>
-
-            )}
-
-
-            {/* =========================
+      {/* =========================
                 STATUS HISTORY
             ========================== */}
-            {history.length > 0 ? (
+      {history.length > 0 ? (
+        <div className="status-history-list">
+          {[...history].reverse().map((entry) => (
+            <article key={entry.id} className="status-history-item">
+              <div className="status-history-top">
+                <StatusBadge status={entry.status} />
 
-                <div className="status-history-list">
+                <span>{entry.changedAt}</span>
+              </div>
 
-                    {[...history]
-                        .reverse()
-                        .map((entry) => (
+              <p>
+                Changed by <strong>{entry.changedBy}</strong>
+              </p>
 
-                            <article
-                                key={entry.id}
-                                className="status-history-item"
-                            >
+              {entry.note && <p>{entry.note}</p>}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="workspace-empty-state">
+          <strong>No status history</strong>
 
-                                <div className="status-history-top">
-
-                                    <StatusBadge
-                                        status={entry.status}
-                                    />
-
-                                    <span>
-                                        {entry.changedAt}
-                                    </span>
-
-                                </div>
-
-
-                                <p>
-                                    Changed by{" "}
-
-                                    <strong>
-                                        {entry.changedBy}
-                                    </strong>
-                                </p>
-
-
-                                {entry.note && (
-
-                                    <p>
-                                        {entry.note}
-                                    </p>
-
-                                )}
-
-                            </article>
-
-                        ))}
-
-                </div>
-
-            ) : (
-
-                <div className="workspace-empty-state">
-
-                    <strong>
-                        No status history
-                    </strong>
-
-                    <p>
-                        Status changes for this repair
-                        will appear here.
-                    </p>
-
-                </div>
-
-            )}
-
-        </section>
-    );
+          <p>Status changes for this repair will appear here.</p>
+        </div>
+      )}
+    </section>
+  );
 }
-
 
 export default RepairStatusHistory;

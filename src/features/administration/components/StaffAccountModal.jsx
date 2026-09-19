@@ -1,402 +1,273 @@
 import { useState } from "react";
 
-import { X } from "lucide-react";
-
+import { X, Eye, EyeOff } from "lucide-react";
 
 function StaffAccountModal({
-    initialUser = null,
-    errorMessage = "",
-    onClose,
-    onSave
+  initialUser = null,
+  errorMessage = "",
+  saving = false,
+  onClose,
+  onSave,
 }) {
+  // -----------------------------
+  // MODE
+  // -----------------------------
 
-    // -----------------------------
-    // MODE
-    // -----------------------------
+  const isEditing = initialUser != null;
 
-    const isEditing =
-        initialUser != null;
+  // -----------------------------
+  // FORM STATE
+  // -----------------------------
 
+  const [name, setName] = useState(initialUser?.name ?? "");
 
-    // -----------------------------
-    // FORM STATE
-    // -----------------------------
+  const [username, setUsername] = useState(initialUser?.username ?? "");
 
-    const [name, setName] =
-        useState(
-            initialUser?.name ?? ""
-        );
+  const [email, setEmail] = useState(initialUser?.email ?? "");
 
-    const [username, setUsername] =
-        useState(
-            initialUser?.username ?? ""
-        );
+  const [password, setPassword] = useState("");
 
-    const [email, setEmail] =
-        useState(
-            initialUser?.email ?? ""
-        );
+  const [showPassword, setShowPassword] = useState(false);
 
-    const [password, setPassword] =
-        useState("");
+  const [roles, setRoles] = useState(initialUser?.roles ?? ["TECHNICIAN"]);
 
-    const [roles, setRoles] =
-        useState(
-            initialUser?.roles ?? [
-                "TECHNICIAN"
-            ]
-        );
+  // -----------------------------
+  // ROLE HANDLING
+  // -----------------------------
 
-
-    // -----------------------------
-    // ROLE HANDLING
-    // -----------------------------
-
-    function handleRoleChange(role) {
-
-        setRoles((currentRoles) => {
-
-            if (
-                currentRoles.includes(role)
-            ) {
-
-                // Every account must retain
-                // at least one role.
-                if (currentRoles.length === 1) {
-                    return currentRoles;
-                }
-
-
-                return currentRoles.filter(
-                    (currentRole) =>
-                        currentRole !== role
-                );
-            }
-
-
-            return [
-                ...currentRoles,
-                role
-            ];
-        });
-    }
-
-
-    // -----------------------------
-    // SUBMISSION
-    // -----------------------------
-
-    function handleSubmit(event) {
-
-        event.preventDefault();
-
-
-        const userData = {
-            name:
-                name.trim(),
-
-            username:
-                username.trim(),
-
-            email:
-                email.trim(),
-
-            roles
-        };
-
-
-        // Password remains temporary form data.
-        // The backend will hash it before storage.
-        if (!isEditing) {
-
-            userData.initialPassword =
-                password;
+  function handleRoleChange(role) {
+    setRoles((currentRoles) => {
+      if (currentRoles.includes(role)) {
+        // Every account must retain
+        // at least one role.
+        if (currentRoles.length === 1) {
+          return currentRoles;
         }
 
+        return currentRoles.filter((currentRole) => currentRole !== role);
+      }
 
-        onSave(userData);
+      return [...currentRoles, role];
+    });
+  }
+
+  // -----------------------------
+  // SUBMISSION
+  // -----------------------------
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (saving) {
+      return;
     }
 
+    const userData = {
+      name: name.trim(),
 
-    return (
-        <div className="modal-backdrop">
+      username: username.trim(),
 
-            <div className="device-modal">
+      email: email.trim(),
 
-                {/* =========================
+      roles,
+    };
+
+    // Password remains temporary form data.
+    // The backend will hash it before storage.
+    if (!isEditing) {
+      userData.initialPassword = password;
+    }
+
+    onSave(userData);
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="device-modal">
+        {/* =========================
                     HEADER
                 ========================== */}
-                <div className="modal-header">
+        <div className="modal-header">
+          <div>
+            <h3>{isEditing ? "Edit Staff Account" : "New Staff Account"}</h3>
 
-                    <div>
+            <p>
+              {isEditing
+                ? "Update staff information and role access."
+                : "Create an authorized Cellbank staff account."}
+            </p>
+          </div>
 
-                        <h3>
-                            {isEditing
-                                ? "Edit Staff Account"
-                                : "New Staff Account"
-                            }
-                        </h3>
+          <button
+            className="modal-close-button"
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-                        <p>
-                            {isEditing
-                                ? "Update staff information and role access."
-                                : "Create an authorized Cellbank staff account."
-                            }
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        className="modal-close-button"
-                        type="button"
-                        onClick={onClose}
-                        aria-label="Close"
-                    >
-                        <X size={20} />
-                    </button>
-
-                </div>
-
-
-                {/* =========================
+        {/* =========================
                     STAFF FORM
                 ========================== */}
-                <form
-                    className="device-registration-form"
-                    onSubmit={handleSubmit}
-                >
+        <form className="device-registration-form" onSubmit={handleSubmit}>
+          <div className="modal-form-grid">
+            {/* FULL NAME */}
+            <div className="repair-form-group">
+              <label htmlFor="staff-name">Full Name</label>
 
-                    <div className="modal-form-grid">
-
-                        {/* FULL NAME */}
-                        <div className="repair-form-group">
-
-                            <label htmlFor="staff-name">
-                                Full Name
-                            </label>
-
-                            <input
-                                id="staff-name"
-                                type="text"
-                                value={name}
-                                onChange={(event) =>
-                                    setName(
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter staff name"
-                                required
-                            />
-
-                        </div>
-
-
-                        {/* USERNAME */}
-                        <div className="repair-form-group">
-
-                            <label htmlFor="staff-username">
-                                Username
-                            </label>
-
-                            <input
-                                id="staff-username"
-                                type="text"
-                                value={username}
-                                onChange={(event) =>
-                                    setUsername(
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter username"
-                                required
-                            />
-
-                        </div>
-
-                    </div>
-
-
-                    {/* EMAIL */}
-                    <div className="repair-form-group">
-
-                        <label htmlFor="staff-email">
-                            Email Address
-                        </label>
-
-                        <input
-                            id="staff-email"
-                            type="email"
-                            value={email}
-                            onChange={(event) =>
-                                setEmail(
-                                    event.target.value
-                                )
-                            }
-                            placeholder="Enter staff email"
-                            required
-                        />
-
-                    </div>
-
-
-                    {/* INITIAL PASSWORD */}
-                    {!isEditing && (
-
-                        <div className="repair-form-group">
-
-                            <label htmlFor="staff-password">
-                                Initial Password
-                            </label>
-
-                            <input
-                                id="staff-password"
-                                type="password"
-                                value={password}
-                                onChange={(event) =>
-                                    setPassword(
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter initial password"
-                                required
-                            />
-
-                        </div>
-
-                    )}
-
-
-                    {/* =========================
-                        ROLES
-                    ========================== */}
-                    <div className="repair-form-group">
-
-                        <label>
-                            Roles
-                        </label>
-
-
-                        <div className="staff-role-options">
-
-                            <label>
-
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        roles.includes(
-                                            "TECHNICIAN"
-                                        )
-                                    }
-                                    onChange={() =>
-                                        handleRoleChange(
-                                            "TECHNICIAN"
-                                        )
-                                    }
-                                />
-
-                                <span>
-                                    Technician
-                                </span>
-
-                            </label>
-
-                            <label>
-
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        roles.includes(
-                                            "FRONT_DESK"
-                                        )
-                                    }
-                                    onChange={() =>
-                                        handleRoleChange(
-                                            "FRONT_DESK"
-                                        )
-                                    }
-                                />
-
-                                    <span>
-                                        Front Desk
-                                    </span>
-
-                            </label>
-
-
-                            <label>
-
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        roles.includes(
-                                            "ADMIN"
-                                        )
-                                    }
-                                    onChange={() =>
-                                        handleRoleChange(
-                                            "ADMIN"
-                                        )
-                                    }
-                                />
-
-                                <span>
-                                    Admin
-                                </span>
-
-                            </label>
-
-                        </div>
-
-                    </div>
-
-                    {/* =========================
-                        FORM ERROR
-                    ========================== */}
-                    {errorMessage && (
-
-                        <div className="administration-error">
-
-                            {errorMessage}
-
-                         </div>
-
-                    )}
-
-
-                    {/* =========================
-                        ACTIONS
-                    ========================== */}
-                    <div className="modal-actions">
-
-                        <button
-                            className="cancel-repair-button"
-                            type="button"
-                            onClick={onClose}
-                        >
-                            Cancel
-                        </button>
-
-
-                        <button
-                            className="create-repair-button"
-                            type="submit"
-                        >
-                            {isEditing
-                                ? "Save Changes"
-                                : "Create Account"
-                            }
-                        </button>
-
-                    </div>
-
-                </form>
-
+              <input
+                id="staff-name"
+                type="text"
+                disabled={saving}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Enter staff name"
+                required
+              />
             </div>
 
-        </div>
-    );
-}
+            {/* USERNAME */}
+            <div className="repair-form-group">
+              <label htmlFor="staff-username">Username</label>
 
+              <input
+                id="staff-username"
+                type="text"
+                disabled={saving}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="Enter username"
+                required
+              />
+            </div>
+          </div>
+
+          {/* EMAIL */}
+          <div className="repair-form-group">
+            <label htmlFor="staff-email">Email Address</label>
+
+            <input
+              id="staff-email"
+              type="email"
+              disabled={saving}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Enter staff email"
+              required
+            />
+          </div>
+
+          {/* INITIAL PASSWORD */}
+
+          {!isEditing && (
+            <div className="repair-form-group">
+              <label htmlFor="staff-password">Initial Password</label>
+
+              <div className="staff-password-input">
+                <input
+                  id="staff-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter initial password"
+                  autoComplete="new-password"
+                  disabled={saving}
+                  required
+                />
+
+                <button
+                  className="staff-password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-controls="staff-password"
+                  disabled={saving}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* =========================
+                        ROLES
+                    ========================== */}
+          <div className="repair-form-group">
+            <label>Roles</label>
+
+            <div className="staff-role-options">
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={saving}
+                  checked={roles.includes("TECHNICIAN")}
+                  onChange={() => handleRoleChange("TECHNICIAN")}
+                />
+
+                <span>Technician</span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={saving}
+                  checked={roles.includes("FRONT_DESK")}
+                  onChange={() => handleRoleChange("FRONT_DESK")}
+                />
+
+                <span>Front Desk</span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={saving}
+                  checked={roles.includes("ADMIN")}
+                  onChange={() => handleRoleChange("ADMIN")}
+                />
+
+                <span>Admin</span>
+              </label>
+            </div>
+          </div>
+
+          {/* =========================
+                        FORM ERROR
+                    ========================== */}
+          {errorMessage && (
+            <div className="administration-error">{errorMessage}</div>
+          )}
+
+          {/* =========================
+                        ACTIONS
+                    ========================== */}
+          <div className="modal-actions">
+            <button
+              className="cancel-repair-button"
+              type="button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="create-repair-button"
+              type="submit"
+              disabled={saving}
+            >
+              {saving
+                ? "Saving..."
+                : isEditing
+                  ? "Save Changes"
+                  : "Create Account"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default StaffAccountModal;

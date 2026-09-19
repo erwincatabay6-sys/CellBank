@@ -1,450 +1,309 @@
-import {
-    Route,
-    Routes
-} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
+import StaffLayout from "../layouts/StaffLayout.jsx";
 
-import StaffLayout
-    from "../layouts/StaffLayout.jsx";
+import PublicLayout from "../layouts/PublicLayout.jsx";
 
-import PublicLayout
-    from "../layouts/PublicLayout.jsx";
-
-import AccessGuard
-    from "../components/AccessGuard.jsx";
-
+import AccessGuard from "../components/AccessGuard.jsx";
 
 // =====================================================
 // PUBLIC / AUTH PAGES
 // =====================================================
 
-import LandingPage
-    from "../features/tracking/pages/LandingPage.jsx";
+import LandingPage from "../features/tracking/pages/LandingPage.jsx";
 
-import TrackingPage
-    from "../features/tracking/pages/TrackingPage.jsx";
+import TrackingPage from "../features/tracking/pages/TrackingPage.jsx";
 
-import LoginPage
-    from "../features/auth/pages/LoginPage.jsx";
+import LoginPage from "../features/auth/pages/LoginPage.jsx";
 
-import ForgotPasswordPage
-    from "../features/auth/pages/ForgotPasswordPage.jsx";
+import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage.jsx";
 
-import ResetPasswordPage
-    from "../features/auth/pages/ResetPasswordPage.jsx";
+import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage.jsx";
 
-import AccessDeniedPage
-    from "../features/auth/pages/AccessDeniedPage.jsx";
-
+import AccessDeniedPage from "../features/auth/pages/AccessDeniedPage.jsx";
 
 // =====================================================
 // STAFF PAGES
 // =====================================================
 
-import DashboardPage
-    from "../features/dashboard/pages/DashboardPage.jsx";
+import DashboardPage from "../features/dashboard/pages/DashboardPage.jsx";
 
+import RepairListPage from "../features/repairs/pages/RepairListPage.jsx";
 
-import RepairListPage
-    from "../features/repairs/pages/RepairListPage.jsx";
+import NewRepairPage from "../features/repairs/pages/NewRepairPage.jsx";
 
-import NewRepairPage
-    from "../features/repairs/pages/NewRepairPage.jsx";
+import RepairWorkspacePage from "../features/repairs/pages/RepairWorkspacePage.jsx";
 
-import RepairWorkspacePage
-    from "../features/repairs/pages/RepairWorkspacePage.jsx";
+import CustomerListPage from "../features/customers/pages/CustomerListPage.jsx";
 
+import CustomerDetailsPage from "../features/customers/pages/CustomerDetailsPage.jsx";
 
-import CustomerListPage
-    from "../features/customers/pages/CustomerListPage.jsx";
+import DeviceDetailsPage from "../features/customers/pages/DeviceDetailsPage.jsx";
 
-import CustomerDetailsPage
-    from "../features/customers/pages/CustomerDetailsPage.jsx";
+import TechnicianPage from "../features/technicians/pages/TechnicianPage.jsx";
 
-import DeviceDetailsPage
-    from "../features/customers/pages/DeviceDetailsPage.jsx";
+import TechnicianDetailsPage from "../features/technicians/pages/TechnicianDetailsPage.jsx";
 
+import ReportsPage from "../features/reports/pages/ReportsPage.jsx";
 
-import TechnicianPage
-    from "../features/technicians/pages/TechnicianPage.jsx";
+import AdministrationPage from "../features/administration/pages/AdministrationPage.jsx";
 
-import TechnicianDetailsPage
-    from "../features/technicians/pages/TechnicianDetailsPage.jsx";
+import AccountSettingsPage from "../features/account/pages/AccountSettingsPage.jsx";
 
+import NotFoundPage from "../features/errors/pages/NotFoundPage.jsx";
 
-import ReportsPage
-    from "../features/reports/pages/ReportsPage.jsx";
-
-
-import AdministrationPage
-    from "../features/administration/pages/AdministrationPage.jsx";
-
-
-import AccountSettingsPage
-    from "../features/account/pages/AccountSettingsPage.jsx";
-
-import NotFoundPage
-    from "../features/errors/pages/NotFoundPage.jsx";
+import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
 function App() {
+  const { user } = useAuth();
 
-    // -----------------------------
-    // TEMPORARY AUTHENTICATED USER
-    // -----------------------------
-    // These will eventually come from
-    // the real authentication/session state.
+  const currentRoles = user?.roles ?? [];
+  const currentUserName = user?.name ?? "";
 
-    const currentRoles = [
-        "ADMIN"
-    ];
+  // -----------------------------
+  // STAFF PAGE WRAPPER
+  // -----------------------------
 
-
-    const currentUserName =
-        "Administrator";
-
-
-    // -----------------------------
-    // STAFF PAGE WRAPPER
-    // -----------------------------
-
-    function renderStaffPage(
-        permission,
-        page
-    ) {
-
-        return (
-            <AccessGuard
-                currentRoles={
-                    currentRoles
-                }
-                permission={
-                    permission
-                }
-            >
-
-                <StaffLayout
-                    currentRoles={
-                        currentRoles
-                    }
-                    currentUserName={
-                        currentUserName
-                    }
-                >
-
-                    {page}
-
-                </StaffLayout>
-
-            </AccessGuard>
-        );
-    }
-
-
+  function renderStaffPage(permission, page) {
     return (
-        <Routes>
+      <AccessGuard currentRoles={currentRoles} permission={permission}>
+        <StaffLayout
+          currentRoles={currentRoles}
+          currentUserName={currentUserName}
+        >
+          {page}
+        </StaffLayout>
+      </AccessGuard>
+    );
+  }
 
-            {/* =================================================
+  return (
+    <Routes>
+      {/* =================================================
                 PUBLIC ROUTES
             ================================================= */}
 
-            <Route
-                path="/"
-                element={
-                    <PublicLayout>
+      <Route
+        path="/"
+        element={
+          <PublicLayout>
+            <LandingPage />
+          </PublicLayout>
+        }
+      />
 
-                        <LandingPage />
+      <Route
+        path="/track"
+        element={
+          <PublicLayout>
+            <TrackingPage />
+          </PublicLayout>
+        }
+      />
 
-                    </PublicLayout>
-                }
-            />
-
-
-            <Route
-                path="/track"
-                element={
-                    <PublicLayout>
-
-                        <TrackingPage />
-
-                    </PublicLayout>
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 AUTHENTICATION ROUTES
             ================================================= */}
 
-            <Route
-                path="/login"
-                element={
-                    <PublicLayout>
+      <Route
+        path="/login"
+        element={
+          <PublicLayout>
+            <LoginPage />
+          </PublicLayout>
+        }
+      />
 
-                        <LoginPage />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicLayout>
+            <ForgotPasswordPage />
+          </PublicLayout>
+        }
+      />
 
-                    </PublicLayout>
-                }
-            />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicLayout>
+            <ResetPasswordPage />
+          </PublicLayout>
+        }
+      />
 
-
-            <Route
-                path="/forgot-password"
-                element={
-                    <PublicLayout>
-
-                        <ForgotPasswordPage />
-
-                    </PublicLayout>
-                }
-            />
-
-
-            <Route
-                path="/reset-password"
-                element={
-                    <PublicLayout>
-
-                        <ResetPasswordPage />
-
-                    </PublicLayout>
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 ACCESS DENIED
                 MUST REMAIN UNPROTECTED
             ================================================= */}
 
-            <Route
-                path="/access-denied"
-                element={
-                    <PublicLayout>
+      <Route
+        path="/access-denied"
+        element={
+          <PublicLayout>
+            <AccessDeniedPage currentRoles={currentRoles} />
+          </PublicLayout>
+        }
+      />
 
-                        <AccessDeniedPage
-                            currentRoles={
-                                currentRoles
-                            }
-                        />
-
-                    </PublicLayout>
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 DASHBOARD
             ================================================= */}
 
-            <Route
-                path="/dashboard"
-                element={
-                    renderStaffPage(
-                        "dashboard",
+      <Route
+        path="/dashboard"
+        element={renderStaffPage(
+          "dashboard",
 
-                        <DashboardPage
-                            currentRoles={
-                                currentRoles
-                            }
-                            currentUserName={
-                                currentUserName
-                            }
-                        />
-                    )
-                }
-            />
+          <DashboardPage
+            currentRoles={currentRoles}
+            currentUserName={currentUserName}
+          />,
+        )}
+      />
 
-
-            {/* =================================================
+      {/* =================================================
                 REPAIRS
             ================================================= */}
 
-            <Route
-                path="/repairs"
-                element={
-                    renderStaffPage(
-                        "repairs",
+      <Route
+        path="/repairs"
+        element={renderStaffPage(
+          "repairs",
 
-                        <RepairListPage
-                            currentRoles={
-                                currentRoles
-                            }
-                        />
-                    )
-                }
-            />
+          <RepairListPage currentRoles={currentRoles} />,
+        )}
+      />
 
+      <Route
+        path="/repairs/new"
+        element={renderStaffPage(
+          "createRepair",
 
-            <Route
-                path="/repairs/new"
-                element={
-                    renderStaffPage(
-                        "createRepair",
+          <NewRepairPage />,
+        )}
+      />
 
-                        <NewRepairPage />
-                    )
-                }
-            />
+      <Route
+        path="/repairs/:repairId"
+        element={renderStaffPage(
+          "repairs",
 
+          <RepairWorkspacePage
+            currentRoles={currentRoles}
+            currentUserName={currentUserName}
+          />,
+        )}
+      />
 
-            <Route
-                path="/repairs/:repairId"
-                element={
-                    renderStaffPage(
-                        "repairs",
-
-                        <RepairWorkspacePage
-                            currentRoles={
-                                currentRoles
-                            }
-                            currentUserName={
-                                currentUserName
-                            }
-                        />
-                    )
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 CUSTOMERS & DEVICES
             ================================================= */}
 
-            <Route
-                path="/customers"
-                element={
-                    renderStaffPage(
-                        "customers",
+      <Route
+        path="/customers"
+        element={renderStaffPage(
+          "customers",
 
-                        <CustomerListPage />
-                    )
-                }
-            />
+          <CustomerListPage />,
+        )}
+      />
 
+      <Route
+        path="/customers/:customerId"
+        element={renderStaffPage(
+          "customers",
 
-            <Route
-                path="/customers/:customerId"
-                element={
-                    renderStaffPage(
-                        "customers",
+          <CustomerDetailsPage />,
+        )}
+      />
 
-                        <CustomerDetailsPage />
-                    )
-                }
-            />
+      <Route
+        path="/customers/:customerId/devices/:deviceId"
+        element={renderStaffPage(
+          "customers",
 
+          <DeviceDetailsPage />,
+        )}
+      />
 
-            <Route
-                path="/customers/:customerId/devices/:deviceId"
-                element={
-                    renderStaffPage(
-                        "customers",
-
-                        <DeviceDetailsPage />
-                    )
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 TECHNICIANS
             ================================================= */}
 
-            <Route
-                path="/technicians"
-                element={
-                    renderStaffPage(
-                        "technicians",
+      <Route
+        path="/technicians"
+        element={renderStaffPage(
+          "technicians",
 
-                        <TechnicianPage />
-                    )
-                }
-            />
+          <TechnicianPage />,
+        )}
+      />
 
+      <Route
+        path="/technicians/:technicianId"
+        element={renderStaffPage(
+          "technicians",
 
-            <Route
-                path="/technicians/:technicianId"
-                element={
-                    renderStaffPage(
-                        "technicians",
+          <TechnicianDetailsPage />,
+        )}
+      />
 
-                        <TechnicianDetailsPage />
-                    )
-                }
-            />
-
-
-            {/* =================================================
+      {/* =================================================
                 REPORTS
             ================================================= */}
 
-            <Route
-                path="/reports"
-                element={
-                    renderStaffPage(
-                        "reports",
+      <Route
+        path="/reports"
+        element={renderStaffPage(
+          "reports",
 
-                        <ReportsPage />
-                    )
-                }
-            />
+          <ReportsPage />,
+        )}
+      />
 
-
-            {/* =================================================
+      {/* =================================================
                 ADMINISTRATION
             ================================================= */}
 
-            <Route
-                path="/administration"
-                element={
-                    renderStaffPage(
-                        "administration",
+      <Route
+        path="/administration"
+        element={renderStaffPage(
+          "administration",
 
-                        <AdministrationPage />
-                    )
-                }
-            />
+          <AdministrationPage />,
+        )}
+      />
 
-
-            {/* =================================================
+      {/* =================================================
                 ACCOUNT SETTINGS
             ================================================= */}
 
-            <Route
-                path="/account"
-                element={
-                    renderStaffPage(
-                        "accountSettings",
+      <Route
+        path="/account"
+        element={renderStaffPage(
+          "accountSettings",
 
-                        <AccountSettingsPage
-                            currentRoles={
-                                currentRoles
-                            }
-                            currentUserName={
-                                currentUserName
-                            }
-                        />
-                    )
-                }
-            />
-            {/* =================================================
+          <AccountSettingsPage
+            currentRoles={currentRoles}
+            currentUserName={currentUserName}
+          />,
+        )}
+      />
+      {/* =================================================
                     NOT FOUND
             ================================================= */}
 
-            <Route
-                path="*"
-                element={
-                        <PublicLayout>
-
-                    <NotFoundPage />
-
-                </PublicLayout>
-                }
-            />
-
-        </Routes>
-    );
+      <Route
+        path="*"
+        element={
+          <PublicLayout>
+            <NotFoundPage />
+          </PublicLayout>
+        }
+      />
+    </Routes>
+  );
 }
-
 
 export default App;
