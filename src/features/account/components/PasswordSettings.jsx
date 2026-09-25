@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
+import { useAuth } from "../../auth/context/AuthContext.jsx";
+
 function PasswordSettings() {
   // -----------------------------
   // PASSWORD STATE
@@ -18,6 +20,10 @@ function PasswordSettings() {
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { changePassword } = useAuth();
+
+  const [saving, setSaving] = useState(false);
 
   const [message, setMessage] = useState("");
 
@@ -37,31 +43,54 @@ function PasswordSettings() {
   // PASSWORD SUBMISSION
   // -----------------------------
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+
+    if (saving) {
+      return;
+    }
 
     setMessage("");
 
+    if (!currentPassword.trim() || !newPassword.trim()) {
+      setMessage("Current and new passwords are required.");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setMessage("New passwords do not match.");
-
       return;
     }
 
     if (newPassword.length < 8) {
       setMessage("New password must contain at least 8 characters.");
-
       return;
     }
 
-    // Frontend shell only.
-    // Spring Boot will later verify the
-    // current password and update the
-    // stored password securely.
+    if (new TextEncoder().encode(newPassword).length > 72) {
+      setMessage("New password must not exceed 72 UTF-8 bytes.");
+      return;
+    }
 
-    setMessage("Password change is ready for backend integration.");
+    if (newPassword === currentPassword) {
+      setMessage("New password must differ from your current password.");
+      return;
+    }
 
-    resetForm();
+    setSaving(true);
+
+    try {
+      await changePassword(currentPassword, newPassword);
+    } catch (error) {
+      setMessage(
+        error.errors?.currentPassword ||
+          error.errors?.newPassword ||
+          error.message ||
+          "Unable to change your password. Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -101,6 +130,7 @@ function PasswordSettings() {
               id="current-password"
               type={showCurrentPassword ? "text" : "password"}
               value={currentPassword}
+              disabled={saving}
               onChange={(event) => setCurrentPassword(event.target.value)}
               autoComplete="current-password"
               required
@@ -131,6 +161,7 @@ function PasswordSettings() {
               id="new-password"
               type={showNewPassword ? "text" : "password"}
               value={newPassword}
+              disabled={saving}
               onChange={(event) => setNewPassword(event.target.value)}
               minLength={8}
               autoComplete="new-password"
@@ -162,6 +193,7 @@ function PasswordSettings() {
               id="confirm-password"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
+              disabled={saving}
               onChange={(event) => setConfirmPassword(event.target.value)}
               autoComplete="new-password"
               required
@@ -184,14 +216,22 @@ function PasswordSettings() {
         {/* =========================
                     MESSAGE
                 ========================== */}
-        {message && <p className="account-form-message">{message}</p>}
+        {message && (
+          <p className="account-form-message" role="alert">
+            {message}
+          </p>
+        )}
 
         {/* =========================
                     ACTION
                 ========================== */}
         <div className="finding-form-actions">
-          <button className="create-repair-button" type="submit">
-            Change Password
+          <button
+            className="create-repair-button"
+            type="submit"
+            disabled={saving}
+          >
+            {saving ? "Changing Password..." : "Change Password"}
           </button>
         </div>
       </form>

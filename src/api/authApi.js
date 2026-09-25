@@ -21,3 +21,24 @@ export function logout() {
     method: "POST",
   });
 }
+export function updateProfile(name) {
+  return apiRequest("/api/auth/me", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+}
+export function changePassword(currentPassword, newPassword) {
+  return apiRequest("/api/auth/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      currentPassword,
+      newPassword,
+    }),
+  });
+}

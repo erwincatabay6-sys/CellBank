@@ -10,6 +10,8 @@ import {
   getCurrentUser,
   login as loginRequest,
   logout as logoutRequest,
+  updateProfile as updateProfileRequest,
+  changePassword as changePasswordRequest,
 } from "../../../api/authApi.js";
 
 const AuthContext = createContext(null);
@@ -81,6 +83,23 @@ export function AuthProvider({ children }) {
     setSessionMessage("");
   }
 
+  async function updateProfile(name) {
+    const updatedUser = await updateProfileRequest(name);
+
+    setUser(updatedUser);
+
+    return updatedUser;
+  }
+  async function changePassword(currentPassword, newPassword) {
+    await changePasswordRequest(currentPassword, newPassword);
+
+    setSessionMessage(
+      "Your password was changed successfully. Please sign in again.",
+    );
+    setAuthError("");
+    setUser(null);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -92,6 +111,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         refreshSession,
+        updateProfile,
+        changePassword,
       }}
     >
       {children}

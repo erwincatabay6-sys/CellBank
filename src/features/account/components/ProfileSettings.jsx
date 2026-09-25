@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useAuth } from "../../auth/context/AuthContext.jsx";
+
 import { Camera, UserCircle } from "lucide-react";
 
 function ProfileSettings({ user }) {
@@ -10,7 +12,11 @@ function ProfileSettings({ user }) {
   const [fullName, setFullName] = useState(user.name);
 
   const [profileImage, setProfileImage] = useState(null);
+  const { updateProfile } = useAuth();
 
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   // -----------------------------
   // PROFILE IMAGE
   // -----------------------------
@@ -31,13 +37,44 @@ function ProfileSettings({ user }) {
   // PROFILE SUBMISSION
   // -----------------------------
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    // Frontend shell only.
-    // Spring Boot will later update:
-    // - profile picture
-    // - full name
+    if (saving) {
+      return;
+    }
+
+    setMessage("");
+    setError("");
+
+    const name = fullName.trim();
+
+    if (!name) {
+      setError("Full name is required.");
+      return;
+    }
+
+    if (name.length > 120) {
+      setError("Full name must not exceed 120 characters.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const updatedUser = await updateProfile(name);
+
+      setFullName(updatedUser.name);
+      setMessage("Full name updated successfully.");
+    } catch (error) {
+      setError(
+        error.errors?.name ||
+          error.message ||
+          "Unable to update your name. Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -103,6 +140,8 @@ function ProfileSettings({ user }) {
             type="text"
             value={fullName}
             onChange={(event) => setFullName(event.target.value)}
+            maxLength={120}
+            disabled={saving}
             required
           />
         </div>
@@ -110,9 +149,25 @@ function ProfileSettings({ user }) {
         {/* =========================
                     SAVE ACTION
                 ========================== */}
+        {message && (
+          <p className="account-form-message" role="status">
+            {message}
+          </p>
+        )}
+
+        {error && (
+          <p className="account-form-message" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="finding-form-actions">
-          <button className="create-repair-button" type="submit">
-            Save Profile Changes
+          <button
+            className="create-repair-button"
+            type="submit"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Full Name"}
           </button>
         </div>
       </form>
