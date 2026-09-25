@@ -11,8 +11,11 @@ function ProfileSettings({ user }) {
 
   const [fullName, setFullName] = useState(user.name);
 
-  const [profileImage, setProfileImage] = useState(null);
-  const { updateProfile } = useAuth();
+  const profileImage = user.profileImageUrl;
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageMessage, setImageMessage] = useState("");
+  const [imageError, setImageError] = useState("");
+  const { updateProfile, uploadProfileImage } = useAuth();
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,16 +24,37 @@ function ProfileSettings({ user }) {
   // PROFILE IMAGE
   // -----------------------------
 
-  function handleProfileImageChange(event) {
+  async function handleProfileImageChange(event) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (!file) {
+    if (!file || uploadingImage) {
       return;
     }
 
-    const imageUrl = URL.createObjectURL(file);
+    setImageMessage("");
+    setImageError("");
 
-    setProfileImage(imageUrl);
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setImageError("Please select a JPG or PNG image.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError("Please select an image no larger than 2 MB.");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      await uploadProfileImage(file);
+      setImageMessage("Profile picture updated successfully.");
+    } catch (error) {
+      setImageError(error.message || "Unable to upload your profile picture.");
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   // -----------------------------
@@ -122,12 +146,27 @@ function ProfileSettings({ user }) {
             <input
               id="profile-picture"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png"
               onChange={handleProfileImageChange}
+              disabled={uploadingImage}
               hidden
             />
           </div>
         </div>
+
+        {uploadingImage && <p role="status">Uploading picture...</p>}
+
+        {imageMessage && (
+          <p className="account-form-message" role="status">
+            {imageMessage}
+          </p>
+        )}
+
+        {imageError && (
+          <p className="account-form-message" role="alert">
+            {imageError}
+          </p>
+        )}
 
         {/* =========================
                     PERSONAL INFORMATION

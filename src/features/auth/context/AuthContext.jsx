@@ -12,6 +12,7 @@ import {
   logout as logoutRequest,
   updateProfile as updateProfileRequest,
   changePassword as changePasswordRequest,
+  uploadProfileImage as uploadProfileImageRequest,
 } from "../../../api/authApi.js";
 
 const AuthContext = createContext(null);
@@ -90,6 +91,12 @@ export function AuthProvider({ children }) {
 
     return updatedUser;
   }
+  async function uploadProfileImage(file) {
+  const updatedUser = await uploadProfileImageRequest(file);
+  setUser(updatedUser);
+  return updatedUser;
+}
+
   async function changePassword(currentPassword, newPassword) {
     await changePasswordRequest(currentPassword, newPassword);
 
@@ -112,6 +119,7 @@ export function AuthProvider({ children }) {
         logout,
         refreshSession,
         updateProfile,
+        uploadProfileImage,
         changePassword,
       }}
     >

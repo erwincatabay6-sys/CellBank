@@ -42,3 +42,12 @@ export function changePassword(currentPassword, newPassword) {
     }),
   });
 }
+export function uploadProfileImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiRequest("/api/auth/me/profile-image", {
+    method: "POST",
+    body: formData,
+  });
+}
