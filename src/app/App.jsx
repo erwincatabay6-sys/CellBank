@@ -20,6 +20,8 @@ import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage.jsx";
 
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage.jsx";
 
+import VerifyEmailPage from "../features/auth/pages/VerifyEmailPage.jsx";
+
 import AccessDeniedPage from "../features/auth/pages/AccessDeniedPage.jsx";
 
 // =====================================================
@@ -128,6 +130,15 @@ function App() {
         element={
           <PublicLayout>
             <ResetPasswordPage />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/verify-email"
+        element={
+          <PublicLayout>
+            <VerifyEmailPage />
           </PublicLayout>
         }
       />

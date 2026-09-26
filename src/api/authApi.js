@@ -51,3 +51,24 @@ export function uploadProfileImage(file) {
     body: formData,
   });
 }
+export function sendEmailVerification() {
+  return apiRequest("/api/auth/me/email-verification", {
+    method: "POST",
+  });
+}
+
+export function getEmailVerificationStatus() {
+  return apiRequest("/api/auth/me/email-verification", {
+    method: "GET",
+  });
+}
+
+export function verifyEmail(token) {
+  return apiRequest("/api/auth/verify-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token }),
+  });
+}

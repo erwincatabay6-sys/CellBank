@@ -1,48 +1,175 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { MailCheck, MailWarning, Send } from "lucide-react";
 
-function EmailVerificationSettings({ user }) {
-  // -----------------------------
-  // TEMPORARY VERIFICATION STATE
-  // -----------------------------
-  // This will eventually come from:
-  // currentUser.emailVerified
-  //
-  // Verification itself will happen
-  // through a secure email link.
+import {
+  sendEmailVerification,
+  getEmailVerificationStatus,
+} from "../../../api/authApi.js";
 
-  const emailVerified = true;
+function EmailVerificationSettings({ user }) {
+  const { refreshUser } = useAuth();
+
+  const emailVerified = user.emailVerified === true;
+  const sendInProgress = useRef(false);
 
   const [verificationRequested, setVerificationRequested] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [statusError, setStatusError] = useState("");
 
-  // -----------------------------
-  // SEND / RESEND VERIFICATION
-  // -----------------------------
+  const [resendAvailableAt, setResendAvailableAt] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState(0);
 
-  function handleSendVerification() {
-    if (emailVerified || verificationRequested) {
+  useEffect(() => {
+    if (!resendAvailableAt) {
       return;
     }
 
-    // Frontend shell only.
-    //
-    // Spring Boot will later:
-    // 1. Generate a secure verification token
-    // 2. Associate it with this account
-    // 3. Send a verification link
-    //    to the registered email
-    // 4. Validate the token when clicked
-    // 5. Mark emailVerified = true
+    function updateCountdown() {
+      const remaining = Math.max(
+        0,
+        Math.ceil((resendAvailableAt - Date.now()) / 1000),
+      );
 
-    setVerificationRequested(true);
+      setSecondsRemaining(remaining);
+      return remaining;
+    }
+
+    updateCountdown();
+
+    const intervalId = window.setInterval(() => {
+      if (updateCountdown() === 0) {
+        window.clearInterval(intervalId);
+      }
+    }, 250);
+
+    return () => window.clearInterval(intervalId);
+  }, [resendAvailableAt]);
+
+  useEffect(() => {
+    if (emailVerified) {
+      setCheckingStatus(false);
+      setResendAvailableAt(0);
+      setSecondsRemaining(0);
+      setStatusError("");
+      return;
+    }
+
+    if (sending) {
+      return;
+    }
+
+    let active = true;
+    let refreshing = false;
+
+    function applyVerificationStatus(status) {
+      const remainingMilliseconds =
+        !status.emailVerified && status.resendAvailableAt
+          ? Math.max(
+              0,
+              Date.parse(status.resendAvailableAt) -
+                Date.parse(status.serverTime),
+            )
+          : 0;
+
+      setResendAvailableAt(
+        remainingMilliseconds > 0 ? Date.now() + remainingMilliseconds : 0,
+      );
+
+      setSecondsRemaining(Math.ceil(remainingMilliseconds / 1000));
+    }
+
+    async function synchronizeStatus() {
+      if (!active || refreshing || sendInProgress.current) {
+        return;
+      }
+
+      refreshing = true;
+      setCheckingStatus(true);
+      setStatusError("");
+
+      try {
+        const status = await getEmailVerificationStatus();
+
+        if (!active || sendInProgress.current) {
+          return;
+        }
+
+        applyVerificationStatus(status);
+
+        if (status.emailVerified !== emailVerified) {
+          await refreshUser();
+        }
+      } catch (error) {
+        if (active && error.status !== 401) {
+          setStatusError(
+            "Unable to refresh verification status. Please refresh the page.",
+          );
+        }
+      } finally {
+        refreshing = false;
+
+        if (active) {
+          setCheckingStatus(false);
+        }
+      }
+    }
+
+    function handleReturnToPage() {
+      if (document.visibilityState === "visible") {
+        void synchronizeStatus();
+      }
+    }
+
+    void synchronizeStatus();
+
+    window.addEventListener("focus", handleReturnToPage);
+    document.addEventListener("visibilitychange", handleReturnToPage);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", handleReturnToPage);
+      document.removeEventListener("visibilitychange", handleReturnToPage);
+    };
+  }, [emailVerified, sending, refreshUser, user.id, user.email]);
+
+  async function handleSendVerification() {
+    if (
+      emailVerified ||
+      sendInProgress.current ||
+      checkingStatus ||
+      Date.now() < resendAvailableAt
+    ) {
+      return;
+    }
+
+    sendInProgress.current = true;
+    setSending(true);
+    setErrorMessage("");
+    setStatusError("");
+    setVerificationRequested(false);
+
+    try {
+      await sendEmailVerification();
+      setVerificationRequested(true);
+    } catch (error) {
+      setErrorMessage(
+        error.message ||
+          "Unable to send the verification email. Please try again.",
+      );
+    } finally {
+      // Keep the button disabled while the effect reloads the cooldown.
+      setCheckingStatus(true);
+      sendInProgress.current = false;
+      setSending(false);
+    }
   }
 
   return (
     <section className="page-content">
-      {/* =========================
-                HEADER
-            ========================== */}
       <div className="workspace-section-header">
         <div>
           <h3>Email Verification</h3>
@@ -54,9 +181,6 @@ function EmailVerificationSettings({ user }) {
         </div>
       </div>
 
-      {/* =========================
-                VERIFICATION STATUS
-            ========================== */}
       <div className="email-verification-card">
         <div className="email-verification-icon">
           {emailVerified ? <MailCheck size={28} /> : <MailWarning size={28} />}
@@ -75,10 +199,8 @@ function EmailVerificationSettings({ user }) {
 
           <p>
             {emailVerified
-              ? "This email can be used for " +
-                "account recovery and security notifications."
-              : "Open the verification link sent " +
-                "to this email address to verify it."}
+              ? "This email can be used for account recovery and security notifications."
+              : "Open the verification link sent to this email address to verify it."}
           </p>
         </div>
 
@@ -87,26 +209,41 @@ function EmailVerificationSettings({ user }) {
             className="secondary-repair-button"
             type="button"
             onClick={handleSendVerification}
-            disabled={verificationRequested}
+            disabled={sending || checkingStatus || secondsRemaining > 0}
           >
             <Send size={18} />
 
             <span>
-              {verificationRequested
-                ? "Verification Sent"
-                : "Resend Verification"}
+              {sending
+                ? "Sending..."
+                : checkingStatus
+                  ? "Checking..."
+                  : secondsRemaining > 0
+                    ? `Resend in ${secondsRemaining}s`
+                    : verificationRequested
+                      ? "Resend Verification"
+                      : "Send Verification"}
             </span>
           </button>
         )}
       </div>
 
-      {/* =========================
-                VERIFICATION MESSAGE
-            ========================== */}
-      {verificationRequested && (
+      {verificationRequested && !emailVerified && (
         <p className="account-form-message">
           Verification instructions have been sent to your registered email
           address.
+        </p>
+      )}
+
+      {errorMessage && !emailVerified && (
+        <p className="account-form-message" role="alert">
+          {errorMessage}
+        </p>
+      )}
+
+      {statusError && !emailVerified && (
+        <p className="account-form-message" role="alert">
+          {statusError}
         </p>
       )}
     </section>

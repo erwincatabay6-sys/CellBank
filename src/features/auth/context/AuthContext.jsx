@@ -41,6 +41,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+    return currentUser;
+  }, []);
+
   useEffect(() => {
     void refreshSession();
   }, [refreshSession]);
@@ -92,10 +98,10 @@ export function AuthProvider({ children }) {
     return updatedUser;
   }
   async function uploadProfileImage(file) {
-  const updatedUser = await uploadProfileImageRequest(file);
-  setUser(updatedUser);
-  return updatedUser;
-}
+    const updatedUser = await uploadProfileImageRequest(file);
+    setUser(updatedUser);
+    return updatedUser;
+  }
 
   async function changePassword(currentPassword, newPassword) {
     await changePasswordRequest(currentPassword, newPassword);
@@ -121,6 +127,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         uploadProfileImage,
         changePassword,
+        refreshUser,
       }}
     >
       {children}
