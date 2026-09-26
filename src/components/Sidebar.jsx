@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
 import {
   LayoutDashboard,
@@ -62,6 +63,8 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
   const navigate = useNavigate();
 
   const location = useLocation();
+
+  const { user } = useAuth();
 
   // -----------------------------
   // NORMALIZED ROLES
@@ -157,7 +160,17 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
                 USER PROFILE
             ========================== */}
       <div className="sidebar-profile">
-        <UserCircle className="profile-icon" size={34} />
+        {user?.profileImageUrl ? (
+          <img
+            className="sidebar-profile-image"
+            src={user.profileImageUrl}
+            alt=""
+            width={34}
+            height={34}
+          />
+        ) : (
+          <UserCircle className="profile-icon" size={34} />
+        )}
 
         {!collapsed && (
           <div className="profile-details">
