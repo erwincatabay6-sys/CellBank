@@ -1,13 +1,19 @@
 import { useState } from "react";
 
+import { resetPassword } from "../../../api/authApi.js";
+
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import "../auth.css";
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+
+  const location = useLocation();
+
+  const token = new URLSearchParams(location.hash.slice(1)).get("token") || "";
 
   // -----------------------------
   // PASSWORD STATE
@@ -31,51 +37,63 @@ function ResetPasswordPage() {
   // RESET PASSWORD
   // -----------------------------
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    setErrorMessage("");
-
-    setSuccessMessage("");
-
-    if (!newPassword) {
-      setErrorMessage("Enter a new password.");
-
+    if (submitting || successMessage) {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setErrorMessage("Password must contain at least 8 characters.");
+    setErrorMessage("");
+    setSuccessMessage("");
 
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+      setErrorMessage(
+        "This reset link is invalid. Open the full link from your recovery email.",
+      );
+      return;
+    }
+
+    if (!newPassword.trim()) {
+      setErrorMessage("Enter a new password.");
+      return;
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 72) {
+      setErrorMessage("Password must contain between 8 and 72 characters.");
+      return;
+    }
+
+    if (new TextEncoder().encode(newPassword).length > 72) {
+      setErrorMessage("Password must not exceed 72 UTF-8 bytes.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
-
       return;
     }
 
     setSubmitting(true);
 
-    // Frontend shell only.
-    //
-    // Spring Boot will later:
-    // 1. Validate the recovery token
-    // 2. Ensure it has not expired
-    // 3. Ensure it has not been used
-    // 4. Hash the new password
-    // 5. Update the account
-    // 6. Invalidate the recovery token
-    // 7. Invalidate appropriate sessions
+    try {
+      await resetPassword(token, newPassword);
 
-    setSuccessMessage("Your password has been reset successfully.");
+      setSuccessMessage(
+        "Your password has been reset successfully. Sign in with your new password.",
+      );
 
-    setSubmitting(false);
-
-    setNewPassword("");
-
-    setConfirmPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+    } catch (error) {
+      setErrorMessage(
+        error.message || "Unable to reset your password. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   // -----------------------------
