@@ -11,15 +11,44 @@
   border-bottom: 1px solid var(--border);
 }
 
-.header-brand h1 {
-  font-size: 1.25rem;
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-brand-icon {
+  flex-shrink: 0;
   color: var(--primary);
 }
 
-.header-actions {
+.header-brand-text {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-brand h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  color: var(--primary);
+}
+
+.header-brand-subtitle {
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.app-header > .header-actions {
+  display: flex;
+  flex-direction: row;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .icon-button,
@@ -649,4 +678,42 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+/* Smooth sidebar and Settings highlights */
+.nav-item,
+.account-settings,
+.sidebar-toggle {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+/* Brief entrance animation when the page changes */
+.page-transition {
+  animation: page-enter 180ms ease-out;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Respect the user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition {
+    animation: none;
+  }
+
+  .nav-item,
+  .account-settings,
+  .sidebar-toggle,
+  .sidebar {
+    transition: none;
+  }
 }

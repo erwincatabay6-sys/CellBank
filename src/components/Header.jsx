@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { Bell, CheckCheck, LogOut } from "lucide-react";
+import { Bell, CheckCheck, LogOut, } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 
 import { hasRole } from "../config/accessControl.js";
 
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
+
+import Brand from "./Brand.jsx";
 
 const notifications = [
   {
@@ -150,10 +152,9 @@ function Header({ currentRoles, currentUserName }) {
   }
 
   return (
-    <header className="app-header">
-      <div className="header-brand">
-        <h1>Cellbank</h1>
-      </div>
+  <header className="app-header">
+    <Brand />
+
 
       <div className="header-actions">
         <div className="notification-wrapper">

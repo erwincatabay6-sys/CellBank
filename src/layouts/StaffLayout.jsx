@@ -1,19 +1,23 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import Header from "../components/Header.jsx";
-
 import Sidebar from "../components/Sidebar.jsx";
 
 function StaffLayout({ children, currentRoles, currentUserName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const location = useLocation();
 
   function toggleSidebar() {
-    setSidebarCollapsed(!sidebarCollapsed);
+    setSidebarCollapsed((collapsed) => !collapsed);
   }
 
   return (
     <div className="staff-layout">
-      <Header currentRoles={currentRoles} currentUserName={currentUserName} />
+      <Header
+        currentRoles={currentRoles}
+        currentUserName={currentUserName}
+      />
 
       <div className="staff-body">
         <Sidebar
@@ -23,7 +27,12 @@ function StaffLayout({ children, currentRoles, currentUserName }) {
           currentUserName={currentUserName}
         />
 
-        <main className="main-content">{children}</main>
+        <main
+          key={location.pathname}
+          className="main-content page-transition"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

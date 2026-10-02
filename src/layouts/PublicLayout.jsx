@@ -1,8 +1,10 @@
+import Brand from "../components/Brand.jsx";
+
 function PublicLayout({ children }) {
   return (
     <div className="public-layout">
       <header className="public-header">
-        <h1>Cellbank</h1>
+        <Brand />
       </header>
 
       <main className="public-content">{children}</main>
