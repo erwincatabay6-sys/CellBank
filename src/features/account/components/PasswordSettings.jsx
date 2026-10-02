@@ -4,6 +4,8 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
 function PasswordSettings() {
   // -----------------------------
   // PASSWORD STATE
@@ -230,8 +232,11 @@ function PasswordSettings() {
             className="create-repair-button"
             type="submit"
             disabled={saving}
+            aria-busy={saving}
           >
-            {saving ? "Changing Password..." : "Change Password"}
+            {saving && <LoadingSpinner size={18} />}
+
+            <span>{saving ? "Changing Password..." : "Change Password"}</span>
           </button>
         </div>
       </form>

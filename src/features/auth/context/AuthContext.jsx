@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import { RequestError } from "../../../api/http.js";
+
 import {
   getCurrentUser,
   login as loginRequest,
@@ -34,7 +36,11 @@ export function AuthProvider({ children }) {
       setUser(null);
 
       if (error.status !== 401) {
-        setAuthError("Unable to check your session. Please try again.");
+        setAuthError(
+          error instanceof RequestError
+            ? error.message
+            : "Unable to check your session. Please try again.",
+        );
       }
     } finally {
       setLoading(false);

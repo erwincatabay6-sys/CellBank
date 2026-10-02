@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-
+import { RequestError } from "../../../api/http.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { MailCheck, MailWarning, Send } from "lucide-react";
-
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import {
   sendEmailVerification,
   getEmailVerificationStatus,
@@ -106,7 +106,9 @@ function EmailVerificationSettings({ user }) {
       } catch (error) {
         if (active && error.status !== 401) {
           setStatusError(
-            "Unable to refresh verification status. Please refresh the page.",
+            error instanceof RequestError
+              ? `${error.message} Refresh the page to check verification status again.`
+              : "Unable to refresh verification status. Please refresh the page.",
           );
         }
       } finally {
@@ -210,8 +212,13 @@ function EmailVerificationSettings({ user }) {
             type="button"
             onClick={handleSendVerification}
             disabled={sending || checkingStatus || secondsRemaining > 0}
+            aria-busy={sending || checkingStatus}
           >
-            <Send size={18} />
+            {sending || checkingStatus ? (
+              <LoadingSpinner size={18} />
+            ) : (
+              <Send size={18} />
+            )}
 
             <span>
               {sending
@@ -226,6 +233,7 @@ function EmailVerificationSettings({ user }) {
             </span>
           </button>
         )}
+        
       </div>
 
       {verificationRequested && !emailVerified && (

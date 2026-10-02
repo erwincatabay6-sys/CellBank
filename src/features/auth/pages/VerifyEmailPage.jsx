@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MailCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
-
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import { verifyEmail } from "../../../api/authApi.js";
 
 import "../auth.css";
@@ -86,8 +86,14 @@ function VerifyEmailPage() {
             type="button"
             onClick={handleVerify}
             disabled={submitting}
+            aria-busy={submitting}
           >
-            <MailCheck size={20} />
+            {submitting ? (
+              <LoadingSpinner size={20} />
+            ) : (
+              <MailCheck size={20} />
+            )}
+
             <span>{submitting ? "Verifying..." : "Verify Email"}</span>
           </button>
         )}

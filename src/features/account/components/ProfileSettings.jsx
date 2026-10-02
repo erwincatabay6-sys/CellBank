@@ -4,6 +4,8 @@ import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import { Camera, UserCircle } from "lucide-react";
 
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
 function ProfileSettings({ user }) {
   // -----------------------------
   // PROFILE STATE
@@ -137,10 +139,16 @@ function ProfileSettings({ user }) {
             <label
               className="secondary-repair-button"
               htmlFor="profile-picture"
+              aria-busy={uploadingImage}
+              aria-disabled={uploadingImage}
             >
-              <Camera size={18} />
+              {uploadingImage ? (
+                <LoadingSpinner size={18} />
+              ) : (
+                <Camera size={18} />
+              )}
 
-              <span>Choose Image</span>
+              <span>{uploadingImage ? "Uploading..." : "Choose Image"}</span>
             </label>
 
             <input
@@ -205,8 +213,11 @@ function ProfileSettings({ user }) {
             className="create-repair-button"
             type="submit"
             disabled={saving}
+            aria-busy={saving}
           >
-            {saving ? "Saving..." : "Save Full Name"}
+            {saving && <LoadingSpinner size={18} />}
+
+            <span>{saving ? "Saving..." : "Save Full Name"}</span>
           </button>
         </div>
       </form>

@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-
-import { Eye, EyeOff, LogIn } from "lucide-react";
-
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import { RequestError } from "../../../api/http.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function LoginPage() {
   const navigate = useNavigate();
-
   const { login, loading, sessionMessage } = useAuth();
 
   // -----------------------------
@@ -15,13 +14,9 @@ function LoginPage() {
   // -----------------------------
 
   const [identifier, setIdentifier] = useState("");
-
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
 
   // -----------------------------
@@ -48,7 +43,23 @@ function LoginPage() {
       await login(identifier, password);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      if (error.status === 401) {
+      if (error.status === 429) {
+        const seconds = error.retryAfterSeconds;
+
+        if (seconds) {
+          const minutes = Math.ceil(seconds / 60);
+
+          setErrorMessage(
+            `Too many sign-in attempts. Please try again in about ${minutes} ${
+              minutes === 1 ? "minute" : "minutes"
+            }.`,
+          );
+        } else {
+          setErrorMessage(
+            "Too many sign-in attempts. Please wait before trying again.",
+          );
+        }
+      } else if (error.status === 401) {
         setErrorMessage(
           "Unable to sign in. Check your credentials or contact your administrator.",
         );
@@ -56,10 +67,10 @@ function LoginPage() {
         setErrorMessage(
           "Your security token could not be verified. Please try signing in again.",
         );
+      } else if (error instanceof RequestError) {
+        setErrorMessage(error.message);
       } else {
-        setErrorMessage(
-          "Unable to connect or complete sign-in. Please try again.",
-        );
+        setErrorMessage("Unable to complete sign-in. Please try again.");
       }
     } finally {
       setSubmitting(false);
@@ -69,8 +80,8 @@ function LoginPage() {
   return (
     <section className="public-card">
       {/* =========================
-                HEADER
-            ========================== */}
+                  HEADER
+          ========================= */}
       <div className="public-card-header">
         <h2>Staff Login</h2>
 
@@ -79,7 +90,7 @@ function LoginPage() {
 
       {/* =========================
                 LOGIN FORM
-            ========================== */}
+          ========================= */}
       <form className="public-form" onSubmit={handleSubmit}>
         {/* USERNAME OR EMAIL */}
         <div className="form-group">
@@ -91,7 +102,7 @@ function LoginPage() {
             name="identifier"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder={"Enter username or email"}
+            placeholder="Enter username or email"
             autoComplete="username"
             disabled={submitting}
           />
@@ -117,7 +128,7 @@ function LoginPage() {
               type="button"
               className="password-toggle"
               aria-label={showPassword ? "Hide password" : "Show password"}
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword((previous) => !previous)}
               disabled={submitting}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -142,8 +153,9 @@ function LoginPage() {
           className="primary-action"
           type="submit"
           disabled={submitting || loading}
+          aria-busy={submitting}
         >
-          <LogIn size={20} />
+          {submitting ? <LoadingSpinner size={20} /> : <LogIn size={20} />}
 
           <span>{submitting ? "Signing In..." : "Login"}</span>
         </button>

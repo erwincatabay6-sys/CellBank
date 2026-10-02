@@ -8,6 +8,8 @@ import { Link } from "react-router-dom";
 
 import "../auth.css";
 
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
 const RECOVERY_COOLDOWN_KEY = "cellbank.recoveryResendAvailableAt";
 
 function readRecoveryDeadline() {
@@ -170,8 +172,9 @@ function ForgotPasswordPage() {
           className="primary-action"
           type="submit"
           disabled={submitting || secondsRemaining > 0}
+          aria-busy={submitting}
         >
-          <Mail size={20} />
+          {submitting ? <LoadingSpinner size={20} /> : <Mail size={20} />}
 
           <span>
             {submitting

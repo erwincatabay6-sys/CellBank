@@ -6,6 +6,8 @@ import { Eye, EyeOff, KeyRound } from "lucide-react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
 import "../auth.css";
 
 function ResetPasswordPage() {
@@ -203,8 +205,9 @@ function ResetPasswordPage() {
             className="primary-action"
             type="submit"
             disabled={submitting}
+            aria-busy={submitting}
           >
-            <KeyRound size={20} />
+            {submitting ? <LoadingSpinner size={20} /> : <KeyRound size={20} />}
 
             <span>{submitting ? "Resetting..." : "Reset Password"}</span>
           </button>
