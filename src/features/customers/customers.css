@@ -425,3 +425,54 @@
 .device-repair-item > div {
   align-items: flex-start;
 }
+
+.customer-field-error {
+  color: var(--error-color);
+  font-size: 0.8125rem;
+  margin-top: 4px;
+}
+
+.customer-form-error {
+  padding: 12px 14px;
+  border: 1px solid var(--error-color);
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--error-color);
+  line-height: 1.5;
+}
+
+.device-registration-form [aria-invalid="true"] {
+  border-color: var(--error-color);
+}
+
+.device-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.customer-skeleton-line {
+  display: block;
+  width: 80%;
+  height: 14px;
+  margin: 7px 0;
+  border-radius: 4px;
+  background-color: var(--border);
+  animation: customer-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes customer-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-skeleton-line {
+    animation: none;
+  }
+}

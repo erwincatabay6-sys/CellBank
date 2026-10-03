@@ -1,253 +1,147 @@
 import { useState } from "react";
-
 import { useNavigate, useParams } from "react-router-dom";
 
-import CustomerDeviceList from "../components/CustomerDeviceList.jsx";
-
-import CustomerRepairHistory from "../components/CustomerRepairHistory.jsx";
-
-import CustomerRegistrationModal from "../components/CustomerRegistrationModal.jsx";
-
-import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
-
+import { hasRole } from "../../../config/accessControl.js";
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
 
-import { mockRepairs } from "../../repairs/data/mockRepairs.js";
+import CustomerRecordLayout from "../components/CustomerRecordLayout.jsx";
+import CustomerDeviceList from "../components/CustomerDeviceList.jsx";
+import CustomerRegistrationModal from "../components/CustomerRegistrationModal.jsx";
+import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
 
 function CustomerDetailsPage() {
   const { customerId } = useParams();
-
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // -----------------------------
-  // SHARED CUSTOMER STATE
-  // -----------------------------
-
-  const { customers, addDevice, updateCustomer } = useCustomers();
-
-  // -----------------------------
-  // PAGE STATE
-  // -----------------------------
+  const { customers, loading, loadError, addDevice, updateCustomer } =
+    useCustomers();
 
   const [customerEditOpen, setCustomerEditOpen] = useState(false);
-
   const [deviceModalOpen, setDeviceModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // -----------------------------
-  // CUSTOMER
-  // -----------------------------
+  const customer = customers.find((item) => String(item.id) === customerId);
 
-  const customer = customers.find(
-    (customer) => customer.id === Number(customerId),
-  );
+  const canManage =
+    hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
 
-  // -----------------------------
-  // CUSTOMER NOT FOUND
-  // -----------------------------
+  const canEditNow = canManage && !loading && !loadError;
+  const modalOpen = customerEditOpen || deviceModalOpen;
 
-  if (!customer) {
-    return (
-      <>
-        <section className="page-header">
-          <h2>Customer Not Found</h2>
-
-          <p>The requested customer record does not exist.</p>
-        </section>
-
-        <section className="page-content">
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={() => navigate("/customers")}
-          >
-            Back to Customers
-          </button>
-        </section>
-      </>
-    );
+  async function handleCustomerUpdate(data) {
+    await updateCustomer(customer.id, data);
+    setSuccessMessage("Customer information updated.");
   }
 
-  // -----------------------------
-  // DERIVED CUSTOMER DATA
-  // -----------------------------
-
-  const customerDeviceIds = customer.devices.map((device) => device.id);
-
-  const customerRepairs = mockRepairs.filter((repair) =>
-    customerDeviceIds.includes(repair.deviceId),
-  );
-
-  // -----------------------------
-  // NAVIGATION
-  // -----------------------------
-
-  function handleDeviceClick(deviceId) {
-    navigate(`/customers/${customer.id}/devices/${deviceId}`);
-  }
-
-  function handleRepairClick(repairId) {
-    navigate(`/repairs/${repairId}`);
-  }
-
-  // -----------------------------
-  // CUSTOMER EDITING
-  // -----------------------------
-
-  function handleEditCustomer() {
-    setCustomerEditOpen(true);
-  }
-
-  function handleCustomerUpdate(updatedCustomer) {
-    updateCustomer(customer.id, updatedCustomer);
-
-    setCustomerEditOpen(false);
-  }
-
-  function handleCustomerEditClose() {
-    setCustomerEditOpen(false);
-  }
-
-  // -----------------------------
-  // DEVICE REGISTRATION
-  // -----------------------------
-
-  function handleNewDevice() {
-    setDeviceModalOpen(true);
-  }
-
-  function handleDeviceSave(newDevice) {
-    addDevice(customer.id, newDevice);
-
-    setDeviceModalOpen(false);
-  }
-
-  function handleDeviceModalClose() {
-    setDeviceModalOpen(false);
+  async function handleDeviceSave(data) {
+    await addDevice(customer.id, data);
+    setSuccessMessage("Device registered successfully.");
   }
 
   return (
-    <>
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
-      <section className="page-header">
-        <h2>{customer.name}</h2>
+    <CustomerRecordLayout
+      title={customer?.name ?? "Customer Details"}
+      description="View customer information and registered devices."
+      found={Boolean(customer)}
+      backPath="/customers"
+      backLabel="Back to Customers"
+      busy={modalOpen}
+    >
+      {customer && (
+        <>
+          {successMessage && (
+            <section className="page-content">
+              <p role="status">{successMessage}</p>
+            </section>
+          )}
 
-        <p>
-          View customer information, registered devices, and repair history.
-        </p>
-      </section>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Customer Information</h3>
+                <p className="workspace-section-description">
+                  Contact information for this customer.
+                </p>
+              </div>
 
-      {/* =========================
-                CUSTOMER INFORMATION
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Customer Information</h3>
+              {canManage && (
+                <button
+                  className="secondary-repair-button"
+                  type="button"
+                  disabled={!canEditNow}
+                  onClick={() => {
+                    setSuccessMessage("");
+                    setCustomerEditOpen(true);
+                  }}
+                >
+                  Edit Customer
+                </button>
+              )}
+            </div>
 
-            <p className="workspace-section-description">
-              Contact and account information for this customer.
-            </p>
-          </div>
+            <div className="customer-info-grid">
+              <div>
+                <span>Full Name</span>
+                <strong>{customer.name}</strong>
+              </div>
 
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={handleEditCustomer}
-          >
-            Edit Customer
-          </button>
-        </div>
+              <div>
+                <span>Phone</span>
+                <strong>{customer.phone}</strong>
+              </div>
 
-        <div className="customer-info-grid">
-          {/* FULL NAME */}
-          <div>
-            <span>Full Name</span>
+              <div>
+                <span>Email</span>
+                <strong>{customer.email || "Not recorded"}</strong>
+              </div>
 
-            <strong>{customer.name}</strong>
-          </div>
+              <div>
+                <span>Address</span>
+                <strong>{customer.address || "Not recorded"}</strong>
+              </div>
 
-          {/* PHONE */}
-          <div>
-            <span>Phone</span>
+              <div>
+                <span>Registered Devices</span>
+                <strong>{customer.devices.length}</strong>
+              </div>
+            </div>
+          </section>
 
-            <strong>{customer.phone}</strong>
-          </div>
+          <section className="page-content">
+            <CustomerDeviceList
+              devices={customer.devices}
+              canManage={canManage}
+              disabled={!canEditNow}
+              onDeviceClick={(deviceId) =>
+                navigate(`/customers/${customer.id}/devices/${deviceId}`)
+              }
+              onNewDevice={() => {
+                setSuccessMessage("");
+                setDeviceModalOpen(true);
+              }}
+            />
+          </section>
 
-          {/* EMAIL */}
-          <div>
-            <span>Email</span>
+          {customerEditOpen && (
+            <CustomerRegistrationModal
+              initialCustomer={customer}
+              onClose={() => setCustomerEditOpen(false)}
+              onSave={handleCustomerUpdate}
+            />
+          )}
 
-            <strong>{customer.email || "Not recorded"}</strong>
-          </div>
-
-          {/* ADDRESS */}
-          <div>
-            <span>Address</span>
-
-            <strong>{customer.address || "Not recorded"}</strong>
-          </div>
-
-          {/* REGISTERED DEVICES */}
-          <div>
-            <span>Registered Devices</span>
-
-            <strong>{customer.devices.length}</strong>
-          </div>
-
-          {/* REPAIR RECORDS */}
-          <div>
-            <span>Repair Records</span>
-
-            <strong>{customerRepairs.length}</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================
-                REGISTERED DEVICES
-            ========================== */}
-      <section className="page-content">
-        <CustomerDeviceList
-          devices={customer.devices}
-          onDeviceClick={handleDeviceClick}
-          onNewDevice={handleNewDevice}
-        />
-      </section>
-
-      {/* =========================
-                CUSTOMER REPAIR HISTORY
-            ========================== */}
-      <section className="page-content">
-        <CustomerRepairHistory
-          repairs={customerRepairs}
-          onRepairClick={handleRepairClick}
-        />
-      </section>
-
-      {/* =========================
-                EDIT CUSTOMER MODAL
-            ========================== */}
-      {customerEditOpen && (
-        <CustomerRegistrationModal
-          initialCustomer={customer}
-          onClose={handleCustomerEditClose}
-          onSave={handleCustomerUpdate}
-        />
+          {deviceModalOpen && (
+            <DeviceRegistrationModal
+              customerName={customer.name}
+              onClose={() => setDeviceModalOpen(false)}
+              onSave={handleDeviceSave}
+            />
+          )}
+        </>
       )}
-
-      {/* =========================
-                NEW DEVICE MODAL
-            ========================== */}
-      {deviceModalOpen && (
-        <DeviceRegistrationModal
-          customerName={customer.name}
-          onClose={handleDeviceModalClose}
-          onSave={handleDeviceSave}
-        />
-      )}
-    </>
+    </CustomerRecordLayout>
   );
 }
 

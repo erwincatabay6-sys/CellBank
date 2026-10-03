@@ -1,134 +1,180 @@
 import { useState } from "react";
-
+import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { Plus, Search } from "lucide-react";
+import { hasRole } from "../../../config/accessControl.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
+import { useAuth } from "../../auth/context/AuthContext.jsx";
+import { useCustomers } from "../context/CustomersContext.jsx";
 
 import CustomerTable from "../components/CustomerTable.jsx";
-
 import CustomerRegistrationModal from "../components/CustomerRegistrationModal.jsx";
-
-import { useCustomers } from "../context/CustomersContext.jsx";
 
 import "../customers.css";
 
 function CustomerListPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // -----------------------------
-  // SHARED CUSTOMER STATE
-  // -----------------------------
-
-  const { customers, addCustomer } = useCustomers();
-
-  // -----------------------------
-  // PAGE STATE
-  // -----------------------------
+  const {
+    customers,
+    loading,
+    loaded,
+    loadError,
+    reloadCustomers,
+    addCustomer,
+  } = useCustomers();
 
   const [searchTerm, setSearchTerm] = useState("");
-
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // -----------------------------
-  // FILTERED CUSTOMERS
-  // -----------------------------
+  const canManage =
+    hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
 
-  const filteredCustomers = customers.filter((customer) => {
-    const search = searchTerm.trim().toLowerCase();
+  const search = searchTerm.trim().toLowerCase();
 
-    return (
-      customer.name.toLowerCase().includes(search) ||
-      customer.phone.toLowerCase().includes(search) ||
-      customer.email.toLowerCase().includes(search)
-    );
-  });
+  const filteredCustomers = customers.filter((customer) =>
+    [customer.name, customer.phone, customer.email].some((value) =>
+      (value ?? "").toLowerCase().includes(search),
+    ),
+  );
 
-  // -----------------------------
-  // NAVIGATION
-  // -----------------------------
-
-  function handleCustomerClick(customerId) {
-    navigate(`/customers/${customerId}`);
-  }
-
-  // -----------------------------
-  // CUSTOMER REGISTRATION
-  // -----------------------------
-
-  function handleNewCustomer() {
-    setCustomerModalOpen(true);
-  }
-
-  function handleCustomerSave(newCustomer) {
-    addCustomer(newCustomer);
-
-    setCustomerModalOpen(false);
-  }
-
-  function handleCustomerModalClose() {
-    setCustomerModalOpen(false);
+  async function handleCustomerSave(data) {
+    await addCustomer(data);
+    setSuccessMessage("Customer registered successfully.");
   }
 
   return (
     <>
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
       <section className="page-header">
         <h2>Customers</h2>
-
         <p>Manage customer records, devices, and repair history.</p>
       </section>
 
-      {/* =========================
-                CUSTOMER LIST
-            ========================== */}
-      <section className="page-content">
-        {/* TOOLBAR */}
+      <section className="page-content" aria-busy={loading}>
         <div className="customer-toolbar">
           <div className="customer-search">
-            <Search size={18} />
+            <Search size={18} aria-hidden="true" />
 
             <input
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search customers..."
+              aria-label="Search customers"
             />
           </div>
 
           <button
-            className="create-repair-button"
+            className="secondary-repair-button"
             type="button"
-            onClick={handleNewCustomer}
+            onClick={() => void reloadCustomers()}
+            disabled={loading || customerModalOpen}
           >
-            <Plus size={18} />
-
-            <span>New Customer</span>
+            {loading && <LoadingSpinner size={16} />}
+            <span>{loading ? "Loading..." : "Refresh"}</span>
           </button>
+
+          {canManage && (
+            <button
+              className="create-repair-button"
+              type="button"
+              disabled={loading || !loaded || Boolean(loadError)}
+              onClick={() => {
+                setSuccessMessage("");
+                setCustomerModalOpen(true);
+              }}
+            >
+              <Plus size={18} />
+              <span>New Customer</span>
+            </button>
+          )}
         </div>
 
-        {/* CUSTOMER TABLE */}
-        {filteredCustomers.length > 0 ? (
-          <CustomerTable
-            customers={filteredCustomers}
-            onCustomerClick={handleCustomerClick}
-          />
-        ) : (
-          <div className="workspace-empty-state">
-            <strong>No customers found</strong>
+        {successMessage && <p role="status">{successMessage}</p>}
 
-            <p>Try another search or register a new customer.</p>
+        {loadError && (
+          <div className="customer-form-error" role="alert">
+            <p>{loadError}</p>
+
+            {loaded && (
+              <p>
+                Previously loaded records are still shown and may be out of
+                date.
+              </p>
+            )}
+
+            <button
+              className="secondary-repair-button"
+              type="button"
+              onClick={() => void reloadCustomers()}
+              disabled={loading || customerModalOpen}
+            >
+              Try Again
+            </button>
           </div>
         )}
+
+        {!loaded && loading ? (
+          <div role="status" aria-label="Loading customers">
+            <div className="customer-table-wrapper" aria-hidden="true">
+              <table className="customer-table">
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Devices</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {Array.from({ length: 5 }, (_, row) => (
+                    <tr key={row}>
+                      {Array.from({ length: 4 }, (_, column) => (
+                        <td key={column}>
+                          <span className="customer-skeleton-line" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : loaded ? (
+          filteredCustomers.length > 0 ? (
+            <CustomerTable
+              customers={filteredCustomers}
+              onCustomerClick={(customerId) =>
+                navigate(`/customers/${customerId}`)
+              }
+            />
+          ) : (
+            <div className="workspace-empty-state">
+              <strong>
+                {customers.length === 0
+                  ? "No customers registered yet"
+                  : "No matching customers"}
+              </strong>
+
+              <p>
+                {customers.length === 0
+                  ? canManage
+                    ? "Select New Customer to register the first customer."
+                    : "Registered customers will appear here."
+                  : "Try a different name, phone number, or email."}
+              </p>
+            </div>
+          )
+        ) : null}
       </section>
 
-      {/* =========================
-                CUSTOMER REGISTRATION
-            ========================== */}
       {customerModalOpen && (
         <CustomerRegistrationModal
-          onClose={handleCustomerModalClose}
+          onClose={() => setCustomerModalOpen(false)}
           onSave={handleCustomerSave}
         />
       )}

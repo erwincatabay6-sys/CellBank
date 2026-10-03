@@ -1,6 +1,22 @@
-import { useState } from "react";
-
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
+
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
+const deviceTypes = [
+  "Mobile Phone",
+  "Laptop",
+  "Desktop Computer",
+  "Tablet",
+  "Other",
+];
+
+const textFields = [
+  { name: "brand", label: "Brand", maxLength: 80, required: true },
+  { name: "model", label: "Model", maxLength: 120, required: true },
+  { name: "serialNumber", label: "Serial Number", maxLength: 120 },
+  { name: "imei", label: "IMEI", maxLength: 20 },
+];
 
 function DeviceRegistrationModal({
   customerName,
@@ -8,63 +24,147 @@ function DeviceRegistrationModal({
   onClose,
   onSave,
 }) {
-  // -----------------------------
-  // MODE
-  // -----------------------------
-
   const isEditing = initialDevice != null;
 
-  // -----------------------------
-  // FORM STATE
-  // -----------------------------
+  const [values, setValues] = useState({
+    type: initialDevice?.type ?? "",
+    brand: initialDevice?.brand ?? "",
+    model: initialDevice?.model ?? "",
+    serialNumber: initialDevice?.serialNumber ?? "",
+    imei: initialDevice?.imei ?? "",
+    notes: initialDevice?.notes ?? "",
+  });
 
-  const [deviceType, setDeviceType] = useState(initialDevice?.type ?? "");
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
+  const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
-  const [brand, setBrand] = useState(initialDevice?.brand ?? "");
+  const submitting = useRef(false);
 
-  const [model, setModel] = useState(initialDevice?.model ?? "");
+  function handleChange(event) {
+    const { name, value } = event.target;
 
-  const [serialNumber, setSerialNumber] = useState(
-    initialDevice?.serialNumber ?? "",
-  );
+    setValues((current) => ({
+      ...current,
+      [name]: value,
+    }));
 
-  const [imei, setImei] = useState(initialDevice?.imei ?? "");
+    setFieldErrors((current) => ({
+      ...current,
+      [name]: "",
+    }));
+  }
 
-  const [notes, setNotes] = useState(initialDevice?.notes ?? "");
+  function handleClose() {
+    if (!submitting.current) {
+      onClose();
+    }
+  }
 
-  // -----------------------------
-  // SUBMISSION
-  // -----------------------------
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    const deviceData = {
-      type: deviceType,
+    if (submitting.current || outcomeUncertain) {
+      return;
+    }
 
-      brand: brand.trim(),
-
-      model: model.trim(),
-
-      serialNumber: serialNumber.trim() || null,
-
-      imei: imei.trim() || null,
-
-      notes: notes.trim() || null,
+    const data = {
+      type: values.type,
+      brand: values.brand.trim(),
+      model: values.model.trim(),
+      serialNumber: values.serialNumber.trim() || null,
+      imei: values.imei.trim() || null,
+      notes: values.notes.trim() || null,
     };
 
-    onSave(deviceData);
+    const errors = {};
+
+    if (!deviceTypes.includes(data.type)) {
+      errors.type = "Select a supported device type.";
+    }
+
+    for (const field of textFields) {
+      const value = data[field.name];
+
+      if (field.required && !value) {
+        errors[field.name] = `${field.label} is required.`;
+      } else if (value && value.length > field.maxLength) {
+        errors[field.name] =
+          `${field.label} must not exceed ${field.maxLength} characters.`;
+      }
+    }
+
+    if (data.notes && data.notes.length > 2000) {
+      errors.notes = "Notes must not exceed 2000 characters.";
+    }
+
+    setFieldErrors(errors);
+    setErrorMessage("");
+
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    submitting.current = true;
+    setSaving(true);
+
+    try {
+      await onSave(data);
+      onClose();
+    } catch (error) {
+      setFieldErrors(error.errors || {});
+
+      if (error.outcomeUncertain) {
+        setOutcomeUncertain(true);
+        setErrorMessage(
+          "The save could not be confirmed. It may have completed. " +
+            "Close this form and reload the customer record before " +
+            "submitting again.",
+        );
+      } else if (error.status === 409) {
+        setErrorMessage(
+          "The device conflicts with an existing record. " +
+            "Check whether its serial number or IMEI is already registered.",
+        );
+      } else if (error.status === 403) {
+        setErrorMessage(
+          "You do not have permission to save this device, " +
+            "or your security token has expired. Refresh the page " +
+            "and try again.",
+        );
+      } else {
+        setErrorMessage(
+          error.message || "Unable to save the device. Please try again.",
+        );
+      }
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
+  }
+
+  function renderFieldError(field) {
+    return fieldErrors[field] ? (
+      <p id={`device-${field}-error`} className="customer-field-error">
+        {fieldErrors[field]}
+      </p>
+    ) : null;
   }
 
   return (
     <div className="modal-backdrop">
-      <div className="device-modal">
-        {/* =========================
-                    MODAL HEADER
-                ========================== */}
+      <div
+        className="device-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="device-modal-title"
+      >
         <div className="modal-header">
           <div>
-            <h3>{isEditing ? "Edit Device" : "New Device"}</h3>
+            <h3 id="device-modal-title">
+              {isEditing ? "Edit Device" : "New Device"}
+            </h3>
 
             <p>
               {isEditing
@@ -76,122 +176,125 @@ function DeviceRegistrationModal({
           <button
             className="modal-close-button"
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
+            disabled={saving}
             aria-label="Close"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* =========================
-                    DEVICE FORM
-                ========================== */}
-        <form className="device-registration-form" onSubmit={handleSubmit}>
-          {/* DEVICE TYPE */}
+        <form
+          className="device-registration-form"
+          onSubmit={handleSubmit}
+          aria-busy={saving}
+        >
           <div className="repair-form-group">
             <label htmlFor="device-type">Device Type</label>
 
             <select
               id="device-type"
-              value={deviceType}
-              onChange={(event) => setDeviceType(event.target.value)}
+              name="type"
+              value={values.type}
+              onChange={handleChange}
+              disabled={saving}
+              aria-invalid={Boolean(fieldErrors.type)}
+              aria-describedby={
+                fieldErrors.type ? "device-type-error" : undefined
+              }
               required
             >
               <option value="">Select device type</option>
 
-              <option value="Mobile Phone">Mobile Phone</option>
-
-              <option value="Laptop">Laptop</option>
-
-              <option value="Desktop Computer">Desktop Computer</option>
-
-              <option value="Tablet">Tablet</option>
-
-              <option value="Other">Other</option>
+              {deviceTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </select>
+
+            {renderFieldError("type")}
           </div>
 
           <div className="modal-form-grid">
-            {/* BRAND */}
-            <div className="repair-form-group">
-              <label htmlFor="device-brand">Brand</label>
+            {textFields.map((field) => (
+              <div className="repair-form-group" key={field.name}>
+                <label htmlFor={`device-${field.name}`}>{field.label}</label>
 
-              <input
-                id="device-brand"
-                type="text"
-                value={brand}
-                onChange={(event) => setBrand(event.target.value)}
-                placeholder="Enter brand"
-                required
-              />
-            </div>
+                <input
+                  id={`device-${field.name}`}
+                  name={field.name}
+                  type="text"
+                  value={values[field.name]}
+                  onChange={handleChange}
+                  maxLength={field.maxLength}
+                  required={Boolean(field.required)}
+                  placeholder={field.required ? "" : "Optional"}
+                  disabled={saving}
+                  aria-invalid={Boolean(fieldErrors[field.name])}
+                  aria-describedby={
+                    fieldErrors[field.name]
+                      ? `device-${field.name}-error`
+                      : undefined
+                  }
+                />
 
-            {/* MODEL */}
-            <div className="repair-form-group">
-              <label htmlFor="device-model">Model</label>
-
-              <input
-                id="device-model"
-                type="text"
-                value={model}
-                onChange={(event) => setModel(event.target.value)}
-                placeholder="Enter model"
-                required
-              />
-            </div>
-
-            {/* SERIAL NUMBER */}
-            <div className="repair-form-group">
-              <label htmlFor="device-serial">Serial Number</label>
-
-              <input
-                id="device-serial"
-                type="text"
-                value={serialNumber}
-                onChange={(event) => setSerialNumber(event.target.value)}
-                placeholder="Optional"
-              />
-            </div>
-
-            {/* IMEI */}
-            <div className="repair-form-group">
-              <label htmlFor="device-imei">IMEI</label>
-
-              <input
-                id="device-imei"
-                type="text"
-                value={imei}
-                onChange={(event) => setImei(event.target.value)}
-                placeholder="Optional"
-              />
-            </div>
+                {renderFieldError(field.name)}
+              </div>
+            ))}
           </div>
 
-          {/* NOTES */}
           <div className="repair-form-group">
             <label htmlFor="device-notes">Notes</label>
 
             <textarea
               id="device-notes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
+              name="notes"
+              value={values.notes}
+              onChange={handleChange}
+              maxLength={2000}
+              rows={3}
               placeholder="Optional identifying notes"
-              rows="3"
+              disabled={saving}
+              aria-invalid={Boolean(fieldErrors.notes)}
+              aria-describedby={
+                fieldErrors.notes ? "device-notes-error" : undefined
+              }
             />
+
+            {renderFieldError("notes")}
           </div>
 
-          {/* ACTIONS */}
+          {errorMessage && (
+            <div className="customer-form-error" role="alert">
+              {errorMessage}
+            </div>
+          )}
+
           <div className="modal-actions">
             <button
               className="cancel-repair-button"
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
+              disabled={saving}
             >
-              Cancel
+              {outcomeUncertain ? "Close" : "Cancel"}
             </button>
 
-            <button className="create-repair-button" type="submit">
-              {isEditing ? "Save Changes" : "Register Device"}
+            <button
+              className="create-repair-button"
+              type="submit"
+              disabled={saving || outcomeUncertain}
+            >
+              {saving && <LoadingSpinner size={16} />}
+
+              <span>
+                {saving
+                  ? "Saving..."
+                  : isEditing
+                    ? "Save Changes"
+                    : "Register Device"}
+              </span>
             </button>
           </div>
         </form>

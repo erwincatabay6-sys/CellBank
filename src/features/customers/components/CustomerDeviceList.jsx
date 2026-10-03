@@ -1,6 +1,12 @@
 import { Plus } from "lucide-react";
 
-function CustomerDeviceList({ devices, onDeviceClick, onNewDevice }) {
+function CustomerDeviceList({
+  devices,
+  onDeviceClick,
+  onNewDevice,
+  canManage = false,
+  disabled = false,
+}) {
   return (
     <section className="customer-devices-section">
       {/* HEADER */}
@@ -13,15 +19,17 @@ function CustomerDeviceList({ devices, onDeviceClick, onNewDevice }) {
           </p>
         </div>
 
-        <button
-          className="secondary-repair-button"
-          type="button"
-          onClick={onNewDevice}
-        >
-          <Plus size={18} />
-
-          <span>New Device</span>
-        </button>
+        {canManage && (
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={onNewDevice}
+            disabled={disabled}
+          >
+            <Plus size={18} />
+            <span>New Device</span>
+          </button>
+        )}
       </div>
 
       {/* DEVICE LIST */}
