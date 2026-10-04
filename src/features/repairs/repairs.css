@@ -1613,3 +1613,66 @@
     height: 76px;
   }
 }
+
+.repair-overview .repair-overview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.repair-overview .repair-overview-grid .overview-wide {
+  grid-column: 1 / -1;
+}
+
+.repair-overview .repair-overview-grid > div {
+  min-width: 0;
+}
+
+.repair-overview .repair-overview-grid strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 650px) {
+  .repair-overview .repair-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.workspace-reassign-button {
+  display: block;
+  align-self: flex-start;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary-dark);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-reassign-button:disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.repair-reference-button {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.repair-reference-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.repair-row {
+  cursor: pointer;
+}

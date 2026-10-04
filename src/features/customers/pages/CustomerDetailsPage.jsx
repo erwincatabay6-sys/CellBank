@@ -4,9 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
+import useRepairHistory from "../hooks/useRepairHistory.js";
 
 import CustomerRecordLayout from "../components/CustomerRecordLayout.jsx";
 import CustomerDeviceList from "../components/CustomerDeviceList.jsx";
+import CustomerRepairHistory from "../components/CustomerRepairHistory.jsx";
 import CustomerRegistrationModal from "../components/CustomerRegistrationModal.jsx";
 import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
 
@@ -24,11 +26,21 @@ function CustomerDetailsPage() {
 
   const customer = customers.find((item) => String(item.id) === customerId);
 
+  const history = useRepairHistory(customer?.id);
+
   const canManage =
     hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
 
   const canEditNow = canManage && !loading && !loadError;
   const modalOpen = customerEditOpen || deviceModalOpen;
+
+  const repairCount = history.loading
+    ? "Loading..."
+    : history.error
+      ? "Unavailable"
+      : history.loaded
+        ? history.repairs.length
+        : "—";
 
   async function handleCustomerUpdate(data) {
     await updateCustomer(customer.id, data);
@@ -43,10 +55,8 @@ function CustomerDetailsPage() {
   return (
     <CustomerRecordLayout
       title={customer?.name ?? "Customer Details"}
-      description="View customer information and registered devices."
+      description="View customer information, registered devices, and repair history."
       found={Boolean(customer)}
-      backPath="/customers"
-      backLabel="Back to Customers"
       busy={modalOpen}
     >
       {customer && (
@@ -106,6 +116,11 @@ function CustomerDetailsPage() {
                 <span>Registered Devices</span>
                 <strong>{customer.devices.length}</strong>
               </div>
+
+              <div>
+                <span>Repair Records</span>
+                <strong aria-live="polite">{repairCount}</strong>
+              </div>
             </div>
           </section>
 
@@ -121,6 +136,19 @@ function CustomerDetailsPage() {
                 setSuccessMessage("");
                 setDeviceModalOpen(true);
               }}
+            />
+          </section>
+
+          <section className="page-content">
+            <CustomerRepairHistory
+              repairs={history.repairs}
+              devices={customer.devices}
+              loading={history.loading}
+              loaded={history.loaded}
+              error={history.error}
+              onRetry={history.retry}
+              onRepairClick={(repairId) => navigate(`/repairs/${repairId}`)}
+              disabled={modalOpen}
             />
           </section>
 

@@ -2,14 +2,13 @@ import { useNavigate } from "react-router-dom";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
-function RepairTable({ repairs = [] }) {
+function RepairTable({ repairs = [], canOpen = true }) {
   const navigate = useNavigate();
 
   if (repairs.length === 0) {
     return (
       <div className="workspace-empty-state">
-        <strong>No repair records found</strong>
-
+        <strong>No matching repairs</strong>
         <p>Try changing the search term or repair filters.</p>
       </div>
     );
@@ -20,11 +19,11 @@ function RepairTable({ repairs = [] }) {
       <table className="repair-table">
         <thead>
           <tr>
-            <th>Reference</th>
-            <th>Customer</th>
-            <th>Device</th>
-            <th>Technician</th>
-            <th>Status</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Device</th>
+            <th scope="col">Technician</th>
+            <th scope="col">Status</th>
           </tr>
         </thead>
 
@@ -32,15 +31,31 @@ function RepairTable({ repairs = [] }) {
           {repairs.map((repair) => (
             <tr
               key={repair.id}
-              className="repair-row"
-              onClick={() => navigate(`/repairs/${repair.id}`)}
+              className={canOpen ? "repair-row" : undefined}
+              onClick={
+                canOpen ? () => navigate(`/repairs/${repair.id}`) : undefined
+              }
             >
-              <td>{repair.reference}</td>
+              <td>
+                {canOpen ? (
+                  <button
+                    className="repair-reference-button"
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      navigate(`/repairs/${repair.id}`);
+                    }}
+                    aria-label={`Open repair ${repair.reference}`}
+                  >
+                    {repair.reference}
+                  </button>
+                ) : (
+                  repair.reference
+                )}
+              </td>
 
               <td>{repair.customer}</td>
-
               <td>{repair.device}</td>
-
               <td>{repair.technician ?? "Unassigned"}</td>
 
               <td>

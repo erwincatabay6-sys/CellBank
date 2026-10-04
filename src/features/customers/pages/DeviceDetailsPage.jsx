@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
+import useRepairHistory from "../hooks/useRepairHistory.js";
 
 import CustomerRecordLayout from "../components/CustomerRecordLayout.jsx";
+import CustomerRepairHistory from "../components/CustomerRepairHistory.jsx";
 import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
 
 function DeviceDetailsPage() {
   const { customerId, deviceId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const { customers, loading, loadError, updateDevice } = useCustomers();
@@ -20,6 +23,11 @@ function DeviceDetailsPage() {
   const customer = customers.find((item) => String(item.id) === customerId);
 
   const device = customer?.devices.find((item) => String(item.id) === deviceId);
+
+  const history = useRepairHistory(
+    device ? customer.id : null,
+    device?.id ?? null,
+  );
 
   const canManage =
     hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
@@ -49,8 +57,6 @@ function DeviceDetailsPage() {
           : "View registered device information."
       }
       found={Boolean(customer && device)}
-      backPath={customer ? `/customers/${customer.id}` : "/customers"}
-      backLabel={customer ? "Back to Customer" : "Back to Customers"}
       busy={deviceEditOpen}
     >
       {customer && device && (
@@ -93,6 +99,19 @@ function DeviceDetailsPage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className="page-content">
+            <CustomerRepairHistory
+              repairs={history.repairs}
+              loading={history.loading}
+              loaded={history.loaded}
+              error={history.error}
+              onRetry={history.retry}
+              onRepairClick={(repairId) => navigate(`/repairs/${repairId}`)}
+              deviceView
+              disabled={deviceEditOpen}
+            />
           </section>
 
           {deviceEditOpen && (

@@ -3,8 +3,6 @@ import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { hasRole } from "../../../config/accessControl.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
-
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
 
@@ -57,7 +55,6 @@ function CustomerListPage() {
         <div className="customer-toolbar">
           <div className="customer-search">
             <Search size={18} aria-hidden="true" />
-
             <input
               type="search"
               value={searchTerm}
@@ -67,19 +64,9 @@ function CustomerListPage() {
             />
           </div>
 
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={() => void reloadCustomers()}
-            disabled={loading || customerModalOpen}
-          >
-            {loading && <LoadingSpinner size={16} />}
-            <span>{loading ? "Loading..." : "Refresh"}</span>
-          </button>
-
           {canManage && (
             <button
-              className="create-repair-button"
+              className="create-repair-button customer-new-button"
               type="button"
               disabled={loading || !loaded || Boolean(loadError)}
               onClick={() => {
@@ -100,10 +87,7 @@ function CustomerListPage() {
             <p>{loadError}</p>
 
             {loaded && (
-              <p>
-                Previously loaded records are still shown and may be out of
-                date.
-              </p>
+              <p>Previously loaded records are shown and may be out of date.</p>
             )}
 
             <button
@@ -129,7 +113,6 @@ function CustomerListPage() {
                     <th>Devices</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {Array.from({ length: 5 }, (_, row) => (
                     <tr key={row}>
@@ -159,7 +142,6 @@ function CustomerListPage() {
                   ? "No customers registered yet"
                   : "No matching customers"}
               </strong>
-
               <p>
                 {customers.length === 0
                   ? canManage

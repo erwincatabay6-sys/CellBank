@@ -1,58 +1,29 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-import { useNavigate, useParams } from "react-router-dom";
-
+import {
+  getRepair,
+  getRepairStatusHistory,
+  getRepairTechnicians,
+} from "../../../api/repairApi.js";
+import { getCustomer } from "../../../api/customerApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
-
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
-import RepairOverview from "../components/RepairOverview.jsx";
-
-import RepairFindings from "../components/RepairFindings.jsx";
-
-import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
-
-import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
-
-import RepairPayments from "../components/RepairPayments.jsx";
-
-import RepairAiTroubleshooting from "../components/RepairAiTroubleshooting.jsx";
-
-import { mockRepairs } from "../data/mockRepairs.js";
-
-import { mockTechnicians } from "../../technicians/data/mockTechnicians.js";
-
-// =====================================================
-// WORKSPACE TABS
-// =====================================================
+import "../../customers/customers.css";
+import "../repairs.css";
 
 const workspaceTabs = [
-  {
-    id: "overview",
-    label: "Overview",
-  },
-
+  { id: "overview", label: "Overview" },
   {
     id: "findings",
     label: "Findings",
     permission: "technicalFindings",
   },
-
-  {
-    id: "status-history",
-    label: "Status History",
-  },
-
-  {
-    id: "parts-costs",
-    label: "Parts & Costs",
-  },
-
-  {
-    id: "payments",
-    label: "Payments",
-  },
-
+  { id: "status-history", label: "Status History" },
+  { id: "parts-costs", label: "Parts & Costs" },
+  { id: "payments", label: "Payments" },
   {
     id: "ai",
     label: "AI Troubleshooting",
@@ -60,516 +31,426 @@ const workspaceTabs = [
   },
 ];
 
-function RepairWorkspacePage({ currentRoles, currentUserName }) {
+const serviceLabels = {
+  DIAGNOSTIC: "Diagnostic",
+  HARDWARE_REPAIR: "Hardware Repair",
+  SOFTWARE_REPAIR: "Software Repair",
+  MAINTENANCE: "Maintenance / Cleaning",
+  OTHER: "Other",
+};
+
+const pendingMessages = {
+  findings: "Recording and viewing technical findings is not available yet.",
+  "parts-costs":
+    "Managing parts and updating repair costs is not available yet.",
+  payments: "Recording and viewing payments is not available yet.",
+  ai: "AI troubleshooting assistance is not available yet.",
+};
+
+const moneyFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+});
+
+function formatMoney(value, fallback) {
+  if (value == null) {
+    return fallback;
+  }
+
+  const amount = Number(value);
+
+  return Number.isFinite(amount)
+    ? moneyFormatter.format(amount)
+    : "Unavailable";
+}
+
+function formatTimestamp(value) {
+  if (!value) {
+    return "Not recorded";
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? "Unavailable" : date.toLocaleString();
+}
+
+function RepairWorkspacePage() {
   const { repairId } = useParams();
+  const { user } = useAuth();
 
-  const navigate = useNavigate();
+  const sessionKey = [
+    repairId,
+    user?.id ?? "signed-out",
+    ...(user?.roles ?? []),
+  ].join(":");
 
-  // -----------------------------
-  // ROLE PERMISSIONS
-  // -----------------------------
+  return <RepairWorkspace key={sessionKey} repairId={repairId} user={user} />;
+}
 
-  const canViewRepairs = hasAccess(currentRoles, "repairs");
+function RepairWorkspace({ repairId, user }) {
+  const canView = hasAccess(user?.roles, "repairs");
+  const canAssign = hasAccess(user?.roles, "assignTechnician");
 
-  const canUseFindings = hasAccess(currentRoles, "technicalFindings");
-
-  const canUseAi = hasAccess(currentRoles, "aiTroubleshooting");
-
-  const canAssignTechnician = hasAccess(currentRoles, "assignTechnician");
-
-  const canEditPartsCosts = hasAccess(currentRoles, "editPartsCosts");
-
-  // -----------------------------
-  // CURRENT REPAIR
-  // -----------------------------
-
-  const repair = mockRepairs.find((repair) => repair.id === Number(repairId));
-
-  // -----------------------------
-  // WORKSPACE STATE
-  // -----------------------------
-
+  const [record, setRecord] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const [currentStatus, setCurrentStatus] = useState(repair?.status ?? "");
+  useEffect(() => {
+    if (!canView) {
+      return;
+    }
 
-  const [estimatedCost, setEstimatedCost] = useState(
-    repair?.estimatedCost ?? null,
+    if (!/^[1-9]\d*$/.test(repairId ?? "")) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    async function loadWorkspace() {
+      setLoading(true);
+      setLoadError("");
+      setNotFound(false);
+
+      let repairLoaded = false;
+
+      try {
+        const repair = await getRepair(repairId, {
+          signal: controller.signal,
+        });
+
+        repairLoaded = true;
+
+        if (!repair?.id || !repair.customerId || !repair.status) {
+          throw new Error("The server returned invalid repair data.");
+        }
+
+        const [customer, history, technicians] = await Promise.all([
+          getCustomer(repair.customerId, {
+            signal: controller.signal,
+          }),
+          getRepairStatusHistory(repairId, {
+            signal: controller.signal,
+          }),
+          getRepairTechnicians({
+            signal: controller.signal,
+          }),
+        ]);
+
+        if (
+          !Array.isArray(customer?.devices) ||
+          !Array.isArray(history) ||
+          !Array.isArray(technicians)
+        ) {
+          throw new Error("The server returned invalid workspace data.");
+        }
+
+        const device = customer.devices.find(
+          (item) => item.id === repair.deviceId,
+        );
+
+        if (!device) {
+          throw new Error(
+            "The repair's device could not be found under its customer.",
+          );
+        }
+
+        if (active) {
+          setRecord({
+            repair,
+            customer,
+            device,
+            history,
+            technicians,
+          });
+        }
+      } catch (error) {
+        if (active && error.code !== "CANCELLED") {
+          if (!repairLoaded && error.status === 404) {
+            setRecord(null);
+            setNotFound(true);
+          } else {
+            setLoadError(
+              error.status === 403
+                ? "You do not have permission to view these records."
+                : error.message || "Unable to load the repair workspace.",
+            );
+          }
+        }
+
+        controller.abort();
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadWorkspace();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [repairId, canView, reloadVersion]);
+
+  const visibleTabs = workspaceTabs.filter(
+    (tab) => !tab.permission || hasAccess(user?.roles, tab.permission),
   );
 
-  const [agreedPrice, setAgreedPrice] = useState(repair?.agreedPrice ?? null);
+  function staffName(staffId) {
+    if (staffId == null) {
+      return "Unassigned";
+    }
 
-  const [assignedTechnicianId, setAssignedTechnicianId] = useState(
-    repair?.technicianId ?? null,
-  );
+    if (staffId === user?.id) {
+      return user.name || `Staff #${staffId}`;
+    }
 
-  const [technicianAssignmentOpen, setTechnicianAssignmentOpen] =
-    useState(false);
+    return (
+      record?.technicians.find((staff) => staff.id === staffId)?.name ??
+      `Staff #${staffId}`
+    );
+  }
 
-  const [technicianSelection, setTechnicianSelection] = useState(
-    repair?.technicianId != null ? String(repair.technicianId) : "",
-  );
+  if (!canView) {
+    return (
+      <section className="page-content">
+        <h2>Access denied</h2>
+        <p>You do not have permission to view repairs.</p>
+      </section>
+    );
+  }
 
-  // -----------------------------
-  // AI ASSISTANCE STATE
-  // -----------------------------
+  const repair = record?.repair;
+  const customer = record?.customer;
+  const device = record?.device;
 
-  const [aiFindingDraft, setAiFindingDraft] = useState("");
-
-  const [aiStatusSuggestion, setAiStatusSuggestion] = useState("");
-
-  const [aiPartSuggestion, setAiPartSuggestion] = useState("");
-
-  // -----------------------------
-  // TECHNICIAN ASSIGNMENT
-  // -----------------------------
-
-  const activeTechnicians = mockTechnicians.filter(
-    (technician) => technician.status === "ACTIVE",
-  );
-
-  const assignedTechnician =
-    activeTechnicians.find(
-      (technician) => technician.id === assignedTechnicianId,
-    ) ?? null;
-
-  const assignedTechnicianName = assignedTechnician?.name ?? "Unassigned";
-
-  const repairClosed =
-    currentStatus === "COMPLETED" || currentStatus === "CANCELLED";
-
-  const canManageTechnician = canAssignTechnician && !repairClosed;
-
-  // -----------------------------
-  // VISIBLE WORKSPACE TABS
-  // -----------------------------
-
-  const visibleWorkspaceTabs = canViewRepairs
-    ? workspaceTabs.filter(
-        (tab) => !tab.permission || hasAccess(currentRoles, tab.permission),
-      )
+  const overviewFields = repair
+    ? [
+        ["Reported Problem", repair.reportedProblem],
+        [
+          "Service Type",
+          serviceLabels[repair.serviceType] ?? repair.serviceType,
+        ],
+        ["Priority", repair.priority],
+        ["Estimated Cost", formatMoney(repair.estimatedCost, "Not estimated")],
+        ["Agreed Price", formatMoney(repair.agreedPrice, "Not recorded")],
+        ["Due Date", repair.dueDate || "Not recorded"],
+        ["Accessories Received", repair.accessoriesReceived || "None recorded"],
+        ["Intake Notes", repair.intakeNotes || "None recorded"],
+        ["Created By", staffName(repair.createdById)],
+        ["Created At", formatTimestamp(repair.createdAt)],
+        ["Updated At", formatTimestamp(repair.updatedAt)],
+        ["Tracking Code", repair.trackingCode],
+      ]
     : [];
-
-  // -----------------------------
-  // REPAIR CHANGE SYNC
-  // -----------------------------
-
-  useEffect(() => {
-    if (!repair) {
-      return;
-    }
-
-    setCurrentStatus(repair.status);
-
-    setEstimatedCost(repair.estimatedCost ?? null);
-
-    setAgreedPrice(repair.agreedPrice ?? null);
-
-    setAssignedTechnicianId(repair.technicianId ?? null);
-
-    setTechnicianSelection(
-      repair.technicianId != null ? String(repair.technicianId) : "",
-    );
-
-    setTechnicianAssignmentOpen(false);
-
-    setAiFindingDraft("");
-
-    setAiStatusSuggestion("");
-
-    setAiPartSuggestion("");
-
-    setActiveTab("overview");
-  }, [repair]);
-
-  // -----------------------------
-  // ROLE CHANGE SYNC
-  // -----------------------------
-
-  useEffect(() => {
-    if (!canViewRepairs) {
-      setActiveTab("overview");
-
-      setAiFindingDraft("");
-
-      setAiStatusSuggestion("");
-
-      return;
-    }
-
-    if (activeTab === "findings" && !canUseFindings) {
-      setActiveTab("overview");
-
-      return;
-    }
-
-    if (activeTab === "ai" && !canUseAi) {
-      setActiveTab("overview");
-    }
-  }, [activeTab, canViewRepairs, canUseFindings, canUseAi]);
-
-  // -----------------------------
-  // TECHNICIAN ASSIGNMENT HANDLERS
-  // -----------------------------
-
-  function handleTechnicianAssignmentToggle() {
-    if (!canManageTechnician) {
-      return;
-    }
-
-    setTechnicianSelection(
-      assignedTechnicianId != null ? String(assignedTechnicianId) : "",
-    );
-
-    setTechnicianAssignmentOpen(!technicianAssignmentOpen);
-  }
-
-  function handleTechnicianAssignmentSave(event) {
-    event.preventDefault();
-
-    if (!canManageTechnician) {
-      return;
-    }
-
-    const nextTechnicianId = technicianSelection
-      ? Number(technicianSelection)
-      : null;
-
-    const technicianExists =
-      nextTechnicianId == null ||
-      activeTechnicians.some(
-        (technician) => technician.id === nextTechnicianId,
-      );
-
-    if (!technicianExists) {
-      return;
-    }
-
-    setAssignedTechnicianId(nextTechnicianId);
-
-    setTechnicianAssignmentOpen(false);
-  }
-
-  // -----------------------------
-  // AI ACTION HANDLERS
-  // -----------------------------
-
-  function handleUseAsFinding(text) {
-    if (!canViewRepairs || !canUseFindings) {
-      return;
-    }
-
-    setAiFindingDraft(text);
-
-    setActiveTab("findings");
-  }
-
-  function handleStatusSuggestion(status) {
-    if (!canViewRepairs || !canUseAi) {
-      return;
-    }
-
-    setAiStatusSuggestion(status);
-
-    setActiveTab("status-history");
-  }
-
-  function handlePartSuggestion(partName) {
-    if (!canViewRepairs || !canUseAi || !canEditPartsCosts) {
-      return;
-    }
-
-    setAiPartSuggestion(partName);
-
-    setActiveTab("parts-costs");
-  }
-
-  // -----------------------------
-  // TAB NAVIGATION
-  // -----------------------------
-
-  function handleTabChange(tabId) {
-    if (!canViewRepairs) {
-      return;
-    }
-
-    const tabAllowed = visibleWorkspaceTabs.some((tab) => tab.id === tabId);
-
-    if (!tabAllowed) {
-      return;
-    }
-
-    setActiveTab(tabId);
-  }
-
-  // -----------------------------
-  // ACCESS DENIED
-  // -----------------------------
-
-  if (!canViewRepairs) {
-    return (
-      <>
-        <section className="page-header">
-          <h2>Access Denied</h2>
-
-          <p>You do not have permission to access repair records.</p>
-        </section>
-
-        <section className="page-content repair-overview">
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            Back to Dashboard
-          </button>
-        </section>
-      </>
-    );
-  }
-
-  // -----------------------------
-  // REPAIR NOT FOUND
-  // -----------------------------
-
-  if (!repair) {
-    return (
-      <>
-        <section className="page-header">
-          <h2>Repair Not Found</h2>
-
-          <p>The requested repair record does not exist.</p>
-        </section>
-
-        <section className="page-content repair-overview">
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={() => navigate("/repairs")}
-          >
-            Back to Repairs
-          </button>
-        </section>
-      </>
-    );
-  }
 
   return (
     <>
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
       <section className="page-header">
-        <h2>{repair.reference}</h2>
-
-        <p>Repair workspace for {repair.device}.</p>
+        <h2>{repair?.repairReference ?? "Repair Workspace"}</h2>
+        <p>
+          {device
+            ? `Repair workspace for ${device.brand} ${device.model}.`
+            : "View repair information and status history."}
+        </p>
       </section>
 
-      {/* =========================
-                REPAIR SUMMARY
-            ========================== */}
-      <section className="repair-workspace-header">
-        {/* CUSTOMER */}
-        <div>
-          <span className="workspace-label">Customer</span>
+      {(loadError || notFound || (!record && loading)) && (
+        <section className="page-content">
+          {loadError && (
+            <div className="customer-form-error" role="alert">
+              <p>{loadError}</p>
 
-          <strong>{repair.customer}</strong>
-        </div>
+              {record && (
+                <p>
+                  Previously loaded information is shown and may be out of date.
+                </p>
+              )}
 
-        {/* DEVICE */}
-        <div>
-          <span className="workspace-label">Device</span>
-
-          <strong>{repair.device}</strong>
-        </div>
-
-        {/* TECHNICIAN */}
-        <div>
-          <span className="workspace-label">Technician</span>
-
-          <strong>{assignedTechnicianName}</strong>
-
-          {canManageTechnician && (
-            <button
-              className="workspace-inline-action"
-              type="button"
-              onClick={handleTechnicianAssignmentToggle}
-            >
-              {assignedTechnicianId != null
-                ? "Change Technician"
-                : "Assign Technician"}
-            </button>
-          )}
-        </div>
-
-        {/* CURRENT STATUS */}
-        <div>
-          <span className="workspace-label">Status</span>
-
-          <StatusBadge status={currentStatus} />
-        </div>
-      </section>
-
-      {/* =========================
-                TECHNICIAN ASSIGNMENT
-                ADMIN + FRONT DESK
-            ========================== */}
-      {technicianAssignmentOpen && canManageTechnician && (
-        <section className="page-content technician-assignment-panel">
-          <div className="workspace-section-header">
-            <div>
-              <h3>
-                {assignedTechnicianId != null
-                  ? "Reassign Technician"
-                  : "Assign Technician"}
-              </h3>
-
-              <p className="workspace-section-description">
-                Assign this repair to an active technician.
-              </p>
-            </div>
-          </div>
-
-          <form
-            className="technician-assignment-form"
-            onSubmit={handleTechnicianAssignmentSave}
-          >
-            <div className="repair-form-group">
-              <label htmlFor="workspace-technician">Assigned Technician</label>
-
-              <select
-                id="workspace-technician"
-                value={technicianSelection}
-                onChange={(event) => setTechnicianSelection(event.target.value)}
-              >
-                <option value="">Unassigned</option>
-
-                {activeTechnicians.map((technician) => (
-                  <option key={technician.id} value={technician.id}>
-                    {technician.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="finding-form-actions">
               <button
-                className="cancel-repair-button"
+                className="secondary-repair-button"
                 type="button"
-                onClick={() => setTechnicianAssignmentOpen(false)}
+                onClick={() => setReloadVersion((value) => value + 1)}
+                disabled={loading}
               >
-                Cancel
-              </button>
-
-              <button className="create-repair-button" type="submit">
-                Save Assignment
+                Try Again
               </button>
             </div>
-          </form>
+          )}
+
+          {!record && loading && (
+            <div role="status" aria-label="Loading repair workspace">
+              <div className="customer-info-grid" aria-hidden="true">
+                {Array.from({ length: 6 }, (_, index) => (
+                  <div key={index}>
+                    <span className="customer-skeleton-line" />
+                    <span className="customer-skeleton-line" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {notFound && !loading && (
+            <div className="workspace-empty-state">
+              <strong>Repair not found</strong>
+              <p>The requested repair record does not exist.</p>
+            </div>
+          )}
         </section>
       )}
 
-      {/* =========================
-                WORKSPACE TABS
-            ========================== */}
-      <nav className="repair-workspace-tabs">
-        {visibleWorkspaceTabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`workspace-tab ${activeTab === tab.id ? "active" : ""}`}
-            type="button"
-            onClick={() => handleTabChange(tab.id)}
+      {record && (
+        <>
+          <section className="repair-workspace-header">
+            <div>
+              <span className="workspace-label">Customer</span>
+              <strong>{customer.name}</strong>
+            </div>
+
+            <div>
+              <span className="workspace-label">Device</span>
+              <strong>
+                {device.brand} {device.model}
+              </strong>
+            </div>
+
+            <div>
+              <span className="workspace-label">Technician</span>
+              <strong>{staffName(repair.assignedTechnicianId)}</strong>
+
+              {canAssign && (
+                <button
+                  className="workspace-reassign-button"
+                  type="button"
+                  disabled
+                  title="Technician reassignment is not available yet."
+                >
+                  Change Technician
+                </button>
+              )}
+            </div>
+
+            <div>
+              <span className="workspace-label">Status</span>
+              <StatusBadge status={repair.status} />
+            </div>
+          </section>
+
+          <nav
+            className="repair-workspace-tabs"
+            aria-label="Repair workspace sections"
           >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+            {visibleTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`workspace-tab ${
+                  activeTab === tab.id ? "active" : ""
+                }`}
+                type="button"
+                aria-pressed={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
 
-      {/* =========================
-                OVERVIEW
-            ========================== */}
-      <div hidden={activeTab !== "overview"}>
-        <RepairOverview
-          repair={repair}
-          estimatedCost={estimatedCost}
-          agreedPrice={agreedPrice}
-        />
-      </div>
+          {activeTab === "overview" && (
+            <section className="page-content repair-overview">
+              <h3>Repair Overview</h3>
 
-      {/* =========================
-                FINDINGS
-                ADMIN + TECHNICIAN
-            ========================== */}
-      {canUseFindings && (
-        <div hidden={activeTab !== "findings"}>
-          <RepairFindings
-            repairId={repair.id}
-            currentUserName={currentUserName}
-            aiDraft={aiFindingDraft}
-            onDraftUsed={() => setAiFindingDraft("")}
-          />
-        </div>
-      )}
+              <div className="repair-overview-grid">
+                {overviewFields.map(([label, value]) => (
+                  <div
+                    key={label}
+                    className={
+                      label === "Reported Problem" || label === "Intake Notes"
+                        ? "overview-wide"
+                        : undefined
+                    }
+                  >
+                    <span>{label}</span>
+                    <strong
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {value}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-      {/* =========================
-                STATUS HISTORY
-            ========================== */}
-      <div hidden={activeTab !== "status-history"}>
-        <RepairStatusHistory
-          repairId={repair.id}
-          currentRoles={currentRoles}
-          currentUserName={currentUserName}
-          currentStatus={currentStatus}
-          onStatusChange={setCurrentStatus}
-          suggestedStatus={aiStatusSuggestion}
-          onSuggestionHandled={() => setAiStatusSuggestion("")}
-        />
-      </div>
+          {activeTab === "status-history" && (
+            <section className="page-content">
+              <div className="workspace-section-header">
+                <div>
+                  <h3>Status History</h3>
+                  <p className="workspace-section-description">
+                    Saved status changes, oldest first.
+                  </p>
+                </div>
+              </div>
 
-      {/* =========================
-                PARTS & COSTS
-            ========================== */}
-      <div hidden={activeTab !== "parts-costs"}>
-        <RepairPartsCosts
-          currentRoles={currentRoles}
-          repairId={repair.id}
-          estimatedCost={estimatedCost}
-          onEstimatedCostChange={setEstimatedCost}
-          agreedPrice={agreedPrice}
-          onAgreedPriceChange={setAgreedPrice}
-          suggestedPart={aiPartSuggestion}
-          onSuggestionHandled={() => setAiPartSuggestion("")}
-        />
-      </div>
+              <p>Status changes are not available yet.</p>
 
-      {/* =========================
-                PAYMENTS
-            ========================== */}
-      <div hidden={activeTab !== "payments"}>
-        <RepairPayments
-          currentRoles={currentRoles}
-          currentUserName={currentUserName}
-          repairId={repair.id}
-          repairTotal={agreedPrice}
-        />
-      </div>
+              {record.history.length === 0 ? (
+                <div className="workspace-empty-state">
+                  <strong>No status history recorded</strong>
+                </div>
+              ) : (
+                <div className="status-history-list">
+                  {record.history.map((entry) => (
+                    <article key={entry.id} className="status-history-item">
+                      <div className="status-history-top">
+                        <strong>{staffName(entry.changedById)}</strong>
+                        <span>{formatTimestamp(entry.changedAt)}</span>
+                      </div>
 
-      {/* =========================
-                AI TROUBLESHOOTING
-                ADMIN + TECHNICIAN
-            ========================== */}
-      {canUseAi && (
-        <div hidden={activeTab !== "ai"}>
-          <RepairAiTroubleshooting
-            repair={{
-              ...repair,
-              status: currentStatus,
-            }}
-            onUseAsFinding={handleUseAsFinding}
-            onSuggestStatus={handleStatusSuggestion}
-            onSuggestPart={handlePartSuggestion}
-          />
-        </div>
+                      <p>
+                        Previous status:{" "}
+                        {entry.previousStatus ? (
+                          <StatusBadge status={entry.previousStatus} />
+                        ) : (
+                          "None — initial entry"
+                        )}
+                      </p>
+
+                      <p>
+                        New status: <StatusBadge status={entry.newStatus} />
+                      </p>
+
+                      <p style={{ whiteSpace: "pre-wrap" }}>
+                        {entry.note || "No note recorded."}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {pendingMessages[activeTab] && (
+            <section className="page-content">
+              <h3>{visibleTabs.find((tab) => tab.id === activeTab)?.label}</h3>
+              <div className="workspace-empty-state">
+                <strong>Not available yet</strong>
+                <p>{pendingMessages[activeTab]}</p>
+              </div>
+            </section>
+          )}
+        </>
       )}
     </>
   );
