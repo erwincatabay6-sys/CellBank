@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
   getRepair,
   getRepairStatusHistory,
   getRepairTechnicians,
+  updateRepairAssignment,
+  updateRepairStatus,
 } from "../../../api/repairApi.js";
 import { getCustomer } from "../../../api/customerApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
+
 import StatusBadge from "../../../components/StatusBadge.jsx";
+import RepairOverview from "../components/RepairOverview.jsx";
+import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 
 import "../../customers/customers.css";
 import "../repairs.css";
@@ -31,14 +36,6 @@ const workspaceTabs = [
   },
 ];
 
-const serviceLabels = {
-  DIAGNOSTIC: "Diagnostic",
-  HARDWARE_REPAIR: "Hardware Repair",
-  SOFTWARE_REPAIR: "Software Repair",
-  MAINTENANCE: "Maintenance / Cleaning",
-  OTHER: "Other",
-};
-
 const pendingMessages = {
   findings: "Recording and viewing technical findings is not available yet.",
   "parts-costs":
@@ -47,33 +44,6 @@ const pendingMessages = {
   ai: "AI troubleshooting assistance is not available yet.",
 };
 
-const moneyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-});
-
-function formatMoney(value, fallback) {
-  if (value == null) {
-    return fallback;
-  }
-
-  const amount = Number(value);
-
-  return Number.isFinite(amount)
-    ? moneyFormatter.format(amount)
-    : "Unavailable";
-}
-
-function formatTimestamp(value) {
-  if (!value) {
-    return "Not recorded";
-  }
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? "Unavailable" : date.toLocaleString();
-}
-
 function RepairWorkspacePage() {
   const { repairId } = useParams();
   const { user } = useAuth();
@@ -81,7 +51,7 @@ function RepairWorkspacePage() {
   const sessionKey = [
     repairId,
     user?.id ?? "signed-out",
-    ...(user?.roles ?? []),
+    ...[...(user?.roles ?? [])].sort(),
   ].join(":");
 
   return <RepairWorkspace key={sessionKey} repairId={repairId} user={user} />;
@@ -97,6 +67,23 @@ function RepairWorkspace({ repairId, user }) {
   const [notFound, setNotFound] = useState(false);
   const [reloadVersion, setReloadVersion] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
+
+  const [technicianAssignmentOpen, setTechnicianAssignmentOpen] =
+    useState(false);
+  const [technicianSelection, setTechnicianSelection] = useState("");
+  const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [assignmentError, setAssignmentError] = useState("");
+  const [assignmentBlocked, setAssignmentBlocked] = useState(false);
+  const [assignmentMessage, setAssignmentMessage] = useState("");
+
+  const assignmentSubmitting = useRef(false);
+
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState("");
+  const [statusBlocked, setStatusBlocked] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const statusSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (!canView) {
@@ -208,14 +195,238 @@ function RepairWorkspace({ repairId, user }) {
       return "Unassigned";
     }
 
-    if (staffId === user?.id) {
-      return user.name || `Staff #${staffId}`;
+    const repair = record?.repair;
+
+    if (staffId === repair?.createdById && repair.createdByName) {
+      return repair.createdByName;
+    }
+
+    if (
+      staffId === repair?.assignedTechnicianId &&
+      repair.assignedTechnicianName
+    ) {
+      return repair.assignedTechnicianName;
+    }
+
+    const historyEntry = record?.history.find(
+      (entry) => entry.changedById === staffId && entry.changedByName,
+    );
+
+    if (historyEntry) {
+      return historyEntry.changedByName;
     }
 
     return (
       record?.technicians.find((staff) => staff.id === staffId)?.name ??
       `Staff #${staffId}`
     );
+  }
+
+  function handleTechnicianAssignmentToggle() {
+    if (
+      !canAssign ||
+      !record ||
+      loading ||
+      loadError ||
+      assignmentSubmitting.current ||
+      assignmentBlocked ||
+      statusSubmittingRef.current ||
+      statusBlocked ||
+      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
+    ) {
+      return;
+    }
+
+    setTechnicianSelection(
+      record.repair.assignedTechnicianId == null
+        ? ""
+        : String(record.repair.assignedTechnicianId),
+    );
+
+    setAssignmentError("");
+    setAssignmentMessage("");
+    setTechnicianAssignmentOpen((open) => !open);
+  }
+
+  async function handleTechnicianAssignmentSave(event) {
+    event.preventDefault();
+
+    if (
+      assignmentSubmitting.current ||
+      assignmentBlocked ||
+      statusSubmittingRef.current ||
+      statusBlocked ||
+      loading ||
+      loadError ||
+      !canAssign ||
+      !record ||
+      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
+    ) {
+      return;
+    }
+
+    const selectedTechnician = record.technicians.find(
+      (technician) => String(technician.id) === technicianSelection,
+    );
+
+    if (technicianSelection && !selectedTechnician) {
+      setAssignmentError("Select an available technician.");
+      return;
+    }
+
+    const assignedTechnicianId = selectedTechnician?.id ?? null;
+
+    if (assignedTechnicianId === record.repair.assignedTechnicianId) {
+      return;
+    }
+
+    assignmentSubmitting.current = true;
+    setAssignmentSaving(true);
+    setAssignmentError("");
+    setAssignmentMessage("");
+
+    try {
+      const saved = await updateRepairAssignment(record.repair.id, {
+        assignedTechnicianId,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (!saved || saved.id !== record.repair.id || !saved.updatedAt) {
+        setAssignmentBlocked(true);
+        setAssignmentError(
+          "The save could not be confirmed. Reload the page and check " +
+            "the assignment before trying again.",
+        );
+        return;
+      }
+
+      setRecord((current) =>
+        current ? { ...current, repair: saved } : current,
+      );
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentMessage("Technician assignment saved.");
+    } catch (error) {
+      if (error.outcomeUncertain || error.status >= 500) {
+        setAssignmentBlocked(true);
+        setAssignmentError(
+          "The assignment may have saved. Reload the page and check " +
+            "it before trying again.",
+        );
+      } else if ([403, 404, 409].includes(error.status)) {
+        setAssignmentBlocked(true);
+        setAssignmentError(
+          error.status === 409
+            ? "This repair changed since you opened it. Reload the page before changing its assignment."
+            : error.message ||
+                "The assignment cannot be changed. Reload the page before trying again.",
+        );
+      } else {
+        setAssignmentError(
+          error.errors?.assignedTechnicianId ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to save the assignment.",
+        );
+      }
+    } finally {
+      assignmentSubmitting.current = false;
+      setAssignmentSaving(false);
+    }
+  }
+
+  async function handleStatusSubmit(data) {
+    if (
+      statusSubmittingRef.current ||
+      statusBlocked ||
+      assignmentSubmitting.current ||
+      assignmentSaving ||
+      assignmentBlocked ||
+      loading ||
+      loadError ||
+      !record ||
+      !canView
+    ) {
+      return false;
+    }
+
+    statusSubmittingRef.current = true;
+    setStatusSaving(true);
+    setStatusError("");
+    setStatusMessage("");
+
+    try {
+      const saved = await updateRepairStatus(record.repair.id, {
+        status: data.status,
+        note: data.note,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (
+        saved?.id !== record.repair.id ||
+        !saved.updatedAt ||
+        saved.status !== data.status
+      ) {
+        setStatusBlocked(true);
+        setStatusError(
+          "The status update could not be confirmed. Reload the page before making another change.",
+        );
+        return false;
+      }
+
+      setRecord((current) =>
+        current ? { ...current, repair: saved } : current,
+      );
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentError("");
+      setAssignmentMessage("");
+      setStatusMessage("Repair status updated successfully.");
+
+      try {
+        const history = await getRepairStatusHistory(repairId);
+
+        if (!Array.isArray(history)) {
+          throw new Error("The server returned invalid status history.");
+        }
+
+        setRecord((current) => (current ? { ...current, history } : current));
+      } catch {
+        setLoadError(
+          "The repair status was saved, but its history could not be loaded. Use Try Again to load the latest records.",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (error.outcomeUncertain || error.status >= 500) {
+        setStatusBlocked(true);
+        setStatusError(
+          "The status change may have been saved. Reload the page to confirm before making another change.",
+        );
+      } else if ([403, 404, 409].includes(error.status)) {
+        setStatusBlocked(true);
+        setStatusError(
+          error.status === 409
+            ? "This repair changed or the transition is no longer allowed. Reload the page before trying again."
+            : error.message ||
+                "The status cannot be changed. Reload the page before trying again.",
+        );
+      } else {
+        setStatusError(
+          error.errors?.status ||
+            error.errors?.note ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to update the repair status.",
+        );
+      }
+
+      return false;
+    } finally {
+      statusSubmittingRef.current = false;
+      setStatusSaving(false);
+    }
   }
 
   if (!canView) {
@@ -231,30 +442,28 @@ function RepairWorkspace({ repairId, user }) {
   const customer = record?.customer;
   const device = record?.device;
 
-  const overviewFields = repair
-    ? [
-        ["Reported Problem", repair.reportedProblem],
-        [
-          "Service Type",
-          serviceLabels[repair.serviceType] ?? repair.serviceType,
-        ],
-        ["Priority", repair.priority],
-        ["Estimated Cost", formatMoney(repair.estimatedCost, "Not estimated")],
-        ["Agreed Price", formatMoney(repair.agreedPrice, "Not recorded")],
-        ["Due Date", repair.dueDate || "Not recorded"],
-        ["Accessories Received", repair.accessoriesReceived || "None recorded"],
-        ["Intake Notes", repair.intakeNotes || "None recorded"],
-        ["Created By", staffName(repair.createdById)],
-        ["Created At", formatTimestamp(repair.createdAt)],
-        ["Updated At", formatTimestamp(repair.updatedAt)],
-        ["Tracking Code", repair.trackingCode],
-      ]
-    : [];
+  const canManageTechnician =
+    canAssign && repair && !["COMPLETED", "CANCELLED"].includes(repair.status);
+
+  const assignmentUnchanged =
+    technicianSelection ===
+    (repair?.assignedTechnicianId == null
+      ? ""
+      : String(repair.assignedTechnicianId));
+
+  const assignmentControlsDisabled =
+    loading ||
+    Boolean(loadError) ||
+    assignmentSaving ||
+    assignmentBlocked ||
+    statusSaving ||
+    statusBlocked;
 
   return (
     <>
       <section className="page-header">
         <h2>{repair?.repairReference ?? "Repair Workspace"}</h2>
+
         <p>
           {device
             ? `Repair workspace for ${device.brand} ${device.model}.`
@@ -277,8 +486,18 @@ function RepairWorkspace({ repairId, user }) {
               <button
                 className="secondary-repair-button"
                 type="button"
-                onClick={() => setReloadVersion((value) => value + 1)}
-                disabled={loading}
+                onClick={() => {
+                  if (
+                    loading ||
+                    assignmentSubmitting.current ||
+                    statusSubmittingRef.current
+                  ) {
+                    return;
+                  }
+
+                  setReloadVersion((value) => value + 1);
+                }}
+                disabled={loading || assignmentSaving || statusSaving}
               >
                 Try Again
               </button>
@@ -326,14 +545,17 @@ function RepairWorkspace({ repairId, user }) {
               <span className="workspace-label">Technician</span>
               <strong>{staffName(repair.assignedTechnicianId)}</strong>
 
-              {canAssign && (
+              {canManageTechnician && (
                 <button
-                  className="workspace-reassign-button"
+                  className="workspace-inline-action"
                   type="button"
-                  disabled
-                  title="Technician reassignment is not available yet."
+                  onClick={handleTechnicianAssignmentToggle}
+                  disabled={assignmentControlsDisabled}
+                  aria-expanded={technicianAssignmentOpen}
                 >
-                  Change Technician
+                  {repair.assignedTechnicianId != null
+                    ? "Change Technician"
+                    : "Assign Technician"}
                 </button>
               )}
             </div>
@@ -343,6 +565,109 @@ function RepairWorkspace({ repairId, user }) {
               <StatusBadge status={repair.status} />
             </div>
           </section>
+
+          {assignmentMessage && <p role="status">{assignmentMessage}</p>}
+
+          {assignmentBlocked && !technicianAssignmentOpen && (
+            <p className="customer-form-error" role="alert">
+              {assignmentError}
+            </p>
+          )}
+
+          {technicianAssignmentOpen && canManageTechnician && (
+            <section className="page-content technician-assignment-panel">
+              <div className="workspace-section-header">
+                <div>
+                  <h3>
+                    {repair.assignedTechnicianId != null
+                      ? "Reassign Technician"
+                      : "Assign Technician"}
+                  </h3>
+
+                  <p className="workspace-section-description">
+                    Assign this repair to an active technician.
+                  </p>
+                </div>
+              </div>
+
+              {assignmentError && (
+                <div
+                  className="customer-form-error"
+                  role="alert"
+                  style={{ marginBottom: "16px" }}
+                >
+                  {assignmentError}
+                </div>
+              )}
+
+              <form
+                className="technician-assignment-form"
+                onSubmit={handleTechnicianAssignmentSave}
+                aria-busy={assignmentSaving}
+              >
+                <div className="repair-form-group">
+                  <label htmlFor="workspace-technician">
+                    Assigned Technician
+                  </label>
+
+                  <select
+                    id="workspace-technician"
+                    value={technicianSelection}
+                    onChange={(event) => {
+                      setTechnicianSelection(event.target.value);
+                      setAssignmentError("");
+                    }}
+                    disabled={assignmentControlsDisabled}
+                  >
+                    <option value="">Unassigned</option>
+
+                    {repair.assignedTechnicianId != null &&
+                      !record.technicians.some(
+                        (technician) =>
+                          technician.id === repair.assignedTechnicianId,
+                      ) && (
+                        <option value={repair.assignedTechnicianId} disabled>
+                          {staffName(repair.assignedTechnicianId)}
+                          {" — unavailable"}
+                        </option>
+                      )}
+
+                    {record.technicians.map((technician) => (
+                      <option key={technician.id} value={technician.id}>
+                        {technician.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="finding-form-actions">
+                  <button
+                    className="cancel-repair-button"
+                    type="button"
+                    disabled={assignmentSaving || statusSaving}
+                    onClick={() => {
+                      if (
+                        !assignmentSubmitting.current &&
+                        !statusSubmittingRef.current
+                      ) {
+                        setTechnicianAssignmentOpen(false);
+                      }
+                    }}
+                  >
+                    {assignmentBlocked || statusBlocked ? "Close" : "Cancel"}
+                  </button>
+
+                  <button
+                    className="create-repair-button"
+                    type="submit"
+                    disabled={assignmentControlsDisabled || assignmentUnchanged}
+                  >
+                    {assignmentSaving ? "Saving..." : "Save Assignment"}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
 
           <nav
             className="repair-workspace-tabs"
@@ -363,87 +688,40 @@ function RepairWorkspace({ repairId, user }) {
             ))}
           </nav>
 
-          {activeTab === "overview" && (
-            <section className="page-content repair-overview">
-              <h3>Repair Overview</h3>
+          <div hidden={activeTab !== "overview"}>
+            <RepairOverview
+              repair={repair}
+              estimatedCost={repair.estimatedCost}
+              agreedPrice={repair.agreedPrice}
+              staffName={staffName}
+            />
+          </div>
 
-              <div className="repair-overview-grid">
-                {overviewFields.map(([label, value]) => (
-                  <div
-                    key={label}
-                    className={
-                      label === "Reported Problem" || label === "Intake Notes"
-                        ? "overview-wide"
-                        : undefined
-                    }
-                  >
-                    <span>{label}</span>
-                    <strong
-                      style={{
-                        whiteSpace: "pre-wrap",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {value}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === "status-history" && (
-            <section className="page-content">
-              <div className="workspace-section-header">
-                <div>
-                  <h3>Status History</h3>
-                  <p className="workspace-section-description">
-                    Saved status changes, oldest first.
-                  </p>
-                </div>
-              </div>
-
-              <p>Status changes are not available yet.</p>
-
-              {record.history.length === 0 ? (
-                <div className="workspace-empty-state">
-                  <strong>No status history recorded</strong>
-                </div>
-              ) : (
-                <div className="status-history-list">
-                  {record.history.map((entry) => (
-                    <article key={entry.id} className="status-history-item">
-                      <div className="status-history-top">
-                        <strong>{staffName(entry.changedById)}</strong>
-                        <span>{formatTimestamp(entry.changedAt)}</span>
-                      </div>
-
-                      <p>
-                        Previous status:{" "}
-                        {entry.previousStatus ? (
-                          <StatusBadge status={entry.previousStatus} />
-                        ) : (
-                          "None — initial entry"
-                        )}
-                      </p>
-
-                      <p>
-                        New status: <StatusBadge status={entry.newStatus} />
-                      </p>
-
-                      <p style={{ whiteSpace: "pre-wrap" }}>
-                        {entry.note || "No note recorded."}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+          <div hidden={activeTab !== "status-history"}>
+            <RepairStatusHistory
+              repairId={repairId}
+              history={record.history}
+              staffName={staffName}
+              currentRoles={user?.roles ?? []}
+              currentStatus={repair.status}
+              onSubmitStatus={handleStatusSubmit}
+              saving={statusSaving}
+              disabled={
+                loading ||
+                Boolean(loadError) ||
+                assignmentSaving ||
+                assignmentBlocked
+              }
+              blocked={statusBlocked}
+              error={statusError}
+              message={statusMessage}
+            />
+          </div>
 
           {pendingMessages[activeTab] && (
             <section className="page-content">
               <h3>{visibleTabs.find((tab) => tab.id === activeTab)?.label}</h3>
+
               <div className="workspace-empty-state">
                 <strong>Not available yet</strong>
                 <p>{pendingMessages[activeTab]}</p>

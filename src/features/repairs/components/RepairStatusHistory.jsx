@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
@@ -7,207 +7,132 @@ import {
   canTransitionRepairStatus,
 } from "../../../config/accessControl.js";
 
-import { getMockStatusHistory } from "../data/mockRepairWorkspaceData.js";
-
-// =====================================================
-// AVAILABLE REPAIR STATUSES
-// =====================================================
-
 const repairStatuses = [
-  {
-    value: "RECEIVED",
-    label: "Received",
-  },
-
-  {
-    value: "AWAITING_APPROVAL",
-    label: "Awaiting Approval",
-  },
-
-  {
-    value: "IN_PROGRESS",
-    label: "In Progress",
-  },
-
-  {
-    value: "AWAITING_PARTS",
-    label: "Awaiting Parts",
-  },
-
-  {
-    value: "READY_FOR_RELEASE",
-    label: "Ready for Release",
-  },
-
-  {
-    value: "COMPLETED",
-    label: "Completed",
-  },
-
-  {
-    value: "CANCELLED",
-    label: "Cancelled",
-  },
+  { value: "RECEIVED", label: "Received" },
+  { value: "AWAITING_APPROVAL", label: "Awaiting Approval" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "AWAITING_PARTS", label: "Awaiting Parts" },
+  { value: "READY_FOR_RELEASE", label: "Ready for Release" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
+
+function formatTimestamp(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
+}
 
 function RepairStatusHistory({
   repairId,
-  currentRoles,
-  currentUserName,
+  history = [],
+  staffName = (id) => (id == null ? "Unknown staff" : `Staff #${id}`),
+  currentRoles = [],
   currentStatus,
-  onStatusChange,
-  suggestedStatus = "",
-  onSuggestionHandled,
+  onSubmitStatus,
+  saving = false,
+  disabled = false,
+  blocked = false,
+  error = "",
+  message = "",
 }) {
-  // -----------------------------
-  // HISTORY STATE
-  // -----------------------------
-
-  const [history, setHistory] = useState(() => getMockStatusHistory(repairId));
-
-  // -----------------------------
-  // FORM STATE
-  // -----------------------------
-
   const [status, setStatus] = useState("");
-
   const [note, setNote] = useState("");
-
   const [formOpen, setFormOpen] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  // -----------------------------
-  // ALLOWED STATUSES
-  // -----------------------------
-
-  const allowedStatuses = repairStatuses.filter(
-    (repairStatus) =>
-      canTransitionRepairStatus(currentStatus, repairStatus.value) &&
-      canChangeRepairStatus(currentRoles, repairStatus.value),
-  );
-
-  const canChangeStatus = allowedStatuses.length > 0;
-
-  function isStatusAllowed(nextStatus) {
-    return (
-      canTransitionRepairStatus(currentStatus, nextStatus) &&
-      canChangeRepairStatus(currentRoles, nextStatus)
-    );
-  }
-
-  // -----------------------------
-  // REPAIR CHANGE SYNC
-  // -----------------------------
+  const submittingRef = useRef(false);
 
   useEffect(() => {
-    setHistory(getMockStatusHistory(repairId));
-
     setStatus("");
     setNote("");
     setFormOpen(false);
+    setLocalError("");
   }, [repairId]);
 
-  // -----------------------------
-  // AI STATUS SUGGESTION
-  // -----------------------------
+  const allowedStatuses = repairStatuses.filter(
+    (option) =>
+      canTransitionRepairStatus(currentStatus, option.value) &&
+      canChangeRepairStatus(currentRoles, option.value),
+  );
 
-  useEffect(() => {
-    if (!suggestedStatus) {
-      return;
-    }
+  const canChangeStatus =
+    allowedStatuses.length > 0 && typeof onSubmitStatus === "function";
 
-    if (isStatusAllowed(suggestedStatus)) {
-      setStatus(suggestedStatus);
+  const selectedStatusAllowed = allowedStatuses.some(
+    (option) => option.value === status,
+  );
 
-      setFormOpen(true);
-    }
+  const controlsDisabled = saving || disabled || blocked;
 
-    if (onSuggestionHandled) {
-      onSuggestionHandled();
-    }
-  }, [suggestedStatus, currentStatus, currentRoles, onSuggestionHandled]);
-
-  // -----------------------------
-  // PERMISSION / TRANSITION SYNC
-  // -----------------------------
-
-  useEffect(() => {
-    if (!canChangeStatus) {
-      setStatus("");
-      setNote("");
-      setFormOpen(false);
-
-      return;
-    }
-
-    if (status && !isStatusAllowed(status)) {
-      setStatus("");
-    }
-  }, [currentRoles, currentStatus, canChangeStatus, status]);
-
-  // -----------------------------
-  // FORM HELPERS
-  // -----------------------------
+  const newestFirst = [...history].sort(
+    (a, b) =>
+      new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime() ||
+      b.id - a.id,
+  );
 
   function resetForm() {
     setStatus("");
     setNote("");
+    setLocalError("");
   }
 
   function handleFormToggle() {
-    if (!canChangeStatus) {
+    if (!canChangeStatus || controlsDisabled || submittingRef.current) {
       return;
     }
 
-    if (formOpen) {
-      resetForm();
-    }
-
-    setFormOpen(!formOpen);
+    resetForm();
+    setFormOpen((open) => !open);
   }
 
   function handleCancel() {
+    if (saving || submittingRef.current) return;
+
     resetForm();
     setFormOpen(false);
   }
 
-  // -----------------------------
-  // STATUS SUBMISSION
-  // -----------------------------
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!canChangeStatus || !status || !isStatusAllowed(status)) {
+    if (
+      submittingRef.current ||
+      controlsDisabled ||
+      !canChangeStatus ||
+      !selectedStatusAllowed
+    ) {
       return;
     }
 
-    const newEntry = {
-      id: Date.now(),
+    setLocalError("");
+    submittingRef.current = true;
 
-      status,
+    try {
+      const saved = await onSubmitStatus({
+        status,
+        note: note.trim() || null,
+      });
 
-      changedBy: currentUserName || "Unknown User",
-
-      changedAt: new Date().toLocaleString(),
-
-      note: note.trim() || null,
-    };
-
-    setHistory((currentHistory) => [...currentHistory, newEntry]);
-
-    if (onStatusChange) {
-      onStatusChange(status);
+      if (saved === true) {
+        resetForm();
+        setFormOpen(false);
+      }
+    } catch {
+      setLocalError(
+        "The status update could not be confirmed. Reload the page before trying again.",
+      );
+    } finally {
+      submittingRef.current = false;
     }
-
-    resetForm();
-    setFormOpen(false);
   }
+
+  const displayedError = error || localError;
 
   return (
     <section className="page-content">
-      {/* =========================
-                HEADER
-            ========================== */}
       <div className="workspace-section-header">
         <div>
           <h3>Status History</h3>
@@ -222,17 +147,32 @@ function RepairStatusHistory({
             className="secondary-repair-button"
             type="button"
             onClick={handleFormToggle}
+            disabled={controlsDisabled}
+            aria-expanded={formOpen}
           >
             Change Status
           </button>
         )}
       </div>
 
-      {/* =========================
-                STATUS CHANGE FORM
-            ========================== */}
+      {displayedError && (
+        <div
+          className="customer-form-error"
+          role="alert"
+          style={{ marginBottom: "16px" }}
+        >
+          {displayedError}
+        </div>
+      )}
+
+      {message && <p role="status">{message}</p>}
+
       {formOpen && canChangeStatus && (
-        <form className="status-change-form" onSubmit={handleSubmit}>
+        <form
+          className="status-change-form"
+          onSubmit={handleSubmit}
+          aria-busy={saving}
+        >
           <div className="repair-form-group">
             <label>Current Status</label>
 
@@ -246,15 +186,16 @@ function RepairStatusHistory({
 
             <select
               id="repair-status"
-              value={status}
+              value={selectedStatusAllowed ? status : ""}
               onChange={(event) => setStatus(event.target.value)}
+              disabled={controlsDisabled}
               required
             >
               <option value="">Select status</option>
 
-              {allowedStatuses.map((repairStatus) => (
-                <option key={repairStatus.value} value={repairStatus.value}>
-                  {repairStatus.label}
+              {allowedStatuses.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -268,7 +209,9 @@ function RepairStatusHistory({
               value={note}
               onChange={(event) => setNote(event.target.value)}
               rows="3"
+              maxLength={2000}
               placeholder="Optional reason or status note"
+              disabled={controlsDisabled}
             />
           </div>
 
@@ -277,35 +220,49 @@ function RepairStatusHistory({
               className="cancel-repair-button"
               type="button"
               onClick={handleCancel}
+              disabled={saving}
             >
-              Cancel
+              {blocked ? "Close" : "Cancel"}
             </button>
 
-            <button className="create-repair-button" type="submit">
-              Confirm Status Change
+            <button
+              className="create-repair-button"
+              type="submit"
+              disabled={controlsDisabled || !selectedStatusAllowed}
+            >
+              {saving ? "Saving…" : "Confirm Status Change"}
             </button>
           </div>
         </form>
       )}
 
-      {/* =========================
-                STATUS HISTORY
-            ========================== */}
       {history.length > 0 ? (
         <div className="status-history-list">
-          {[...history].reverse().map((entry) => (
+          {newestFirst.map((entry) => (
             <article key={entry.id} className="status-history-item">
               <div className="status-history-top">
-                <StatusBadge status={entry.status} />
+                <StatusBadge status={entry.newStatus} />
 
-                <span>{entry.changedAt}</span>
+                <span>{formatTimestamp(entry.changedAt)}</span>
               </div>
 
               <p>
-                Changed by <strong>{entry.changedBy}</strong>
+                Changed by{" "}
+                <strong>
+                  {entry.changedByName || staffName(entry.changedById)}
+                </strong>
               </p>
 
-              {entry.note && <p>{entry.note}</p>}
+              {entry.note && (
+                <p
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {entry.note}
+                </p>
+              )}
             </article>
           ))}
         </div>

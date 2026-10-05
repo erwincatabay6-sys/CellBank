@@ -56,3 +56,16 @@ export function updateRepairAssignment(repairId, data) {
     },
   );
 }
+
+export function updateRepairStatus(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/status`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}

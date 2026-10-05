@@ -19,23 +19,24 @@ function CustomerRepairHistory({
   deviceView = false,
   disabled = false,
 }) {
-  const devicesById = new Map(
-    devices.map((device) => [device.id, device]),
-  );
+  const devicesById = new Map(devices.map((device) => [device.id, device]));
+
+  const historyClassName = deviceView
+    ? "device-repair-history"
+    : "customer-repair-history";
+
+  const itemClassName = deviceView
+    ? "device-repair-item"
+    : "customer-repair-item";
 
   function deviceLabel(deviceId) {
     const device = devicesById.get(deviceId);
 
-    return device
-      ? `${device.brand} ${device.model}`
-      : `Device #${deviceId}`;
+    return device ? `${device.brand} ${device.model}` : `Device #${deviceId}`;
   }
 
   return (
-    <section
-      className="customer-repair-history-section"
-      aria-busy={loading}
-    >
+    <section className="customer-repair-history-section" aria-busy={loading}>
       <div className="workspace-section-header">
         <div>
           <h3>Repair History</h3>
@@ -53,9 +54,7 @@ function CustomerRepairHistory({
           <p>{error}</p>
 
           {loaded && (
-            <p>
-              Previously loaded history is shown and may be out of date.
-            </p>
+            <p>Previously loaded history is shown and may be out of date.</p>
           )}
 
           <button
@@ -71,9 +70,9 @@ function CustomerRepairHistory({
 
       {!loaded && loading && (
         <div role="status" aria-label="Loading repair history">
-          <div className="customer-repair-history" aria-hidden="true">
+          <div className={historyClassName} aria-hidden="true">
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="customer-repair-item">
+              <div key={index} className={itemClassName}>
                 {Array.from({ length: 4 }, (_, field) => (
                   <div key={field}>
                     <span className="customer-skeleton-line" />
@@ -87,11 +86,11 @@ function CustomerRepairHistory({
       )}
 
       {loaded && repairs.length > 0 && (
-        <div className="customer-repair-history">
+        <div className={historyClassName}>
           {repairs.map((repair) => (
             <button
               key={repair.id}
-              className="customer-repair-item"
+              className={itemClassName}
               type="button"
               onClick={() => onRepairClick(repair.id)}
               disabled={disabled}
@@ -102,19 +101,33 @@ function CustomerRepairHistory({
                 <strong>{repair.repairReference}</strong>
               </div>
 
-              <div>
-                <span>{deviceView ? "Service Type" : "Device"}</span>
-                <strong>
-                  {deviceView
-                    ? serviceLabels[repair.serviceType] ?? repair.serviceType
-                    : deviceLabel(repair.deviceId)}
-                </strong>
-              </div>
+              {deviceView ? (
+                <>
+                  <div>
+                    <span>Reported Problem</span>
+                    <strong>{repair.reportedProblem}</strong>
+                  </div>
 
-              <div>
-                <span>Reported Problem</span>
-                <strong>{repair.reportedProblem}</strong>
-              </div>
+                  <div>
+                    <span>Service Type</span>
+                    <strong>
+                      {serviceLabels[repair.serviceType] ?? repair.serviceType}
+                    </strong>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <span>Device</span>
+                    <strong>{deviceLabel(repair.deviceId)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Reported Problem</span>
+                    <strong>{repair.reportedProblem}</strong>
+                  </div>
+                </>
+              )}
 
               <div>
                 <span>Status</span>
@@ -128,6 +141,7 @@ function CustomerRepairHistory({
       {loaded && !loading && !error && repairs.length === 0 && (
         <div className="workspace-empty-state">
           <strong>No repair history</strong>
+
           <p>
             {deviceView
               ? "Repair jobs created for this device will appear here."
