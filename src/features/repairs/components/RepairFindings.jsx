@@ -1,96 +1,83 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { getMockFindings } from "../data/mockRepairWorkspaceData.js";
+function formatTimestamp(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
+}
 
 function RepairFindings({
   repairId,
-  currentUserName,
+  findings = [],
+  currentStatus,
+  canAdd = false,
+  onSubmitFinding,
+  saving = false,
+  disabled = false,
+  blocked = false,
+  error = "",
+  message = "",
   aiDraft = "",
   onDraftUsed,
 }) {
-  const [findings, setFindings] = useState(() => getMockFindings(repairId));
-
-  const [findingText, setFindingText] = useState(aiDraft);
-
+  const [findingText, setFindingText] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
-
   const [actionTaken, setActionTaken] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const [localBlocked, setLocalBlocked] = useState(false);
 
-  const [formOpen, setFormOpen] = useState(Boolean(aiDraft));
+  const submittingRef = useRef(false);
 
-  function resetForm() {
+  const closed = ["COMPLETED", "CANCELLED"].includes(currentStatus);
+
+  const canRecord =
+    canAdd &&
+    Boolean(currentStatus) &&
+    !closed &&
+    typeof onSubmitFinding === "function";
+
+  const controlsDisabled = saving || disabled || blocked || localBlocked;
+
+  useEffect(() => {
     setFindingText("");
     setDiagnosis("");
     setActionTaken("");
-  }
-
-  // -----------------------------
-  // REPAIR CHANGE SYNC
-  // -----------------------------
-
-  useEffect(() => {
-    setFindings(getMockFindings(repairId));
-
-    resetForm();
     setFormOpen(false);
+    setLocalError("");
+    setLocalBlocked(false);
   }, [repairId]);
 
-  // -----------------------------
-  // AI DRAFT SYNC
-  // -----------------------------
-
   useEffect(() => {
-    if (!aiDraft) {
-      return;
-    }
+    if (!aiDraft) return;
 
     setFindingText(aiDraft);
     setFormOpen(true);
   }, [aiDraft]);
 
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const trimmedFinding = findingText.trim();
-
-    if (!trimmedFinding) {
-      return;
-    }
-
-    const newFinding = {
-      id: Date.now(),
-
-      finding: trimmedFinding,
-
-      diagnosis: diagnosis.trim() || null,
-
-      actionTaken: actionTaken.trim() || null,
-
-      recordedBy: currentUserName || "Unknown User",
-    };
-
-    setFindings((currentFindings) => [...currentFindings, newFinding]);
-
-    resetForm();
-    setFormOpen(false);
-
-    if (onDraftUsed) {
-      onDraftUsed();
-    }
+  function resetForm() {
+    setFindingText("");
+    setDiagnosis("");
+    setActionTaken("");
+    setLocalError("");
   }
 
   function handleCancel() {
+    if (saving || submittingRef.current) return;
+
     resetForm();
     setFormOpen(false);
-
-    if (onDraftUsed) {
-      onDraftUsed();
-    }
+    onDraftUsed?.();
   }
 
   function handleAddFinding() {
+    if (!canRecord || controlsDisabled || submittingRef.current) {
+      return;
+    }
+
     if (formOpen) {
       handleCancel();
       return;
@@ -100,9 +87,74 @@ function RepairFindings({
     setFormOpen(true);
   }
 
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (submittingRef.current || controlsDisabled || !canRecord) {
+      return;
+    }
+
+    const finding = findingText.trim();
+    const trimmedDiagnosis = diagnosis.trim();
+    const trimmedAction = actionTaken.trim();
+
+    if (!finding) {
+      setLocalError("Enter a finding.");
+      return;
+    }
+
+    if (
+      [finding, trimmedDiagnosis, trimmedAction].some(
+        (value) => value.length > 5000,
+      )
+    ) {
+      setLocalError("Each field must not exceed 5000 characters.");
+      return;
+    }
+
+    setLocalError("");
+    submittingRef.current = true;
+
+    let saved = false;
+
+    try {
+      saved =
+        (await onSubmitFinding({
+          finding,
+          diagnosis: trimmedDiagnosis || null,
+          actionTaken: trimmedAction || null,
+        })) === true;
+    } catch {
+      setLocalBlocked(true);
+      setLocalError(
+        "The save could not be confirmed. Reload the page and check the findings before trying again.",
+      );
+    } finally {
+      submittingRef.current = false;
+    }
+
+    if (saved) {
+      resetForm();
+      setFormOpen(false);
+      onDraftUsed?.();
+    }
+  }
+
+  const displayedError = error || localError;
+
+  const newestFirst = [...findings].sort(
+    (a, b) =>
+      new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime() ||
+      b.id - a.id,
+  );
+
+  const textStyle = {
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+  };
+
   return (
     <section className="page-content repair-findings">
-      {/* HEADER */}
       <div className="workspace-section-header">
         <div>
           <h3>Findings</h3>
@@ -112,20 +164,48 @@ function RepairFindings({
           </p>
         </div>
 
-        <button
-          className="secondary-repair-button"
-          type="button"
-          onClick={handleAddFinding}
-        >
-          <Plus size={18} />
-
-          <span>Add Finding</span>
-        </button>
+        {canRecord && (
+          <button
+            className="secondary-repair-button"
+            type="button"
+            onClick={handleAddFinding}
+            disabled={controlsDisabled}
+            aria-expanded={formOpen}
+          >
+            <Plus size={18} />
+            <span>Add Finding</span>
+          </button>
+        )}
       </div>
 
-      {/* FINDING FORM */}
-      {formOpen && (
-        <form className="finding-form" onSubmit={handleSubmit}>
+      {displayedError && (
+        <div
+          className="customer-form-error"
+          role="alert"
+          style={{ marginBottom: "16px" }}
+        >
+          {displayedError}
+        </div>
+      )}
+
+      {message && (
+        <div className="repair-success-message" role="status">
+          {message}
+        </div>
+      )}
+
+      {localBlocked && error && (
+        <p role="alert">
+          Reload the page and check the findings before trying again.
+        </p>
+      )}
+
+      {formOpen && canRecord && (
+        <form
+          className="finding-form"
+          onSubmit={handleSubmit}
+          aria-busy={saving}
+        >
           <div className="repair-form-group">
             <label htmlFor="finding">Finding</label>
 
@@ -134,7 +214,9 @@ function RepairFindings({
               value={findingText}
               onChange={(event) => setFindingText(event.target.value)}
               rows="3"
-              placeholder={"Record what was observed " + "during inspection"}
+              maxLength={5000}
+              placeholder="Record what was observed during inspection"
+              disabled={controlsDisabled}
               required
             />
           </div>
@@ -147,7 +229,9 @@ function RepairFindings({
               value={diagnosis}
               onChange={(event) => setDiagnosis(event.target.value)}
               rows="3"
+              maxLength={5000}
               placeholder="Optional diagnosis"
+              disabled={controlsDisabled}
             />
           </div>
 
@@ -159,9 +243,9 @@ function RepairFindings({
               value={actionTaken}
               onChange={(event) => setActionTaken(event.target.value)}
               rows="3"
-              placeholder={
-                "Optional inspection, test, " + "or repair action performed"
-              }
+              maxLength={5000}
+              placeholder="Optional inspection, test, or repair action performed"
+              disabled={controlsDisabled}
             />
           </div>
 
@@ -170,49 +254,54 @@ function RepairFindings({
               className="cancel-repair-button"
               type="button"
               onClick={handleCancel}
+              disabled={saving}
             >
-              Cancel
+              {blocked || localBlocked ? "Close" : "Cancel"}
             </button>
 
-            <button className="create-repair-button" type="submit">
-              Save Finding
+            <button
+              className="create-repair-button"
+              type="submit"
+              disabled={controlsDisabled || !findingText.trim()}
+            >
+              {saving ? "Saving…" : "Save Finding"}
             </button>
           </div>
         </form>
       )}
 
-      {/* FINDINGS */}
       {findings.length > 0 ? (
         <div className="findings-list">
-          {findings.map((finding) => (
-            <article key={finding.id} className="finding-item">
+          {newestFirst.map((entry) => (
+            <article key={entry.id} className="finding-item">
               <div className="finding-field">
                 <span>Finding</span>
-
-                <p>{finding.finding}</p>
+                <p style={textStyle}>{entry.finding}</p>
               </div>
 
-              {finding.diagnosis && (
+              {entry.diagnosis && (
                 <div className="finding-field">
                   <span>Diagnosis</span>
-
-                  <p>{finding.diagnosis}</p>
+                  <p style={textStyle}>{entry.diagnosis}</p>
                 </div>
               )}
 
-              {finding.actionTaken && (
+              {entry.actionTaken && (
                 <div className="finding-field">
                   <span>Action Taken</span>
-
-                  <p>{finding.actionTaken}</p>
+                  <p style={textStyle}>{entry.actionTaken}</p>
                 </div>
               )}
 
-              {finding.recordedBy && (
-                <div className="finding-meta">
-                  Recorded by {finding.recordedBy}
-                </div>
-              )}
+              <div className="finding-meta">
+                Recorded by{" "}
+                {entry.recordedByName ||
+                  (entry.recordedById == null
+                    ? "Unknown staff"
+                    : `Staff #${entry.recordedById}`)}
+                {" • "}
+                {formatTimestamp(entry.recordedAt)}
+              </div>
             </article>
           ))}
         </div>
@@ -220,7 +309,11 @@ function RepairFindings({
         <div className="workspace-empty-state">
           <strong>No findings recorded</strong>
 
-          <p>Add a finding after inspecting or diagnosing the device.</p>
+          <p>
+            {closed
+              ? "No findings were recorded for this repair."
+              : "Findings will appear here after they are recorded."}
+          </p>
         </div>
       )}
     </section>

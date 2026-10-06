@@ -69,3 +69,23 @@ export function updateRepairStatus(repairId, data) {
     },
   );
 }
+
+export function getRepairFindings(repairId, { signal } = {}) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/findings`,
+    { signal },
+  );
+}
+
+export function createRepairFinding(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/findings`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}

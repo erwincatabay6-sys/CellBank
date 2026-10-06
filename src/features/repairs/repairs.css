@@ -1676,3 +1676,14 @@
 .repair-row {
   cursor: pointer;
 }
+
+.repair-success-message {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #16a34a;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

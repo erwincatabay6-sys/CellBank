@@ -370,13 +370,17 @@ function NewRepairPage() {
       )}
 
       {savedRepair && (
-        <section className="page-content" role="status">
-          <h3>Repair created successfully</h3>
-          <p>
-            Reference: <strong>{savedRepair.repairReference}</strong>
-          </p>
-          <p>Status: Received</p>
-          <p>The repair and its initial status history have been saved.</p>
+        <section className="page-content">
+          <div className="repair-success-message" role="status">
+            <strong>Repair created successfully</strong>
+            <div>
+              Reference: <strong>{savedRepair.repairReference}</strong>
+            </div>
+            <div>Status: Received</div>
+            <div>
+              The repair and its initial status history have been saved.
+            </div>
+          </div>
         </section>
       )}
 

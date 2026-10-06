@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 
 import {
   getRepair,
+  getRepairFindings,
+  createRepairFinding,
   getRepairStatusHistory,
   getRepairTechnicians,
   updateRepairAssignment,
@@ -14,6 +16,7 @@ import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import RepairOverview from "../components/RepairOverview.jsx";
+import RepairFindings from "../components/RepairFindings.jsx";
 import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 
 import "../../customers/customers.css";
@@ -37,7 +40,6 @@ const workspaceTabs = [
 ];
 
 const pendingMessages = {
-  findings: "Recording and viewing technical findings is not available yet.",
   "parts-costs":
     "Managing parts and updating repair costs is not available yet.",
   payments: "Recording and viewing payments is not available yet.",
@@ -60,6 +62,7 @@ function RepairWorkspacePage() {
 function RepairWorkspace({ repairId, user }) {
   const canView = hasAccess(user?.roles, "repairs");
   const canAssign = hasAccess(user?.roles, "assignTechnician");
+  const canFindings = hasAccess(user?.roles, "technicalFindings");
 
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +87,13 @@ function RepairWorkspace({ repairId, user }) {
   const [statusMessage, setStatusMessage] = useState("");
 
   const statusSubmittingRef = useRef(false);
+
+  const [findingSaving, setFindingSaving] = useState(false);
+  const [findingError, setFindingError] = useState("");
+  const [findingBlocked, setFindingBlocked] = useState(false);
+  const [findingMessage, setFindingMessage] = useState("");
+
+  const findingSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (!canView) {
@@ -117,7 +127,7 @@ function RepairWorkspace({ repairId, user }) {
           throw new Error("The server returned invalid repair data.");
         }
 
-        const [customer, history, technicians] = await Promise.all([
+        const [customer, history, technicians, findings] = await Promise.all([
           getCustomer(repair.customerId, {
             signal: controller.signal,
           }),
@@ -127,12 +137,18 @@ function RepairWorkspace({ repairId, user }) {
           getRepairTechnicians({
             signal: controller.signal,
           }),
+          canFindings
+            ? getRepairFindings(repairId, {
+                signal: controller.signal,
+              })
+            : Promise.resolve([]),
         ]);
 
         if (
           !Array.isArray(customer?.devices) ||
           !Array.isArray(history) ||
-          !Array.isArray(technicians)
+          !Array.isArray(technicians) ||
+          !Array.isArray(findings)
         ) {
           throw new Error("The server returned invalid workspace data.");
         }
@@ -154,6 +170,7 @@ function RepairWorkspace({ repairId, user }) {
             device,
             history,
             technicians,
+            findings,
           });
         }
       } catch (error) {
@@ -184,7 +201,7 @@ function RepairWorkspace({ repairId, user }) {
       active = false;
       controller.abort();
     };
-  }, [repairId, canView, reloadVersion]);
+  }, [repairId, canView, canFindings, reloadVersion]);
 
   const visibleTabs = workspaceTabs.filter(
     (tab) => !tab.permission || hasAccess(user?.roles, tab.permission),
@@ -232,6 +249,8 @@ function RepairWorkspace({ repairId, user }) {
       assignmentBlocked ||
       statusSubmittingRef.current ||
       statusBlocked ||
+      findingSubmittingRef.current ||
+      findingBlocked ||
       ["COMPLETED", "CANCELLED"].includes(record.repair.status)
     ) {
       return;
@@ -256,6 +275,8 @@ function RepairWorkspace({ repairId, user }) {
       assignmentBlocked ||
       statusSubmittingRef.current ||
       statusBlocked ||
+      findingSubmittingRef.current ||
+      findingBlocked ||
       loading ||
       loadError ||
       !canAssign ||
@@ -342,6 +363,8 @@ function RepairWorkspace({ repairId, user }) {
       assignmentSubmitting.current ||
       assignmentSaving ||
       assignmentBlocked ||
+      findingSubmittingRef.current ||
+      findingBlocked ||
       loading ||
       loadError ||
       !record ||
@@ -429,6 +452,114 @@ function RepairWorkspace({ repairId, user }) {
     }
   }
 
+  async function handleFindingSubmit(data) {
+    if (
+      findingSubmittingRef.current ||
+      findingBlocked ||
+      assignmentSubmitting.current ||
+      assignmentBlocked ||
+      statusSubmittingRef.current ||
+      statusBlocked ||
+      loading ||
+      loadError ||
+      !record ||
+      !canFindings ||
+      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
+    ) {
+      return false;
+    }
+
+    findingSubmittingRef.current = true;
+    setFindingSaving(true);
+    setFindingError("");
+    setFindingMessage("");
+
+    try {
+      const saved = await createRepairFinding(record.repair.id, {
+        finding: data.finding,
+        diagnosis: data.diagnosis,
+        actionTaken: data.actionTaken,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (
+        !saved?.id ||
+        saved.repairJobId !== record.repair.id ||
+        typeof saved.finding !== "string" ||
+        !saved.finding.trim() ||
+        !saved.recordedAt ||
+        !saved.recordedById
+      ) {
+        setFindingBlocked(true);
+        setFindingError(
+          "The save could not be confirmed. Reload the page and check the findings before trying again.",
+        );
+        return false;
+      }
+
+      setRecord((current) =>
+        current
+          ? {
+              ...current,
+              findings: [
+                saved,
+                ...current.findings.filter((entry) => entry.id !== saved.id),
+              ],
+            }
+          : current,
+      );
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentMessage("");
+      setFindingMessage("Finding recorded successfully.");
+
+      try {
+        const findings = await getRepairFindings(repairId);
+
+        if (!Array.isArray(findings)) {
+          throw new Error("The server returned invalid findings.");
+        }
+
+        setRecord((current) => (current ? { ...current, findings } : current));
+      } catch {
+        setLoadError(
+          "The finding was saved, but the findings list could not be refreshed. Use Try Again to load the latest records.",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
+        setFindingBlocked(true);
+        setFindingError(
+          "The finding may have been saved. Reload the page and check the findings before trying again.",
+        );
+      } else if ([401, 403, 404, 409].includes(error.status)) {
+        setFindingBlocked(true);
+        setFindingError(
+          error.status === 409
+            ? "This repair changed or is already closed. Reload the page before recording a finding."
+            : error.message ||
+                "The finding cannot be recorded. Reload the page before trying again.",
+        );
+      } else {
+        setFindingError(
+          error.errors?.finding ||
+            error.errors?.diagnosis ||
+            error.errors?.actionTaken ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to record the finding.",
+        );
+      }
+
+      return false;
+    } finally {
+      findingSubmittingRef.current = false;
+      setFindingSaving(false);
+    }
+  }
+
   if (!canView) {
     return (
       <section className="page-content">
@@ -457,7 +588,9 @@ function RepairWorkspace({ repairId, user }) {
     assignmentSaving ||
     assignmentBlocked ||
     statusSaving ||
-    statusBlocked;
+    statusBlocked ||
+    findingSaving ||
+    findingBlocked;
 
   return (
     <>
@@ -490,14 +623,17 @@ function RepairWorkspace({ repairId, user }) {
                   if (
                     loading ||
                     assignmentSubmitting.current ||
-                    statusSubmittingRef.current
+                    statusSubmittingRef.current ||
+                    findingSubmittingRef.current
                   ) {
                     return;
                   }
 
                   setReloadVersion((value) => value + 1);
                 }}
-                disabled={loading || assignmentSaving || statusSaving}
+                disabled={
+                  loading || assignmentSaving || statusSaving || findingSaving
+                }
               >
                 Try Again
               </button>
@@ -566,7 +702,11 @@ function RepairWorkspace({ repairId, user }) {
             </div>
           </section>
 
-          {assignmentMessage && <p role="status">{assignmentMessage}</p>}
+          {assignmentMessage && (
+            <div className="repair-success-message" role="status">
+              {assignmentMessage}
+            </div>
+          )}
 
           {assignmentBlocked && !technicianAssignmentOpen && (
             <p className="customer-form-error" role="alert">
@@ -644,17 +784,20 @@ function RepairWorkspace({ repairId, user }) {
                   <button
                     className="cancel-repair-button"
                     type="button"
-                    disabled={assignmentSaving || statusSaving}
+                    disabled={assignmentSaving || statusSaving || findingSaving}
                     onClick={() => {
                       if (
                         !assignmentSubmitting.current &&
-                        !statusSubmittingRef.current
+                        !statusSubmittingRef.current &&
+                        !findingSubmittingRef.current
                       ) {
                         setTechnicianAssignmentOpen(false);
                       }
                     }}
                   >
-                    {assignmentBlocked || statusBlocked ? "Close" : "Cancel"}
+                    {assignmentBlocked || statusBlocked || findingBlocked
+                      ? "Close"
+                      : "Cancel"}
                   </button>
 
                   <button
@@ -697,6 +840,30 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
+          {canFindings && (
+            <div hidden={activeTab !== "findings"}>
+              <RepairFindings
+                repairId={repairId}
+                findings={record.findings}
+                currentStatus={repair.status}
+                canAdd={canFindings}
+                onSubmitFinding={handleFindingSubmit}
+                saving={findingSaving}
+                disabled={
+                  loading ||
+                  Boolean(loadError) ||
+                  assignmentSaving ||
+                  assignmentBlocked ||
+                  statusSaving ||
+                  statusBlocked
+                }
+                blocked={findingBlocked}
+                error={findingError}
+                message={findingMessage}
+              />
+            </div>
+          )}
+
           <div hidden={activeTab !== "status-history"}>
             <RepairStatusHistory
               repairId={repairId}
@@ -710,7 +877,9 @@ function RepairWorkspace({ repairId, user }) {
                 loading ||
                 Boolean(loadError) ||
                 assignmentSaving ||
-                assignmentBlocked
+                assignmentBlocked ||
+                findingSaving ||
+                findingBlocked
               }
               blocked={statusBlocked}
               error={statusError}

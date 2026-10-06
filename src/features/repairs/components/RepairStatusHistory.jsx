@@ -165,7 +165,11 @@ function RepairStatusHistory({
         </div>
       )}
 
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <div className="repair-success-message" role="status">
+          {message}
+        </div>
+      )}
 
       {formOpen && canChangeStatus && (
         <form
