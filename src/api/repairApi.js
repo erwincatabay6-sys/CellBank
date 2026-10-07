@@ -135,3 +135,23 @@ export function updateRepairAgreedPrice(repairId, data) {
     },
   );
 }
+
+export function getRepairPayments(repairId, { signal } = {}) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/payments`,
+    { signal },
+  );
+}
+
+export function createRepairPayment(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/payments`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}

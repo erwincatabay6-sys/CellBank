@@ -9,11 +9,14 @@ import {
   createRepairPart,
   updateRepairEstimate,
   updateRepairAgreedPrice,
+  getRepairPayments,
+  createRepairPayment,
   getRepairStatusHistory,
   getRepairTechnicians,
   updateRepairAssignment,
   updateRepairStatus,
 } from "../../../api/repairApi.js";
+
 import { getCustomer } from "../../../api/customerApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -22,6 +25,7 @@ import StatusBadge from "../../../components/StatusBadge.jsx";
 import RepairOverview from "../components/RepairOverview.jsx";
 import RepairFindings from "../components/RepairFindings.jsx";
 import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
+import RepairPayments from "../components/RepairPayments.jsx";
 import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 
 import "../../customers/customers.css";
@@ -45,7 +49,6 @@ const workspaceTabs = [
 ];
 
 const pendingMessages = {
-  payments: "Recording and viewing payments is not available yet.",
   ai: "AI troubleshooting assistance is not available yet.",
 };
 
@@ -105,6 +108,13 @@ function RepairWorkspace({ repairId, user }) {
 
   const costsSubmittingRef = useRef(false);
 
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentBlocked, setPaymentBlocked] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+
+  const paymentSubmittingRef = useRef(false);
+
   useEffect(() => {
     if (!canView) return;
 
@@ -140,7 +150,7 @@ function RepairWorkspace({ repairId, user }) {
           throw new Error("The server returned invalid repair data.");
         }
 
-        const [customer, history, technicians, findings, parts] =
+        const [customer, history, technicians, findings, parts, payments] =
           await Promise.all([
             getCustomer(repair.customerId, {
               signal: controller.signal,
@@ -159,6 +169,9 @@ function RepairWorkspace({ repairId, user }) {
             getRepairParts(repairId, {
               signal: controller.signal,
             }),
+            getRepairPayments(repairId, {
+              signal: controller.signal,
+            }),
           ]);
 
         if (
@@ -166,7 +179,8 @@ function RepairWorkspace({ repairId, user }) {
           !Array.isArray(history) ||
           !Array.isArray(technicians) ||
           !Array.isArray(findings) ||
-          !Array.isArray(parts)
+          !Array.isArray(parts) ||
+          !Array.isArray(payments)
         ) {
           throw new Error("The server returned invalid workspace data.");
         }
@@ -190,6 +204,7 @@ function RepairWorkspace({ repairId, user }) {
             technicians,
             findings,
             parts,
+            payments,
           });
         }
       } catch (error) {
@@ -225,10 +240,18 @@ function RepairWorkspace({ repairId, user }) {
   );
 
   const anySaving =
-    assignmentSaving || statusSaving || findingSaving || costsSaving;
+    assignmentSaving ||
+    statusSaving ||
+    findingSaving ||
+    costsSaving ||
+    paymentSaving;
 
   const anyBlocked =
-    assignmentBlocked || statusBlocked || findingBlocked || costsBlocked;
+    assignmentBlocked ||
+    statusBlocked ||
+    findingBlocked ||
+    costsBlocked ||
+    paymentBlocked;
 
   const controlsDisabled =
     loading || Boolean(loadError) || anySaving || anyBlocked;
@@ -238,7 +261,8 @@ function RepairWorkspace({ repairId, user }) {
       assignmentSubmitting.current ||
       statusSubmittingRef.current ||
       findingSubmittingRef.current ||
-      costsSubmittingRef.current
+      costsSubmittingRef.current ||
+      paymentSubmittingRef.current
     );
   }
 
@@ -709,6 +733,134 @@ function RepairWorkspace({ repairId, user }) {
     return handleCostsSubmit("agreement", data);
   }
 
+  async function handlePaymentSubmit(data) {
+    if (!hasAccess(user?.roles, "recordPayments") || cannotChangeRepair()) {
+      return false;
+    }
+
+    paymentSubmittingRef.current = true;
+    setPaymentSaving(true);
+    setPaymentError("");
+    setPaymentMessage("");
+
+    try {
+      const saved = await createRepairPayment(record.repair.id, {
+        amount: data.amount,
+        note: data.note,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (
+        !saved?.id ||
+        saved.repairJobId !== record.repair.id ||
+        saved.amount == null ||
+        !Number.isFinite(Number(saved.amount)) ||
+        Number(saved.amount) !== Number(data.amount) ||
+        !saved.paidAt ||
+        !saved.recordedById
+      ) {
+        setPaymentBlocked(true);
+        setPaymentError(
+          "The payment save could not be confirmed. Reload the page and check payment history before trying again.",
+        );
+        return false;
+      }
+
+      setRecord((current) =>
+        current
+          ? {
+              ...current,
+              payments: [
+                saved,
+                ...current.payments.filter(
+                  (payment) => payment.id !== saved.id,
+                ),
+              ],
+            }
+          : current,
+      );
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentMessage("");
+      setPaymentMessage("Payment recorded successfully.");
+
+      try {
+        const [latestRepair, payments] = await Promise.all([
+          getRepair(repairId),
+          getRepairPayments(repairId),
+        ]);
+
+        if (
+          latestRepair?.id !== record.repair.id ||
+          !latestRepair.updatedAt ||
+          !latestRepair.status ||
+          !Array.isArray(payments) ||
+          !payments.some((payment) => payment.id === saved.id)
+        ) {
+          throw new Error(
+            "The server returned incomplete payment or repair data.",
+          );
+        }
+
+        setRecord((current) =>
+          current
+            ? {
+                ...current,
+                repair: latestRepair,
+                payments,
+              }
+            : current,
+        );
+      } catch {
+        setLoadError(
+          "The payment was saved, but the latest repair and payment records could not be loaded. Use Try Again before making another change.",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
+        setPaymentBlocked(true);
+        setPaymentError(
+          "The payment may have been saved. Reload the page and check payment history before trying again.",
+        );
+      } else if ([401, 403, 404, 409].includes(error.status)) {
+        setPaymentBlocked(true);
+
+        if (error.status === 401) {
+          setPaymentError(
+            "Your session has expired. Sign in again and reload this repair before recording a payment.",
+          );
+        } else if (error.status === 403) {
+          setPaymentError(
+            "The payment request was denied. Reload the page and check that your account has permission to record payments.",
+          );
+        } else if (error.status === 404) {
+          setPaymentError(
+            "The repair could not be found. Reload the page before continuing.",
+          );
+        } else {
+          setPaymentError(
+            "The repair or its payment eligibility changed. Reload the page and check its status, agreed price, and payment history before trying again.",
+          );
+        }
+      } else {
+        setPaymentError(
+          error.errors?.amount ||
+            error.errors?.note ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to record the payment.",
+        );
+      }
+
+      return false;
+    } finally {
+      paymentSubmittingRef.current = false;
+      setPaymentSaving(false);
+    }
+  }
+
   if (!canView) {
     return (
       <section className="page-content">
@@ -1012,6 +1164,22 @@ function RepairWorkspace({ repairId, user }) {
               blocked={costsBlocked}
               error={costsError}
               message={costsMessage}
+            />
+          </div>
+
+          <div hidden={activeTab !== "payments"}>
+            <RepairPayments
+              repairId={repairId}
+              currentRoles={user?.roles ?? []}
+              currentStatus={repair.status}
+              repairTotal={repair.agreedPrice}
+              payments={record.payments}
+              onCreatePayment={handlePaymentSubmit}
+              saving={paymentSaving}
+              disabled={controlsDisabled}
+              blocked={paymentBlocked}
+              error={paymentError}
+              message={paymentMessage}
             />
           </div>
 
