@@ -1,273 +1,331 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { hasAccess } from "../../../config/accessControl.js";
 
-import { getMockParts } from "../data/mockRepairWorkspaceData.js";
+const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
+
+function toCents(value) {
+  if (value == null || value === "") return null;
+
+  const text = String(value).trim();
+
+  if (!MONEY_PATTERN.test(text)) return null;
+
+  const [whole, fraction = ""] = text.split(".");
+
+  return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
+}
+
+function formatCents(cents) {
+  if (cents == null) return "—";
+
+  const whole = (cents / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  const fraction = (cents % 100n).toString().padStart(2, "0");
+
+  return `₱${whole}.${fraction}`;
+}
+
+function formatMoney(value) {
+  return formatCents(toCents(value));
+}
+
+function getSubtotalCents(part) {
+  const unitCents = toCents(part.unitCost);
+  const quantity = Number(part.quantity);
+
+  if (unitCents == null || !Number.isSafeInteger(quantity) || quantity < 1) {
+    return null;
+  }
+
+  return unitCents * BigInt(quantity);
+}
 
 function RepairPartsCosts({
-  currentRoles,
+  currentRoles = [],
   repairId,
+  currentStatus,
+  parts = [],
   estimatedCost,
-  onEstimatedCostChange,
   agreedPrice,
-  onAgreedPriceChange,
+  onCreatePart,
+  onUpdateEstimate,
+  onUpdateAgreedPrice,
+  saving = false,
+  disabled = false,
+  blocked = false,
+  error = "",
+  message = "",
   suggestedPart = "",
   onSuggestionHandled,
 }) {
-  // -----------------------------
-  // ROLE PERMISSIONS
-  // -----------------------------
+  const closed = ["COMPLETED", "CANCELLED"].includes(currentStatus);
+  const repairOpen = Boolean(currentStatus) && !closed;
 
-  const canEditEstimatedCost = hasAccess(currentRoles, "editEstimatedCost");
+  const canEditEstimatedCost =
+    repairOpen &&
+    hasAccess(currentRoles, "editEstimatedCost") &&
+    typeof onUpdateEstimate === "function";
 
-  const canEditPartsCosts = hasAccess(currentRoles, "editPartsCosts");
+  const canEditPartsCosts =
+    repairOpen &&
+    hasAccess(currentRoles, "editPartsCosts") &&
+    typeof onCreatePart === "function";
 
-  const canEditAgreedPrice = hasAccess(currentRoles, "editAgreedPrice");
-
-  // -----------------------------
-  // PARTS STATE
-  // -----------------------------
-
-  const [parts, setParts] = useState(() => getMockParts(repairId));
+  const canEditAgreedPrice =
+    repairOpen &&
+    hasAccess(currentRoles, "editAgreedPrice") &&
+    typeof onUpdateAgreedPrice === "function";
 
   const [partFormOpen, setPartFormOpen] = useState(false);
-
   const [partName, setPartName] = useState("");
-
-  const [quantity, setQuantity] = useState(1);
-
+  const [quantity, setQuantity] = useState("1");
   const [unitCost, setUnitCost] = useState("");
 
-  // -----------------------------
-  // ESTIMATE STATE
-  // -----------------------------
-
   const [estimateFormOpen, setEstimateFormOpen] = useState(false);
-
-  const [estimateInput, setEstimateInput] = useState(
-    estimatedCost != null ? String(estimatedCost) : "",
-  );
-
-  // -----------------------------
-  // AGREEMENT STATE
-  // -----------------------------
+  const [estimateInput, setEstimateInput] = useState("");
 
   const [priceFormOpen, setPriceFormOpen] = useState(false);
+  const [priceInput, setPriceInput] = useState("");
 
-  const [priceInput, setPriceInput] = useState(
-    agreedPrice != null ? String(agreedPrice) : "",
-  );
+  const [localError, setLocalError] = useState("");
+  const [localBlocked, setLocalBlocked] = useState(false);
 
-  // -----------------------------
-  // REPAIR CHANGE SYNC
-  // -----------------------------
+  const submittingRef = useRef(false);
+
+  const controlsDisabled = saving || disabled || blocked || localBlocked;
 
   useEffect(() => {
-    setParts(getMockParts(repairId));
-
     setPartFormOpen(false);
     setPartName("");
-    setQuantity(1);
+    setQuantity("1");
     setUnitCost("");
 
     setEstimateFormOpen(false);
+    setEstimateInput("");
+
     setPriceFormOpen(false);
+    setPriceInput("");
+
+    setLocalError("");
+    setLocalBlocked(false);
   }, [repairId]);
 
-  // -----------------------------
-  // PERMISSION SYNC
-  // -----------------------------
-
   useEffect(() => {
-    if (!canEditEstimatedCost) {
-      setEstimateFormOpen(false);
-
-      setEstimateInput(estimatedCost != null ? String(estimatedCost) : "");
-    }
-
-    if (!canEditPartsCosts) {
-      setPartFormOpen(false);
-
-      setPartName("");
-      setQuantity(1);
-      setUnitCost("");
-    }
-
-    if (!canEditAgreedPrice) {
-      setPriceFormOpen(false);
-
-      setPriceInput(agreedPrice != null ? String(agreedPrice) : "");
-    }
-  }, [
-    canEditEstimatedCost,
-    canEditPartsCosts,
-    canEditAgreedPrice,
-    estimatedCost,
-    agreedPrice,
-  ]);
-
-  // -----------------------------
-  // AI PART SUGGESTION
-  // -----------------------------
-
-  useEffect(() => {
-    if (!suggestedPart) {
+    if (
+      !suggestedPart ||
+      !canEditPartsCosts ||
+      controlsDisabled ||
+      partFormOpen
+    ) {
       return;
     }
 
-    if (canEditPartsCosts) {
-      setPartName(suggestedPart);
+    setPartName(suggestedPart);
+    setQuantity("1");
+    setUnitCost("");
+    setPartFormOpen(true);
+    setEstimateFormOpen(false);
+    setPriceFormOpen(false);
+    setLocalError("");
 
-      setQuantity(1);
-      setUnitCost("");
-      setPartFormOpen(true);
-    }
+    onSuggestionHandled?.();
+  }, [
+    suggestedPart,
+    canEditPartsCosts,
+    controlsDisabled,
+    partFormOpen,
+    onSuggestionHandled,
+  ]);
 
-    if (onSuggestionHandled) {
-      onSuggestionHandled();
-    }
-  }, [suggestedPart, canEditPartsCosts, onSuggestionHandled]);
+  const subtotals = parts.map(getSubtotalCents);
 
-  // -----------------------------
-  // DERIVED VALUES
-  // -----------------------------
-
-  const partsTotal = parts.reduce(
-    (total, part) => total + part.quantity * part.unitCost,
-    0,
-  );
-
-  // -----------------------------
-  // PART FORM HELPERS
-  // -----------------------------
+  const partsTotal = subtotals.some((value) => value == null)
+    ? null
+    : subtotals.reduce((total, value) => total + value, 0n);
 
   function resetPartForm() {
     setPartName("");
-
-    setQuantity(1);
-
+    setQuantity("1");
     setUnitCost("");
   }
 
+  function handlePartCancel() {
+    if (saving || submittingRef.current) return;
+
+    resetPartForm();
+    setPartFormOpen(false);
+    setLocalError("");
+    onSuggestionHandled?.();
+  }
+
   function handlePartFormToggle() {
-    if (!canEditPartsCosts) {
+    if (!canEditPartsCosts || controlsDisabled || submittingRef.current) {
       return;
     }
 
     if (partFormOpen) {
-      resetPartForm();
-    }
-
-    setPartFormOpen(!partFormOpen);
-  }
-
-  function handlePartCancel() {
-    resetPartForm();
-
-    setPartFormOpen(false);
-  }
-
-  // -----------------------------
-  // PART SUBMISSION
-  // -----------------------------
-
-  function handlePartSubmit(event) {
-    event.preventDefault();
-
-    if (!canEditPartsCosts) {
+      handlePartCancel();
       return;
     }
 
-    const newPart = {
-      id: Date.now(),
-
-      name: partName.trim(),
-
-      quantity: Number(quantity),
-
-      unitCost: Number(unitCost),
-    };
-
-    setParts((currentParts) => [...currentParts, newPart]);
-
     resetPartForm();
-
-    setPartFormOpen(false);
+    setLocalError("");
+    setPartFormOpen(true);
+    setEstimateFormOpen(false);
+    setPriceFormOpen(false);
   }
 
-  // -----------------------------
-  // ESTIMATE HANDLERS
-  // -----------------------------
-
   function handleEstimateFormToggle() {
-    if (!canEditEstimatedCost) {
+    if (!canEditEstimatedCost || controlsDisabled || submittingRef.current) {
       return;
     }
 
     setEstimateInput(estimatedCost != null ? String(estimatedCost) : "");
 
-    setEstimateFormOpen(!estimateFormOpen);
-
-    // Keep only one pricing form open.
+    setLocalError("");
+    setEstimateFormOpen((open) => !open);
     setPriceFormOpen(false);
+    setPartFormOpen(false);
   }
-
-  function handleEstimateSubmit(event) {
-    event.preventDefault();
-
-    if (!canEditEstimatedCost) {
-      return;
-    }
-
-    const newEstimatedCost = Number(estimateInput);
-
-    if (onEstimatedCostChange) {
-      onEstimatedCostChange(newEstimatedCost);
-    }
-
-    setEstimateFormOpen(false);
-  }
-
-  // -----------------------------
-  // PRICE AGREEMENT HANDLERS
-  // -----------------------------
 
   function handlePriceFormToggle() {
-    if (!canEditAgreedPrice) {
+    if (!canEditAgreedPrice || controlsDisabled || submittingRef.current) {
       return;
     }
 
     setPriceInput(agreedPrice != null ? String(agreedPrice) : "");
 
-    setPriceFormOpen(!priceFormOpen);
-
-    // Keep only one pricing form open.
+    setLocalError("");
+    setPriceFormOpen((open) => !open);
     setEstimateFormOpen(false);
+    setPartFormOpen(false);
   }
 
-  function handlePriceSubmit(event) {
+  async function submitAction(callback, data) {
+    if (submittingRef.current || controlsDisabled) {
+      return false;
+    }
+
+    submittingRef.current = true;
+    setLocalError("");
+
+    try {
+      return (await callback(data)) === true;
+    } catch {
+      setLocalBlocked(true);
+      setLocalError(
+        "The save could not be confirmed. Reload the page and check the records before trying again.",
+      );
+      return false;
+    } finally {
+      submittingRef.current = false;
+    }
+  }
+
+  async function handlePartSubmit(event) {
     event.preventDefault();
 
-    if (!canEditAgreedPrice) {
+    if (!canEditPartsCosts || controlsDisabled || submittingRef.current) {
       return;
     }
 
-    const newAgreedPrice = Number(priceInput);
+    const trimmedName = partName.trim();
+    const quantityText = String(quantity).trim();
+    const parsedQuantity = Number(quantityText);
+    const costText = unitCost.trim();
 
-    if (onAgreedPriceChange) {
-      onAgreedPriceChange(newAgreedPrice);
+    if (!trimmedName || trimmedName.length > 150) {
+      setLocalError("Enter a part name of 1 to 150 characters.");
+      return;
     }
 
-    setPriceFormOpen(false);
+    if (
+      !/^\d+$/.test(quantityText) ||
+      !Number.isInteger(parsedQuantity) ||
+      parsedQuantity < 1 ||
+      parsedQuantity > 2147483647
+    ) {
+      setLocalError("Quantity must be a whole number from 1 to 2147483647.");
+      return;
+    }
+
+    if (!MONEY_PATTERN.test(costText)) {
+      setLocalError(
+        "Enter a non-negative unit cost with at most 10 whole-number digits and 2 decimal places.",
+      );
+      return;
+    }
+
+    const saved = await submitAction(onCreatePart, {
+      partName: trimmedName,
+      quantity: parsedQuantity,
+      unitCost: costText,
+    });
+
+    if (saved) {
+      resetPartForm();
+      setPartFormOpen(false);
+      onSuggestionHandled?.();
+    }
   }
+
+  async function handleEstimateSubmit(event) {
+    event.preventDefault();
+
+    if (!canEditEstimatedCost || controlsDisabled || submittingRef.current) {
+      return;
+    }
+
+    const amount = estimateInput.trim();
+
+    if (!MONEY_PATTERN.test(amount)) {
+      setLocalError(
+        "Enter a non-negative estimate with at most 10 whole-number digits and 2 decimal places.",
+      );
+      return;
+    }
+
+    const saved = await submitAction(onUpdateEstimate, {
+      estimatedCost: amount,
+    });
+
+    if (saved) {
+      setEstimateFormOpen(false);
+    }
+  }
+
+  async function handlePriceSubmit(event) {
+    event.preventDefault();
+
+    if (!canEditAgreedPrice || controlsDisabled || submittingRef.current) {
+      return;
+    }
+
+    const amount = priceInput.trim();
+
+    if (!MONEY_PATTERN.test(amount)) {
+      setLocalError(
+        "Enter a non-negative agreed price with at most 10 whole-number digits and 2 decimal places.",
+      );
+      return;
+    }
+
+    const saved = await submitAction(onUpdateAgreedPrice, {
+      agreedPrice: amount,
+    });
+
+    if (saved) {
+      setPriceFormOpen(false);
+    }
+  }
+
+  const displayedError = error || localError;
+  const cancelLabel = blocked || localBlocked ? "Close" : "Cancel";
 
   return (
     <section className="page-content repair-parts-costs">
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
       <div className="workspace-section-header">
         <div>
           <h3>Parts & Costs</h3>
@@ -279,9 +337,22 @@ function RepairPartsCosts({
         </div>
       </div>
 
-      {/* =========================
-                PRICE AGREEMENT
-            ========================== */}
+      {displayedError && (
+        <div
+          className="customer-form-error"
+          role="alert"
+          style={{ marginBottom: "16px" }}
+        >
+          {displayedError}
+        </div>
+      )}
+
+      {message && (
+        <div className="repair-success-message" role="status">
+          {message}
+        </div>
+      )}
+
       <div className="price-agreement-section">
         <div className="price-agreement-header">
           <div>
@@ -290,56 +361,52 @@ function RepairPartsCosts({
             <p>Review the estimated cost and customer-approved repair price.</p>
           </div>
 
-          {/* ADMIN + FRONT DESK */}
           {canEditAgreedPrice && (
             <button
               className="secondary-repair-button"
               type="button"
               onClick={handlePriceFormToggle}
+              disabled={controlsDisabled}
+              aria-expanded={priceFormOpen}
             >
               {agreedPrice != null ? "Update Agreement" : "Record Agreement"}
             </button>
           )}
         </div>
 
-        {/* =========================
-                    PRICE SUMMARY
-                ========================== */}
         <div className="price-summary">
-          {/* ESTIMATED COST */}
           <div>
             <span>Estimated Cost</span>
 
             <strong>
               {estimatedCost != null
-                ? `₱${estimatedCost.toFixed(2)}`
+                ? formatMoney(estimatedCost)
                 : "Not estimated"}
             </strong>
 
-            {/* ADMIN + TECHNICIAN */}
             {canEditEstimatedCost && (
               <button
                 className="inline-cost-button"
                 type="button"
                 onClick={handleEstimateFormToggle}
+                disabled={controlsDisabled}
+                aria-expanded={estimateFormOpen}
               >
                 {estimatedCost != null ? "Update Estimate" : "Set Estimate"}
               </button>
             )}
           </div>
 
-          {/* AGREED PRICE */}
           <div>
             <span>Agreed Price</span>
 
             <strong>
               {agreedPrice != null
-                ? `₱${agreedPrice.toFixed(2)}`
+                ? formatMoney(agreedPrice)
                 : "Awaiting customer approval"}
             </strong>
           </div>
 
-          {/* AGREEMENT STATUS */}
           <div>
             <span>Agreement Status</span>
 
@@ -347,14 +414,11 @@ function RepairPartsCosts({
           </div>
         </div>
 
-        {/* =========================
-                    ESTIMATE FORM
-                    ADMIN + TECHNICIAN
-                ========================== */}
         {estimateFormOpen && canEditEstimatedCost && (
           <form
             className="price-agreement-form"
             onSubmit={handleEstimateSubmit}
+            aria-busy={saving}
           >
             <div className="repair-form-group">
               <label htmlFor="estimated-cost-workspace">
@@ -365,10 +429,12 @@ function RepairPartsCosts({
                 id="estimated-cost-workspace"
                 type="number"
                 min="0"
+                max="9999999999.99"
                 step="0.01"
                 value={estimateInput}
                 onChange={(event) => setEstimateInput(event.target.value)}
                 placeholder="0.00"
+                disabled={controlsDisabled}
                 required
               />
             </div>
@@ -377,24 +443,33 @@ function RepairPartsCosts({
               <button
                 className="cancel-repair-button"
                 type="button"
-                onClick={() => setEstimateFormOpen(false)}
+                disabled={saving}
+                onClick={() => {
+                  if (submittingRef.current) return;
+                  setEstimateFormOpen(false);
+                  setLocalError("");
+                }}
               >
-                Cancel
+                {cancelLabel}
               </button>
 
-              <button className="create-repair-button" type="submit">
-                Save Estimate
+              <button
+                className="create-repair-button"
+                type="submit"
+                disabled={controlsDisabled}
+              >
+                {saving ? "Saving…" : "Save Estimate"}
               </button>
             </div>
           </form>
         )}
 
-        {/* =========================
-                    AGREED PRICE FORM
-                    ADMIN + FRONT DESK
-                ========================== */}
         {priceFormOpen && canEditAgreedPrice && (
-          <form className="price-agreement-form" onSubmit={handlePriceSubmit}>
+          <form
+            className="price-agreement-form"
+            onSubmit={handlePriceSubmit}
+            aria-busy={saving}
+          >
             <div className="repair-form-group">
               <label htmlFor="agreed-price">Agreed Repair Price</label>
 
@@ -402,10 +477,12 @@ function RepairPartsCosts({
                 id="agreed-price"
                 type="number"
                 min="0"
+                max="9999999999.99"
                 step="0.01"
                 value={priceInput}
                 onChange={(event) => setPriceInput(event.target.value)}
                 placeholder="0.00"
+                disabled={controlsDisabled}
                 required
               />
             </div>
@@ -414,51 +491,55 @@ function RepairPartsCosts({
               <button
                 className="cancel-repair-button"
                 type="button"
-                onClick={() => setPriceFormOpen(false)}
+                disabled={saving}
+                onClick={() => {
+                  if (submittingRef.current) return;
+                  setPriceFormOpen(false);
+                  setLocalError("");
+                }}
               >
-                Cancel
+                {cancelLabel}
               </button>
 
-              <button className="create-repair-button" type="submit">
-                Confirm Agreement
+              <button
+                className="create-repair-button"
+                type="submit"
+                disabled={controlsDisabled}
+              >
+                {saving ? "Saving…" : "Confirm Agreement"}
               </button>
             </div>
           </form>
         )}
       </div>
 
-      {/* =========================
-                PARTS USED
-            ========================== */}
       <div className="parts-section-header">
         <div>
           <h4>Parts Used</h4>
-
           <p>Review parts actually used during the repair.</p>
         </div>
 
-        {/* ADMIN + TECHNICIAN */}
         {canEditPartsCosts && (
           <button
             className="secondary-repair-button"
             type="button"
             onClick={handlePartFormToggle}
+            disabled={controlsDisabled}
+            aria-expanded={partFormOpen}
           >
             <Plus size={18} />
-
             <span>Add Part</span>
           </button>
         )}
       </div>
 
-      {/* =========================
-                ADD PART FORM
-                ADMIN + TECHNICIAN
-            ========================== */}
       {partFormOpen && canEditPartsCosts && (
-        <form className="part-form" onSubmit={handlePartSubmit}>
+        <form
+          className="part-form"
+          onSubmit={handlePartSubmit}
+          aria-busy={saving}
+        >
           <div className="repair-form-grid">
-            {/* PART NAME */}
             <div className="repair-form-group">
               <label htmlFor="part-name">Part Name</label>
 
@@ -467,12 +548,13 @@ function RepairPartsCosts({
                 type="text"
                 value={partName}
                 onChange={(event) => setPartName(event.target.value)}
+                maxLength={150}
                 placeholder="e.g. Charging Port"
+                disabled={controlsDisabled}
                 required
               />
             </div>
 
-            {/* QUANTITY */}
             <div className="repair-form-group">
               <label htmlFor="part-quantity">Quantity</label>
 
@@ -480,13 +562,15 @@ function RepairPartsCosts({
                 id="part-quantity"
                 type="number"
                 min="1"
+                max="2147483647"
+                step="1"
                 value={quantity}
                 onChange={(event) => setQuantity(event.target.value)}
+                disabled={controlsDisabled}
                 required
               />
             </div>
 
-            {/* UNIT COST */}
             <div className="repair-form-group">
               <label htmlFor="part-unit-cost">Unit Cost</label>
 
@@ -494,10 +578,12 @@ function RepairPartsCosts({
                 id="part-unit-cost"
                 type="number"
                 min="0"
+                max="9999999999.99"
                 step="0.01"
                 value={unitCost}
                 onChange={(event) => setUnitCost(event.target.value)}
                 placeholder="0.00"
+                disabled={controlsDisabled}
                 required
               />
             </div>
@@ -508,20 +594,22 @@ function RepairPartsCosts({
               className="cancel-repair-button"
               type="button"
               onClick={handlePartCancel}
+              disabled={saving}
             >
-              Cancel
+              {cancelLabel}
             </button>
 
-            <button className="create-repair-button" type="submit">
-              Add Part
+            <button
+              className="create-repair-button"
+              type="submit"
+              disabled={controlsDisabled || !partName.trim()}
+            >
+              {saving ? "Saving…" : "Add Part"}
             </button>
           </div>
         </form>
       )}
 
-      {/* =========================
-                PARTS LIST / EMPTY STATE
-            ========================== */}
       {parts.length > 0 ? (
         <>
           <div className="parts-table-wrapper">
@@ -529,11 +617,8 @@ function RepairPartsCosts({
               <thead>
                 <tr>
                   <th>Part</th>
-
                   <th>Quantity</th>
-
                   <th>Unit Cost</th>
-
                   <th>Subtotal</th>
                 </tr>
               </thead>
@@ -541,13 +626,10 @@ function RepairPartsCosts({
               <tbody>
                 {parts.map((part) => (
                   <tr key={part.id}>
-                    <td>{part.name}</td>
-
+                    <td style={{ overflowWrap: "anywhere" }}>{part.name}</td>
                     <td>{part.quantity}</td>
-
-                    <td>₱{part.unitCost.toFixed(2)}</td>
-
-                    <td>₱{(part.quantity * part.unitCost).toFixed(2)}</td>
+                    <td>{formatMoney(part.unitCost)}</td>
+                    <td>{formatCents(getSubtotalCents(part))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -556,8 +638,7 @@ function RepairPartsCosts({
 
           <div className="parts-total">
             <span>Parts Total</span>
-
-            <strong>₱{partsTotal.toFixed(2)}</strong>
+            <strong>{formatCents(partsTotal)}</strong>
           </div>
         </>
       ) : (

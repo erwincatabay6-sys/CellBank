@@ -89,3 +89,49 @@ export function createRepairFinding(repairId, data) {
     },
   );
 }
+
+export function getRepairParts(repairId, { signal } = {}) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/parts`,
+    { signal },
+  );
+}
+
+export function createRepairPart(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/parts`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export function updateRepairEstimate(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/estimate`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export function updateRepairAgreedPrice(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/agreed-price`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}

@@ -5,6 +5,10 @@ import {
   getRepair,
   getRepairFindings,
   createRepairFinding,
+  getRepairParts,
+  createRepairPart,
+  updateRepairEstimate,
+  updateRepairAgreedPrice,
   getRepairStatusHistory,
   getRepairTechnicians,
   updateRepairAssignment,
@@ -17,6 +21,7 @@ import { useAuth } from "../../auth/context/AuthContext.jsx";
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import RepairOverview from "../components/RepairOverview.jsx";
 import RepairFindings from "../components/RepairFindings.jsx";
+import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
 import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 
 import "../../customers/customers.css";
@@ -40,8 +45,6 @@ const workspaceTabs = [
 ];
 
 const pendingMessages = {
-  "parts-costs":
-    "Managing parts and updating repair costs is not available yet.",
   payments: "Recording and viewing payments is not available yet.",
   ai: "AI troubleshooting assistance is not available yet.",
 };
@@ -95,10 +98,15 @@ function RepairWorkspace({ repairId, user }) {
 
   const findingSubmittingRef = useRef(false);
 
+  const [costsSaving, setCostsSaving] = useState(false);
+  const [costsError, setCostsError] = useState("");
+  const [costsBlocked, setCostsBlocked] = useState(false);
+  const [costsMessage, setCostsMessage] = useState("");
+
+  const costsSubmittingRef = useRef(false);
+
   useEffect(() => {
-    if (!canView) {
-      return;
-    }
+    if (!canView) return;
 
     if (!/^[1-9]\d*$/.test(repairId ?? "")) {
       setNotFound(true);
@@ -123,32 +131,42 @@ function RepairWorkspace({ repairId, user }) {
 
         repairLoaded = true;
 
-        if (!repair?.id || !repair.customerId || !repair.status) {
+        if (
+          !repair?.id ||
+          !repair.customerId ||
+          !repair.status ||
+          !repair.updatedAt
+        ) {
           throw new Error("The server returned invalid repair data.");
         }
 
-        const [customer, history, technicians, findings] = await Promise.all([
-          getCustomer(repair.customerId, {
-            signal: controller.signal,
-          }),
-          getRepairStatusHistory(repairId, {
-            signal: controller.signal,
-          }),
-          getRepairTechnicians({
-            signal: controller.signal,
-          }),
-          canFindings
-            ? getRepairFindings(repairId, {
-                signal: controller.signal,
-              })
-            : Promise.resolve([]),
-        ]);
+        const [customer, history, technicians, findings, parts] =
+          await Promise.all([
+            getCustomer(repair.customerId, {
+              signal: controller.signal,
+            }),
+            getRepairStatusHistory(repairId, {
+              signal: controller.signal,
+            }),
+            getRepairTechnicians({
+              signal: controller.signal,
+            }),
+            canFindings
+              ? getRepairFindings(repairId, {
+                  signal: controller.signal,
+                })
+              : Promise.resolve([]),
+            getRepairParts(repairId, {
+              signal: controller.signal,
+            }),
+          ]);
 
         if (
           !Array.isArray(customer?.devices) ||
           !Array.isArray(history) ||
           !Array.isArray(technicians) ||
-          !Array.isArray(findings)
+          !Array.isArray(findings) ||
+          !Array.isArray(parts)
         ) {
           throw new Error("The server returned invalid workspace data.");
         }
@@ -171,6 +189,7 @@ function RepairWorkspace({ repairId, user }) {
             history,
             technicians,
             findings,
+            parts,
           });
         }
       } catch (error) {
@@ -189,9 +208,7 @@ function RepairWorkspace({ repairId, user }) {
 
         controller.abort();
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     }
 
@@ -207,10 +224,38 @@ function RepairWorkspace({ repairId, user }) {
     (tab) => !tab.permission || hasAccess(user?.roles, tab.permission),
   );
 
+  const anySaving =
+    assignmentSaving || statusSaving || findingSaving || costsSaving;
+
+  const anyBlocked =
+    assignmentBlocked || statusBlocked || findingBlocked || costsBlocked;
+
+  const controlsDisabled =
+    loading || Boolean(loadError) || anySaving || anyBlocked;
+
+  function isSubmitting() {
+    return (
+      assignmentSubmitting.current ||
+      statusSubmittingRef.current ||
+      findingSubmittingRef.current ||
+      costsSubmittingRef.current
+    );
+  }
+
+  function cannotChangeRepair() {
+    return (
+      isSubmitting() ||
+      anyBlocked ||
+      loading ||
+      Boolean(loadError) ||
+      !record ||
+      !canView ||
+      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
+    );
+  }
+
   function staffName(staffId) {
-    if (staffId == null) {
-      return "Unassigned";
-    }
+    if (staffId == null) return "Unassigned";
 
     const repair = record?.repair;
 
@@ -229,9 +274,7 @@ function RepairWorkspace({ repairId, user }) {
       (entry) => entry.changedById === staffId && entry.changedByName,
     );
 
-    if (historyEntry) {
-      return historyEntry.changedByName;
-    }
+    if (historyEntry) return historyEntry.changedByName;
 
     return (
       record?.technicians.find((staff) => staff.id === staffId)?.name ??
@@ -240,21 +283,7 @@ function RepairWorkspace({ repairId, user }) {
   }
 
   function handleTechnicianAssignmentToggle() {
-    if (
-      !canAssign ||
-      !record ||
-      loading ||
-      loadError ||
-      assignmentSubmitting.current ||
-      assignmentBlocked ||
-      statusSubmittingRef.current ||
-      statusBlocked ||
-      findingSubmittingRef.current ||
-      findingBlocked ||
-      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
-    ) {
-      return;
-    }
+    if (!canAssign || cannotChangeRepair()) return;
 
     setTechnicianSelection(
       record.repair.assignedTechnicianId == null
@@ -270,21 +299,7 @@ function RepairWorkspace({ repairId, user }) {
   async function handleTechnicianAssignmentSave(event) {
     event.preventDefault();
 
-    if (
-      assignmentSubmitting.current ||
-      assignmentBlocked ||
-      statusSubmittingRef.current ||
-      statusBlocked ||
-      findingSubmittingRef.current ||
-      findingBlocked ||
-      loading ||
-      loadError ||
-      !canAssign ||
-      !record ||
-      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
-    ) {
-      return;
-    }
+    if (!canAssign || cannotChangeRepair()) return;
 
     const selectedTechnician = record.technicians.find(
       (technician) => String(technician.id) === technicianSelection,
@@ -312,11 +327,15 @@ function RepairWorkspace({ repairId, user }) {
         expectedUpdatedAt: record.repair.updatedAt,
       });
 
-      if (!saved || saved.id !== record.repair.id || !saved.updatedAt) {
+      if (
+        !saved ||
+        saved.id !== record.repair.id ||
+        !saved.updatedAt ||
+        saved.assignedTechnicianId !== assignedTechnicianId
+      ) {
         setAssignmentBlocked(true);
         setAssignmentError(
-          "The save could not be confirmed. Reload the page and check " +
-            "the assignment before trying again.",
+          "The save could not be confirmed. Reload the page and check the assignment before trying again.",
         );
         return;
       }
@@ -328,13 +347,12 @@ function RepairWorkspace({ repairId, user }) {
       setTechnicianAssignmentOpen(false);
       setAssignmentMessage("Technician assignment saved.");
     } catch (error) {
-      if (error.outcomeUncertain || error.status >= 500) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setAssignmentBlocked(true);
         setAssignmentError(
-          "The assignment may have saved. Reload the page and check " +
-            "it before trying again.",
+          "The assignment may have saved. Reload the page and check it before trying again.",
         );
-      } else if ([403, 404, 409].includes(error.status)) {
+      } else if ([401, 403, 404, 409].includes(error.status)) {
         setAssignmentBlocked(true);
         setAssignmentError(
           error.status === 409
@@ -357,21 +375,7 @@ function RepairWorkspace({ repairId, user }) {
   }
 
   async function handleStatusSubmit(data) {
-    if (
-      statusSubmittingRef.current ||
-      statusBlocked ||
-      assignmentSubmitting.current ||
-      assignmentSaving ||
-      assignmentBlocked ||
-      findingSubmittingRef.current ||
-      findingBlocked ||
-      loading ||
-      loadError ||
-      !record ||
-      !canView
-    ) {
-      return false;
-    }
+    if (cannotChangeRepair()) return false;
 
     statusSubmittingRef.current = true;
     setStatusSaving(true);
@@ -422,12 +426,12 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
-      if (error.outcomeUncertain || error.status >= 500) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setStatusBlocked(true);
         setStatusError(
           "The status change may have been saved. Reload the page to confirm before making another change.",
         );
-      } else if ([403, 404, 409].includes(error.status)) {
+      } else if ([401, 403, 404, 409].includes(error.status)) {
         setStatusBlocked(true);
         setStatusError(
           error.status === 409
@@ -453,21 +457,7 @@ function RepairWorkspace({ repairId, user }) {
   }
 
   async function handleFindingSubmit(data) {
-    if (
-      findingSubmittingRef.current ||
-      findingBlocked ||
-      assignmentSubmitting.current ||
-      assignmentBlocked ||
-      statusSubmittingRef.current ||
-      statusBlocked ||
-      loading ||
-      loadError ||
-      !record ||
-      !canFindings ||
-      ["COMPLETED", "CANCELLED"].includes(record.repair.status)
-    ) {
-      return false;
-    }
+    if (!canFindings || cannotChangeRepair()) return false;
 
     findingSubmittingRef.current = true;
     setFindingSaving(true);
@@ -560,6 +550,165 @@ function RepairWorkspace({ repairId, user }) {
     }
   }
 
+  async function handleCostsSubmit(action, data) {
+    const actions = {
+      part: {
+        permission: "editPartsCosts",
+        request: createRepairPart,
+        message: "Part recorded successfully.",
+      },
+      estimate: {
+        permission: "editEstimatedCost",
+        request: updateRepairEstimate,
+        field: "estimatedCost",
+        message: "Repair estimate updated successfully.",
+      },
+      agreement: {
+        permission: "editAgreedPrice",
+        request: updateRepairAgreedPrice,
+        field: "agreedPrice",
+        message: "Agreed repair price saved successfully.",
+      },
+    };
+
+    const selectedAction = actions[action];
+
+    if (
+      !selectedAction ||
+      !hasAccess(user?.roles, selectedAction.permission) ||
+      cannotChangeRepair()
+    ) {
+      return false;
+    }
+
+    costsSubmittingRef.current = true;
+    setCostsSaving(true);
+    setCostsError("");
+    setCostsMessage("");
+
+    try {
+      const saved = await selectedAction.request(record.repair.id, {
+        ...data,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (action === "part") {
+        if (
+          !saved?.id ||
+          saved.repairJobId !== record.repair.id ||
+          saved.name !== data.partName ||
+          saved.quantity !== data.quantity ||
+          saved.unitCost == null ||
+          Number(saved.unitCost) !== Number(data.unitCost) ||
+          !saved.recordedAt ||
+          !saved.recordedById
+        ) {
+          setCostsBlocked(true);
+          setCostsError(
+            "The part save could not be confirmed. Reload the page and check the parts list before trying again.",
+          );
+          return false;
+        }
+
+        setRecord((current) =>
+          current
+            ? {
+                ...current,
+                parts: [
+                  saved,
+                  ...current.parts.filter((entry) => entry.id !== saved.id),
+                ],
+              }
+            : current,
+        );
+      } else {
+        const field = selectedAction.field;
+
+        if (
+          saved?.id !== record.repair.id ||
+          !saved.updatedAt ||
+          saved[field] == null ||
+          Number(saved[field]) !== Number(data[field])
+        ) {
+          setCostsBlocked(true);
+          setCostsError(
+            "The price update could not be confirmed. Reload the page and check the repair pricing before trying again.",
+          );
+          return false;
+        }
+
+        setRecord((current) =>
+          current ? { ...current, repair: saved } : current,
+        );
+      }
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentMessage("");
+      setCostsMessage(selectedAction.message);
+
+      if (action === "part") {
+        try {
+          const parts = await getRepairParts(repairId);
+
+          if (!Array.isArray(parts)) {
+            throw new Error("The server returned invalid parts.");
+          }
+
+          setRecord((current) => (current ? { ...current, parts } : current));
+        } catch {
+          setLoadError(
+            "The part was saved, but the parts list could not be refreshed. Use Try Again to load the latest records.",
+          );
+        }
+      }
+
+      return true;
+    } catch (error) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
+        setCostsBlocked(true);
+        setCostsError(
+          "The change may have been saved. Reload the page and check Parts & Costs before trying again.",
+        );
+      } else if ([401, 403, 404, 409].includes(error.status)) {
+        setCostsBlocked(true);
+        setCostsError(
+          error.status === 409
+            ? "This repair changed or is already closed. Reload the page before updating Parts & Costs."
+            : error.message ||
+                "This change is not permitted. Reload the page before trying again.",
+        );
+      } else {
+        setCostsError(
+          error.errors?.partName ||
+            error.errors?.quantity ||
+            error.errors?.unitCost ||
+            error.errors?.estimatedCost ||
+            error.errors?.agreedPrice ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to save the change.",
+        );
+      }
+
+      return false;
+    } finally {
+      costsSubmittingRef.current = false;
+      setCostsSaving(false);
+    }
+  }
+
+  function handlePartSubmit(data) {
+    return handleCostsSubmit("part", data);
+  }
+
+  function handleEstimateSubmit(data) {
+    return handleCostsSubmit("estimate", data);
+  }
+
+  function handleAgreedPriceSubmit(data) {
+    return handleCostsSubmit("agreement", data);
+  }
+
   if (!canView) {
     return (
       <section className="page-content">
@@ -581,16 +730,6 @@ function RepairWorkspace({ repairId, user }) {
     (repair?.assignedTechnicianId == null
       ? ""
       : String(repair.assignedTechnicianId));
-
-  const assignmentControlsDisabled =
-    loading ||
-    Boolean(loadError) ||
-    assignmentSaving ||
-    assignmentBlocked ||
-    statusSaving ||
-    statusBlocked ||
-    findingSaving ||
-    findingBlocked;
 
   return (
     <>
@@ -620,20 +759,10 @@ function RepairWorkspace({ repairId, user }) {
                 className="secondary-repair-button"
                 type="button"
                 onClick={() => {
-                  if (
-                    loading ||
-                    assignmentSubmitting.current ||
-                    statusSubmittingRef.current ||
-                    findingSubmittingRef.current
-                  ) {
-                    return;
-                  }
-
+                  if (loading || isSubmitting()) return;
                   setReloadVersion((value) => value + 1);
                 }}
-                disabled={
-                  loading || assignmentSaving || statusSaving || findingSaving
-                }
+                disabled={loading || anySaving}
               >
                 Try Again
               </button>
@@ -686,7 +815,7 @@ function RepairWorkspace({ repairId, user }) {
                   className="workspace-inline-action"
                   type="button"
                   onClick={handleTechnicianAssignmentToggle}
-                  disabled={assignmentControlsDisabled}
+                  disabled={controlsDisabled}
                   aria-expanded={technicianAssignmentOpen}
                 >
                   {repair.assignedTechnicianId != null
@@ -757,7 +886,7 @@ function RepairWorkspace({ repairId, user }) {
                       setTechnicianSelection(event.target.value);
                       setAssignmentError("");
                     }}
-                    disabled={assignmentControlsDisabled}
+                    disabled={controlsDisabled}
                   >
                     <option value="">Unassigned</option>
 
@@ -784,26 +913,20 @@ function RepairWorkspace({ repairId, user }) {
                   <button
                     className="cancel-repair-button"
                     type="button"
-                    disabled={assignmentSaving || statusSaving || findingSaving}
+                    disabled={anySaving}
                     onClick={() => {
-                      if (
-                        !assignmentSubmitting.current &&
-                        !statusSubmittingRef.current &&
-                        !findingSubmittingRef.current
-                      ) {
+                      if (!isSubmitting()) {
                         setTechnicianAssignmentOpen(false);
                       }
                     }}
                   >
-                    {assignmentBlocked || statusBlocked || findingBlocked
-                      ? "Close"
-                      : "Cancel"}
+                    {anyBlocked ? "Close" : "Cancel"}
                   </button>
 
                   <button
                     className="create-repair-button"
                     type="submit"
-                    disabled={assignmentControlsDisabled || assignmentUnchanged}
+                    disabled={controlsDisabled || assignmentUnchanged}
                   >
                     {assignmentSaving ? "Saving..." : "Save Assignment"}
                   </button>
@@ -849,14 +972,7 @@ function RepairWorkspace({ repairId, user }) {
                 canAdd={canFindings}
                 onSubmitFinding={handleFindingSubmit}
                 saving={findingSaving}
-                disabled={
-                  loading ||
-                  Boolean(loadError) ||
-                  assignmentSaving ||
-                  assignmentBlocked ||
-                  statusSaving ||
-                  statusBlocked
-                }
+                disabled={controlsDisabled}
                 blocked={findingBlocked}
                 error={findingError}
                 message={findingMessage}
@@ -873,17 +989,29 @@ function RepairWorkspace({ repairId, user }) {
               currentStatus={repair.status}
               onSubmitStatus={handleStatusSubmit}
               saving={statusSaving}
-              disabled={
-                loading ||
-                Boolean(loadError) ||
-                assignmentSaving ||
-                assignmentBlocked ||
-                findingSaving ||
-                findingBlocked
-              }
+              disabled={controlsDisabled}
               blocked={statusBlocked}
               error={statusError}
               message={statusMessage}
+            />
+          </div>
+
+          <div hidden={activeTab !== "parts-costs"}>
+            <RepairPartsCosts
+              repairId={repairId}
+              currentRoles={user?.roles ?? []}
+              currentStatus={repair.status}
+              parts={record.parts}
+              estimatedCost={repair.estimatedCost}
+              agreedPrice={repair.agreedPrice}
+              onCreatePart={handlePartSubmit}
+              onUpdateEstimate={handleEstimateSubmit}
+              onUpdateAgreedPrice={handleAgreedPriceSubmit}
+              saving={costsSaving}
+              disabled={controlsDisabled}
+              blocked={costsBlocked}
+              error={costsError}
+              message={costsMessage}
             />
           </div>
 
