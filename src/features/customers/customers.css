@@ -493,3 +493,51 @@
     align-self: flex-end;
   }
 }
+
+.customer-repeated-problem-alert {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #78350f;
+  overflow-wrap: anywhere;
+}
+
+.customer-repeated-problem-alert > strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.customer-repeated-problem-alert p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.customer-repeated-problem-group {
+  margin-top: 16px;
+}
+
+.customer-repeated-problem-group > strong {
+  display: block;
+  line-height: 1.5;
+}
+
+.customer-repeated-problem-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.customer-repair-history-section .customer-repeat-note {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.customer-repeated-problem-alert .customer-repeat-note {
+  margin: 16px 0 0;
+  color: #78350f;
+}

@@ -1687,3 +1687,29 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+
+/* Overview problem category */
+.repair-category-section .workspace-section-header h3 {
+  margin-bottom: 8px;
+}
+
+.repair-category-section .repair-overview-grid {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 640px;
+}
+
+.repair-category-section .repair-form {
+  width: 100%;
+  max-width: 640px;
+  margin-top: 20px;
+}
+
+.repair-category-section .repair-form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.repair-category-section .finding-form-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin: 0;
+}

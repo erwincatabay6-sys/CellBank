@@ -1,5 +1,10 @@
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
+import {
+  getProblemCategoryLabel,
+  getRepeatedDeviceProblems,
+} from "../../repairs/problemCategories.js";
+
 const serviceLabels = {
   DIAGNOSTIC: "Diagnostic",
   HARDWARE_REPAIR: "Hardware Repair",
@@ -28,6 +33,21 @@ function CustomerRepairHistory({
   const itemClassName = deviceView
     ? "device-repair-item"
     : "customer-repair-item";
+
+  const canShowPatterns = deviceView && loaded && !loading && !error;
+
+  const repeatedProblems = canShowPatterns
+    ? getRepeatedDeviceProblems(repairs)
+    : [];
+
+  const uncategorizedCount = new Set(
+    repairs
+      .filter(
+        (repair) =>
+          repair.status !== "CANCELLED" && repair.problemCategory == null,
+      )
+      .map((repair) => repair.id),
+  ).size;
 
   function deviceLabel(deviceId) {
     const device = devicesById.get(deviceId);
@@ -85,6 +105,19 @@ function CustomerRepairHistory({
         </div>
       )}
 
+      {canShowPatterns && repeatedProblems.length > 0 && (
+        <div className="customer-repeated-problem-alert">
+          <strong>Repeated Problem Detected</strong>
+
+          {repeatedProblems.map((group) => (
+            <p key={`${group.deviceId}:${group.category}`}>
+              {getProblemCategoryLabel(group.category)} issue recorded in{" "}
+              {group.count} repair visits.
+            </p>
+          ))}
+        </div>
+      )}
+
       {loaded && repairs.length > 0 && (
         <div className={historyClassName}>
           {repairs.map((repair) => (
@@ -112,6 +145,11 @@ function CustomerRepairHistory({
                     <span>Service Type</span>
                     <strong>
                       {serviceLabels[repair.serviceType] ?? repair.serviceType}
+                    </strong>
+
+                    <span>Problem Category</span>
+                    <strong>
+                      {getProblemCategoryLabel(repair.problemCategory)}
                     </strong>
                   </div>
                 </>

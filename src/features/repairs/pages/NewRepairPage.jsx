@@ -6,6 +6,11 @@ import { createRepair, getRepairTechnicians } from "../../../api/repairApi.js";
 import { hasRole } from "../../../config/accessControl.js";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
+import {
+  problemCategoryOptions,
+  isValidProblemCategory,
+} from "../problemCategories.js";
+
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../../customers/context/CustomersContext.jsx";
 import CustomerRegistrationModal from "../../customers/components/CustomerRegistrationModal.jsx";
@@ -60,6 +65,7 @@ function NewRepairPage() {
     customerId: "",
     deviceId: "",
     reportedProblem: "",
+    problemCategory: "",
     serviceType: "",
     accessoriesReceived: "",
     intakeNotes: "",
@@ -203,6 +209,7 @@ function NewRepairPage() {
       customerId: selectedCustomer?.id,
       deviceId: selectedDevice?.id,
       reportedProblem: values.reportedProblem.trim(),
+      problemCategory: values.problemCategory,
       serviceType: values.serviceType,
       accessoriesReceived: values.accessoriesReceived.trim() || null,
       intakeNotes: values.intakeNotes.trim() || null,
@@ -220,6 +227,10 @@ function NewRepairPage() {
 
     if (!selectedDevice) {
       errors.deviceId = "Select a device belonging to this customer.";
+    }
+
+    if (!isValidProblemCategory(data.problemCategory)) {
+      errors.problemCategory = "Select a problem category.";
     }
 
     if (!data.reportedProblem) {
@@ -275,10 +286,14 @@ function NewRepairPage() {
     try {
       const result = await createRepair(data);
 
-      if (!result?.id || !result?.repairReference) {
+      if (
+        !result?.id ||
+        !result?.repairReference ||
+        result.problemCategory !== data.problemCategory
+      ) {
         setOutcomeUncertain(true);
         setErrorMessage(
-          "The server response did not confirm the repair. " +
+          "The server response did not confirm the repair and its category. " +
             "Check saved repairs before submitting again.",
         );
         return;
@@ -288,7 +303,7 @@ function NewRepairPage() {
     } catch (error) {
       setFieldErrors(error.errors || {});
 
-      if (error.outcomeUncertain || error.status >= 500) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setOutcomeUncertain(true);
         setErrorMessage(
           "The save could not be confirmed. The repair may have been saved. " +
@@ -422,6 +437,36 @@ function NewRepairPage() {
                 {loaded && customers.length === 0 && (
                   <p>No customers yet. Register a customer to continue.</p>
                 )}
+              </div>
+            </div>
+          </section>
+
+          <section className="repair-form-section">
+            <div className="repair-form-section-header">
+              <div>
+                <h3>Problem Category</h3>
+                <p>
+                  Select the primary reported problem. A technician can update
+                  this after diagnosis.
+                </p>
+              </div>
+            </div>
+
+            <div className="repair-form-grid">
+              <div className="repair-form-group">
+                <label htmlFor="repair-problemCategory">Problem Category</label>
+
+                <select {...fieldProps("problemCategory")} required>
+                  <option value="">Select problem category</option>
+
+                  {problemCategoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                {fieldError("problemCategory")}
               </div>
             </div>
           </section>

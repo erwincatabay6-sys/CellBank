@@ -15,6 +15,7 @@ import {
   getRepairTechnicians,
   updateRepairAssignment,
   updateRepairStatus,
+  updateRepairProblemCategory,
 } from "../../../api/repairApi.js";
 
 import { getCustomer } from "../../../api/customerApi.js";
@@ -114,6 +115,13 @@ function RepairWorkspace({ repairId, user }) {
   const [paymentMessage, setPaymentMessage] = useState("");
 
   const paymentSubmittingRef = useRef(false);
+
+  const [categorySaving, setCategorySaving] = useState(false);
+  const [categoryError, setCategoryError] = useState("");
+  const [categoryBlocked, setCategoryBlocked] = useState(false);
+  const [categoryMessage, setCategoryMessage] = useState("");
+
+  const categorySubmittingRef = useRef(false);
 
   useEffect(() => {
     if (!canView) return;
@@ -244,14 +252,16 @@ function RepairWorkspace({ repairId, user }) {
     statusSaving ||
     findingSaving ||
     costsSaving ||
-    paymentSaving;
+    paymentSaving ||
+    categorySaving;
 
   const anyBlocked =
     assignmentBlocked ||
     statusBlocked ||
     findingBlocked ||
     costsBlocked ||
-    paymentBlocked;
+    paymentBlocked ||
+    categoryBlocked;
 
   const controlsDisabled =
     loading || Boolean(loadError) || anySaving || anyBlocked;
@@ -262,7 +272,8 @@ function RepairWorkspace({ repairId, user }) {
       statusSubmittingRef.current ||
       findingSubmittingRef.current ||
       costsSubmittingRef.current ||
-      paymentSubmittingRef.current
+      paymentSubmittingRef.current ||
+      categorySubmittingRef.current
     );
   }
 
@@ -861,6 +872,85 @@ function RepairWorkspace({ repairId, user }) {
     }
   }
 
+  async function handleProblemCategorySubmit(data) {
+    if (!canFindings || cannotChangeRepair()) {
+      return false;
+    }
+
+    categorySubmittingRef.current = true;
+    setCategorySaving(true);
+    setCategoryError("");
+    setCategoryMessage("");
+
+    try {
+      const saved = await updateRepairProblemCategory(record.repair.id, {
+        problemCategory: data.problemCategory,
+        expectedUpdatedAt: record.repair.updatedAt,
+      });
+
+      if (
+        saved?.id !== record.repair.id ||
+        !saved.updatedAt ||
+        saved.problemCategory !== data.problemCategory
+      ) {
+        setCategoryBlocked(true);
+        setCategoryError(
+          "The category update could not be confirmed. Reload the page and check the category before trying again.",
+        );
+        return false;
+      }
+
+      setRecord((current) =>
+        current ? { ...current, repair: saved } : current,
+      );
+
+      setTechnicianAssignmentOpen(false);
+      setAssignmentMessage("");
+      setCategoryMessage("Problem category updated successfully.");
+
+      return true;
+    } catch (error) {
+      if (error.outcomeUncertain || !error.status || error.status >= 500) {
+        setCategoryBlocked(true);
+        setCategoryError(
+          "The category may have been saved. Reload the page and check it before trying again.",
+        );
+      } else if ([401, 403, 404, 409].includes(error.status)) {
+        setCategoryBlocked(true);
+
+        if (error.status === 401) {
+          setCategoryError(
+            "Your session has expired. Sign in again and reload this repair before updating its category.",
+          );
+        } else if (error.status === 403) {
+          setCategoryError(
+            "The category update was denied. Reload the page and check that your account has permission to update categories.",
+          );
+        } else if (error.status === 404) {
+          setCategoryError(
+            "The repair could not be found. Reload the page before continuing.",
+          );
+        } else {
+          setCategoryError(
+            "This repair changed or is already closed. Reload the page before updating its problem category.",
+          );
+        }
+      } else {
+        setCategoryError(
+          error.errors?.problemCategory ||
+            error.errors?.expectedUpdatedAt ||
+            error.message ||
+            "Unable to update the problem category.",
+        );
+      }
+
+      return false;
+    } finally {
+      categorySubmittingRef.current = false;
+      setCategorySaving(false);
+    }
+  }
+
   if (!canView) {
     return (
       <section className="page-content">
@@ -1112,6 +1202,13 @@ function RepairWorkspace({ repairId, user }) {
               estimatedCost={repair.estimatedCost}
               agreedPrice={repair.agreedPrice}
               staffName={staffName}
+              currentRoles={user?.roles ?? []}
+              onUpdateProblemCategory={handleProblemCategorySubmit}
+              categorySaving={categorySaving}
+              disabled={controlsDisabled}
+              categoryBlocked={categoryBlocked}
+              categoryError={categoryError}
+              categoryMessage={categoryMessage}
             />
           </div>
 

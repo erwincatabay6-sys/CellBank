@@ -155,3 +155,16 @@ export function createRepairPayment(repairId, data) {
     },
   );
 }
+
+export function updateRepairProblemCategory(repairId, data) {
+  return apiRequest(
+    `/api/repairs/${encodeURIComponent(repairId)}/problem-category`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+}
