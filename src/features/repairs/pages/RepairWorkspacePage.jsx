@@ -19,7 +19,11 @@ import {
 } from "../../../api/repairApi.js";
 
 import { getCustomer } from "../../../api/customerApi.js";
-import { hasAccess } from "../../../config/accessControl.js";
+import {
+  hasAccess,
+  canChangeRepairStatus,
+  canTransitionRepairStatus,
+} from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
@@ -28,6 +32,7 @@ import RepairFindings from "../components/RepairFindings.jsx";
 import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
 import RepairPayments from "../components/RepairPayments.jsx";
 import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
+import RepairAiTroubleshooting from "../components/RepairAiTroubleshooting.jsx";
 
 import "../../customers/customers.css";
 import "../repairs.css";
@@ -48,10 +53,6 @@ const workspaceTabs = [
     permission: "aiTroubleshooting",
   },
 ];
-
-const pendingMessages = {
-  ai: "AI troubleshooting assistance is not available yet.",
-};
 
 function RepairWorkspacePage() {
   const { repairId } = useParams();
@@ -92,6 +93,7 @@ function RepairWorkspace({ repairId, user }) {
   const [statusError, setStatusError] = useState("");
   const [statusBlocked, setStatusBlocked] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [aiStatusDraft, setAiStatusDraft] = useState("");
 
   const statusSubmittingRef = useRef(false);
 
@@ -99,6 +101,7 @@ function RepairWorkspace({ repairId, user }) {
   const [findingError, setFindingError] = useState("");
   const [findingBlocked, setFindingBlocked] = useState(false);
   const [findingMessage, setFindingMessage] = useState("");
+  const [aiFindingDraft, setAiFindingDraft] = useState("");
 
   const findingSubmittingRef = useRef(false);
 
@@ -106,6 +109,7 @@ function RepairWorkspace({ repairId, user }) {
   const [costsError, setCostsError] = useState("");
   const [costsBlocked, setCostsBlocked] = useState(false);
   const [costsMessage, setCostsMessage] = useState("");
+  const [aiPartDraft, setAiPartDraft] = useState("");
 
   const costsSubmittingRef = useRef(false);
 
@@ -265,6 +269,21 @@ function RepairWorkspace({ repairId, user }) {
 
   const controlsDisabled =
     loading || Boolean(loadError) || anySaving || anyBlocked;
+
+  const aiAllowedStatuses = [
+    "RECEIVED",
+    "AWAITING_APPROVAL",
+    "IN_PROGRESS",
+    "AWAITING_PARTS",
+    "READY_FOR_RELEASE",
+    "COMPLETED",
+    "CANCELLED",
+  ].filter(
+    (status) =>
+      Boolean(record?.repair?.status) &&
+      canTransitionRepairStatus(record.repair.status, status) &&
+      canChangeRepairStatus(user?.roles ?? [], status),
+  );
 
   function isSubmitting() {
     return (
@@ -1225,6 +1244,8 @@ function RepairWorkspace({ repairId, user }) {
                 blocked={findingBlocked}
                 error={findingError}
                 message={findingMessage}
+                aiDraft={aiFindingDraft}
+                onDraftUsed={() => setAiFindingDraft("")}
               />
             </div>
           )}
@@ -1242,6 +1263,8 @@ function RepairWorkspace({ repairId, user }) {
               blocked={statusBlocked}
               error={statusError}
               message={statusMessage}
+              suggestedStatus={aiStatusDraft}
+              onSuggestionHandled={() => setAiStatusDraft("")}
             />
           </div>
 
@@ -1261,6 +1284,8 @@ function RepairWorkspace({ repairId, user }) {
               blocked={costsBlocked}
               error={costsError}
               message={costsMessage}
+              suggestedPart={aiPartDraft}
+              onSuggestionHandled={() => setAiPartDraft("")}
             />
           </div>
 
@@ -1280,15 +1305,60 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
-          {pendingMessages[activeTab] && (
-            <section className="page-content">
-              <h3>{visibleTabs.find((tab) => tab.id === activeTab)?.label}</h3>
+          {hasAccess(user?.roles, "aiTroubleshooting") && (
+            <div hidden={activeTab !== "ai"}>
+              <RepairAiTroubleshooting
+                repair={repair}
+                controlsDisabled={controlsDisabled}
+                allowedStatuses={aiAllowedStatuses}
+                onUseAsFinding={(text) => {
+                  if (
+                    !canFindings ||
+                    controlsDisabled ||
+                    cannotChangeRepair() ||
+                    typeof text !== "string" ||
+                    !text.trim()
+                  ) {
+                    return;
+                  }
 
-              <div className="workspace-empty-state">
-                <strong>Not available yet</strong>
-                <p>{pendingMessages[activeTab]}</p>
-              </div>
-            </section>
+                  setFindingError("");
+                  setFindingMessage("");
+                  setAiFindingDraft(text.trim());
+                  setActiveTab("findings");
+                }}
+                onSuggestPart={(partName) => {
+                  if (
+                    !hasAccess(user?.roles, "editPartsCosts") ||
+                    controlsDisabled ||
+                    cannotChangeRepair() ||
+                    typeof partName !== "string" ||
+                    !partName.trim()
+                  ) {
+                    return;
+                  }
+
+                  setCostsError("");
+                  setCostsMessage("");
+                  setAiPartDraft(partName.trim());
+                  setActiveTab("parts-costs");
+                }}
+                onSuggestStatus={(status) => {
+                  if (
+                    controlsDisabled ||
+                    cannotChangeRepair() ||
+                    !aiAllowedStatuses.includes(status)
+                  ) {
+                    return;
+                  }
+
+                  setStatusError("");
+                  setStatusMessage("");
+                  setAiStatusDraft(status);
+                  setActiveTab("status-history");
+                }}
+              />
+            </div>
           )}
         </>
       )}

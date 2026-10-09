@@ -11,432 +11,316 @@ import {
   PackageSearch,
 } from "lucide-react";
 
+import {
+  getRepairAiMessages,
+  getRepairAiContext,
+  sendRepairAiMessage,
+} from "../../../api/repairAiApi.js";
+
+import { RequestError } from "../../../api/http.js";
+import { getProblemCategoryLabel } from "../problemCategories.js";
+
 const MAX_ATTACHMENTS = 3;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-function getInitialMessages() {
-  return [
-    {
-      id: 1,
-      sender: "ai",
-      text:
-        "I can help troubleshoot this repair using the " +
-        "device information, reported problem, findings, " +
-        "relevant repair history, and optional images.",
-      canUseAsFinding: false,
-      suggestedDiagnosis: null,
-      suggestedStatus: null,
-      recommendedParts: [],
-      attachments: [],
-    },
-  ];
-}
+const INTRODUCTION =
+  "I can help troubleshoot this repair using the device information, " +
+  "reported problem, findings, relevant repair history, and optional images.";
 
-function getSuggestedStatusLabel(status) {
-  if (!status) {
-    return "";
-  }
-
-  return status
+function getStatusLabel(status) {
+  return (status || "")
     .replaceAll("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function getMockRecommendation(repair) {
-  const searchableText =
-    `${repair.reportedProblem ?? ""} ` +
-    `${repair.serviceType ?? ""} ` +
-    `${repair.device ?? ""}`;
+function getErrorMessage(error) {
+  const fieldErrors = Object.values(error?.errors || {}).filter(
+    (value) => typeof value === "string",
+  );
 
-  const normalized = searchableText.toLowerCase();
-
-  if (normalized.includes("charg") || normalized.includes("usb")) {
-    return {
-      diagnosis: "Possible charging-port, connector, or charging-path fault.",
-      parts: ["Charging Port Assembly"],
-    };
-  }
-
-  if (normalized.includes("battery") || normalized.includes("power")) {
-    return {
-      diagnosis: "Possible battery, power-delivery, or power-management fault.",
-      parts: ["Replacement Battery"],
-    };
-  }
-
-  if (
-    normalized.includes("screen") ||
-    normalized.includes("display") ||
-    normalized.includes("lcd")
-  ) {
-    return {
-      diagnosis: "Possible display assembly, connector, or display-path fault.",
-      parts: ["Display Assembly"],
-    };
-  }
-
-  if (normalized.includes("keyboard") || normalized.includes("key")) {
-    return {
-      diagnosis: "Possible keyboard assembly or connector fault.",
-      parts: ["Keyboard Assembly"],
-    };
-  }
-
-  if (
-    normalized.includes("overheat") ||
-    normalized.includes("cooling") ||
-    normalized.includes("fan")
-  ) {
-    return {
-      diagnosis: "Possible cooling-system, fan, or thermal-transfer issue.",
-      parts: ["Cooling Fan Assembly"],
-    };
-  }
-
-  return {
-    diagnosis:
-      "Possible hardware or subsystem fault requiring targeted confirmation.",
-    parts: [],
-  };
+  return (
+    fieldErrors[0] || error?.message || "The AI request could not be completed."
+  );
 }
 
-function getMockAiResponse(repair, hasImageAttachments) {
-  const device = repair.device;
-
-  const problem = repair.reportedProblem;
-
-  const recommendation = getMockRecommendation(repair);
-
-  const visualContextText = hasImageAttachments
-    ? " I also considered the attached image context; confirm any visual observation with physical testing before acting on it."
-    : "";
-
-  if (repair.status === "AWAITING_PARTS") {
-    return {
-      text:
-        `${device} is currently waiting for parts. ` +
-        `Before resuming the repair, confirm that the required ` +
-        `replacement component matches the reported problem: ` +
-        `"${problem}". After installation, repeat functional ` +
-        `testing before moving toward release.` +
-        visualContextText,
-      suggestedDiagnosis: recommendation.diagnosis,
-      suggestedStatus: "IN_PROGRESS",
-      recommendedParts: recommendation.parts,
-    };
-  }
-
-  if (repair.status === "IN_PROGRESS") {
-    return {
-      text:
-        `For ${device}, continue diagnosis around the reported ` +
-        `problem: "${problem}". Verify the suspected component ` +
-        `or subsystem with targeted testing. If a required ` +
-        `replacement component is unavailable, document the ` +
-        `finding and place the repair in Awaiting Parts.` +
-        visualContextText,
-      suggestedDiagnosis: recommendation.diagnosis,
-      suggestedStatus: "AWAITING_PARTS",
-      recommendedParts: recommendation.parts,
-    };
-  }
-
-  if (repair.status === "RECEIVED") {
-    return {
-      text:
-        `Begin with a structured inspection of ${device} based on ` +
-        `the reported problem: "${problem}". Record objective ` +
-        `findings first, then prepare an estimate or customer ` +
-        `approval request when the likely repair is identified.` +
-        visualContextText,
-      suggestedDiagnosis: recommendation.diagnosis,
-      suggestedStatus: "AWAITING_APPROVAL",
-      recommendedParts: recommendation.parts,
-    };
-  }
-
-  if (repair.status === "READY_FOR_RELEASE") {
-    return {
-      text:
-        `${device} is marked Ready for Release. Perform a final ` +
-        `functional check against the original reported problem: ` +
-        `"${problem}" and confirm that the device is ready for ` +
-        `customer handoff.` +
-        visualContextText,
-      suggestedDiagnosis: null,
-      suggestedStatus: null,
-      recommendedParts: [],
-    };
-  }
-
-  return {
-    text:
-      `Review ${device} against the reported problem: "${problem}". ` +
-      `Use the repair history and saved findings as supporting ` +
-      `context, and confirm any official action through the normal ` +
-      `Cellbank repair workflow.` +
-      visualContextText,
-    suggestedDiagnosis: recommendation.diagnosis,
-    suggestedStatus: null,
-    recommendedParts: recommendation.parts,
-  };
+// Reset this tab's local state when navigating to another repair.
+function RepairAiTroubleshooting(props) {
+  return <RepairAiConversation key={props.repair.id} {...props} />;
 }
 
-function RepairAiTroubleshooting({
+function RepairAiConversation({
   repair,
+  controlsDisabled = false,
+  allowedStatuses = [],
   onUseAsFinding,
   onSuggestStatus,
   onSuggestPart,
 }) {
-  const responseTimeoutRef = useRef(null);
-
   const fileInputRef = useRef(null);
-
   const objectUrlsRef = useRef(new Set());
+  const mountedRef = useRef(false);
+  const sendingRef = useRef(false);
+  const sendControllerRef = useRef(null);
+  const loadControllerRef = useRef(null);
 
-  // -----------------------------
-  // CONVERSATION STATE
-  // -----------------------------
-
-  const [messages, setMessages] = useState(getInitialMessages);
-
+  const [messages, setMessages] = useState([]);
+  const [context, setContext] = useState(null);
   const [messageText, setMessageText] = useState("");
-
-  const [isResponding, setIsResponding] = useState(false);
-
   const [attachments, setAttachments] = useState([]);
 
+  const [loading, setLoading] = useState(true);
+  const [isResponding, setIsResponding] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [sendError, setSendError] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
+  const [reloadRequired, setReloadRequired] = useState(false);
+  const [reloadCount, setReloadCount] = useState(0);
 
-  // -----------------------------
-  // REPAIR CHANGE SYNC
-  // -----------------------------
+  const isClosed = ["COMPLETED", "CANCELLED"].includes(repair.status);
+
+  const interactionDisabled =
+    controlsDisabled ||
+    loading ||
+    Boolean(loadError) ||
+    isResponding ||
+    reloadRequired ||
+    isClosed;
 
   useEffect(() => {
-    if (responseTimeoutRef.current) {
-      clearTimeout(responseTimeoutRef.current);
-
-      responseTimeoutRef.current = null;
-    }
-
-    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-
-    objectUrlsRef.current.clear();
-
-    setMessages(getInitialMessages());
-
-    setMessageText("");
-    setAttachments([]);
-    setAttachmentError("");
-    setIsResponding(false);
+    mountedRef.current = true;
 
     return () => {
-      if (responseTimeoutRef.current) {
-        clearTimeout(responseTimeoutRef.current);
-      }
+      mountedRef.current = false;
+      sendControllerRef.current?.abort();
+      loadControllerRef.current?.abort();
 
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-
       objectUrlsRef.current.clear();
     };
-  }, [repair.id]);
+  }, []);
 
-  // -----------------------------
-  // REPAIR HISTORY CONTEXT
-  // -----------------------------
+  useEffect(() => {
+    // Refresh after the active send finishes instead.
+    if (sendingRef.current) {
+      return;
+    }
 
-  const previousRepairs = repair.previousRepairs ?? [];
+    const controller = new AbortController();
+    loadControllerRef.current = controller;
 
-  const problemCounts = previousRepairs.reduce((counts, previousRepair) => {
-    const category = previousRepair.problemCategory;
+    setLoading(true);
+    setLoadError("");
 
-    counts[category] = (counts[category] || 0) + 1;
+    async function loadConversation() {
+      try {
+        const [savedMessages, savedContext] = await Promise.all([
+          getRepairAiMessages(repair.id, {
+            signal: controller.signal,
+          }),
+          getRepairAiContext(repair.id, {
+            signal: controller.signal,
+          }),
+        ]);
 
-    return counts;
-  }, {});
+        if (!Array.isArray(savedMessages) || !savedContext?.device) {
+          throw new Error("The server returned invalid AI conversation data.");
+        }
 
-  const repeatedProblems = Object.entries(problemCounts).filter(
-    ([, count]) => count > 1,
-  );
+        if (!mountedRef.current || controller.signal.aborted) {
+          return;
+        }
 
-  // -----------------------------
-  // IMAGE ATTACHMENTS
-  // -----------------------------
+        setMessages(savedMessages);
+        setContext(savedContext);
+      } catch (error) {
+        if (mountedRef.current && !controller.signal.aborted) {
+          setLoadError(getErrorMessage(error));
+        }
+      } finally {
+        if (mountedRef.current && !controller.signal.aborted) {
+          setLoading(false);
+        }
+
+        if (loadControllerRef.current === controller) {
+          loadControllerRef.current = null;
+        }
+      }
+    }
+
+    loadConversation();
+
+    return () => controller.abort();
+  }, [repair.id, repair.updatedAt, reloadCount]);
+
+  function clearAttachments() {
+    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrlsRef.current.clear();
+    setAttachments([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   function handleImageChange(event) {
-    const files = Array.from(event.target.files ?? []);
-
+    const files = Array.from(event.target.files || []);
     event.target.value = "";
 
-    if (files.length === 0) {
+    if (interactionDisabled || files.length === 0) {
       return;
     }
 
     const availableSlots = MAX_ATTACHMENTS - attachments.length;
-
-    if (availableSlots <= 0) {
-      setAttachmentError(
-        `You can attach up to ${MAX_ATTACHMENTS} images per message.`,
-      );
-
-      return;
-    }
-
-    const validFiles = [];
-    let invalidFileFound = false;
-
-    files.forEach((file) => {
-      const validType = ALLOWED_IMAGE_TYPES.includes(file.type);
-
-      const validSize = file.size <= MAX_IMAGE_SIZE_BYTES;
-
-      if (validType && validSize) {
-        validFiles.push(file);
-      } else {
-        invalidFileFound = true;
-      }
-    });
+    const validFiles = files.filter(
+      (file) =>
+        ALLOWED_IMAGE_TYPES.includes(file.type) &&
+        file.size > 0 &&
+        file.size <= MAX_IMAGE_SIZE_BYTES,
+    );
 
     const selectedFiles = validFiles.slice(0, availableSlots);
 
     const newAttachments = selectedFiles.map((file) => {
       const previewUrl = URL.createObjectURL(file);
-
       objectUrlsRef.current.add(previewUrl);
 
       return {
-        id: `${file.name}-${file.lastModified}-${previewUrl}`,
+        id: previewUrl,
         file,
         previewUrl,
       };
     });
 
-    if (newAttachments.length > 0) {
-      setAttachments((current) => [...current, ...newAttachments]);
-    }
+    setAttachments((current) => [...current, ...newAttachments]);
 
-    if (invalidFileFound || validFiles.length > selectedFiles.length) {
-      setAttachmentError(
-        "Only JPEG, PNG, or WebP images up to 10 MB are allowed, with a maximum of 3 images per message.",
-      );
-    } else {
-      setAttachmentError("");
-    }
+    setAttachmentError(
+      validFiles.length !== files.length ||
+        selectedFiles.length !== validFiles.length
+        ? "Only non-empty JPEG, PNG, or WebP images up to 10 MB are allowed, with a maximum of 3 images per message."
+        : "",
+    );
   }
 
   function handleRemoveAttachment(id) {
-    setAttachments((current) => {
-      const attachment = current.find((item) => item.id === id);
-
-      if (attachment) {
-        URL.revokeObjectURL(attachment.previewUrl);
-
-        objectUrlsRef.current.delete(attachment.previewUrl);
-      }
-
-      return current.filter((item) => item.id !== id);
-    });
-
-    setAttachmentError("");
-  }
-
-  // -----------------------------
-  // MESSAGE SUBMISSION
-  // -----------------------------
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const trimmedMessage = messageText.trim();
-
-    if ((!trimmedMessage && attachments.length === 0) || isResponding) {
+    if (interactionDisabled) {
       return;
     }
 
-    const sentAttachments = attachments.map((attachment) => ({
-      id: attachment.id,
-      name: attachment.file.name,
-      previewUrl: attachment.previewUrl,
-    }));
+    const attachment = attachments.find((item) => item.id === id);
 
-    const technicianMessage = {
-      id: Date.now(),
-      sender: "user",
-      text:
-        trimmedMessage ||
-        "Please review the attached image(s) for troubleshooting context.",
-      attachments: sentAttachments,
-      canUseAsFinding: false,
-      suggestedDiagnosis: null,
-      suggestedStatus: null,
-      recommendedParts: [],
-    };
+    if (attachment) {
+      URL.revokeObjectURL(attachment.previewUrl);
+      objectUrlsRef.current.delete(attachment.previewUrl);
+    }
 
-    setMessages((currentMessages) => [...currentMessages, technicianMessage]);
-
-    const hasImageAttachments = sentAttachments.length > 0;
-
-    setMessageText("");
-    setAttachments([]);
+    setAttachments((current) => current.filter((item) => item.id !== id));
     setAttachmentError("");
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (interactionDisabled || sendingRef.current) {
+      return;
+    }
+
+    const trimmedMessage = messageText.trim();
+
+    if (!trimmedMessage && attachments.length === 0) {
+      return;
+    }
+
+    if (trimmedMessage.length > 5000) {
+      setSendError("Message must not exceed 5000 characters.");
+      return;
+    }
+
+    if (!repair.updatedAt || context?.repairUpdatedAt !== repair.updatedAt) {
+      setSendError(
+        "The repair information changed. Reload the page before sending.",
+      );
+      setReloadRequired(true);
+      return;
+    }
+
+    sendingRef.current = true;
     setIsResponding(true);
+    setSendError("");
+    setAttachmentError("");
 
-    // Temporary frontend AI simulation.
-    // Later:
-    // React -> Spring Boot -> AI service.
-    // Images will be validated by Spring Boot
-    // before being forwarded to the AI provider.
-    responseTimeoutRef.current = setTimeout(() => {
-      const mockResponse = getMockAiResponse(repair, hasImageAttachments);
+    loadControllerRef.current?.abort();
 
-      const aiMessage = {
-        id: Date.now() + 1,
-        sender: "ai",
-        text: mockResponse.text,
-        attachments: [],
-        canUseAsFinding: true,
-        suggestedDiagnosis: mockResponse.suggestedDiagnosis,
-        suggestedStatus: mockResponse.suggestedStatus,
-        recommendedParts: mockResponse.recommendedParts ?? [],
-      };
+    const controller = new AbortController();
+    sendControllerRef.current = controller;
 
-      setMessages((currentMessages) => [...currentMessages, aiMessage]);
+    try {
+      const savedMessages = await sendRepairAiMessage(
+        repair.id,
+        {
+          messageText: trimmedMessage,
+          expectedUpdatedAt: repair.updatedAt,
+          attachments: attachments.map((attachment) => attachment.file),
+        },
+        { signal: controller.signal },
+      );
 
-      setIsResponding(false);
-      responseTimeoutRef.current = null;
-    }, 700);
-  }
+      if (!Array.isArray(savedMessages)) {
+        throw new RequestError(
+          "INVALID_RESPONSE",
+          "The server returned an unexpected response. Reload the page to check whether the exchange was saved before sending again.",
+          true,
+        );
+      }
 
-  // -----------------------------
-  // AI ACTION HANDLERS
-  // -----------------------------
+      if (!mountedRef.current || controller.signal.aborted) {
+        return;
+      }
 
-  function handleUseAsFinding(message) {
-    if (onUseAsFinding) {
-      onUseAsFinding(message.suggestedDiagnosis || message.text);
+      setMessages(savedMessages);
+      setMessageText("");
+      clearAttachments();
+    } catch (error) {
+      if (!mountedRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      const mustReload =
+        error?.outcomeUncertain ||
+        [401, 403, 409, 500, 502, 504].includes(error?.status);
+
+      setReloadRequired(Boolean(mustReload));
+      setSendError(
+        getErrorMessage(error) +
+          (mustReload ? " Reload the page before sending again." : ""),
+      );
+    } finally {
+      sendingRef.current = false;
+
+      if (sendControllerRef.current === controller) {
+        sendControllerRef.current = null;
+      }
+
+      if (mountedRef.current) {
+        setIsResponding(false);
+        setReloadCount((current) => current + 1);
+      }
     }
   }
 
-  function handleSuggestStatus(status) {
-    if (onSuggestStatus) {
-      onSuggestStatus(status);
-    }
-  }
+  const previousRepairs = context?.previousRepairs || [];
+  const repeatedProblems = context?.repeatedProblems || [];
 
-  function handleSuggestPart(partName) {
-    if (onSuggestPart) {
-      onSuggestPart(partName);
-    }
-  }
+  const deviceLabel =
+    repair.device ||
+    [context?.device?.brand, context?.device?.model]
+      .filter(Boolean)
+      .join(" ") ||
+    "—";
 
   return (
     <section className="page-content repair-ai">
-      {/* =========================
-                HEADER
-            ========================== */}
       <div className="workspace-section-header">
         <div>
           <h3>AI Troubleshooting</h3>
@@ -447,9 +331,6 @@ function RepairAiTroubleshooting({
         </div>
       </div>
 
-      {/* =========================
-                ADVISORY NOTICE
-            ========================== */}
       <div className="ai-advisory-note">
         <Bot size={18} />
 
@@ -459,183 +340,83 @@ function RepairAiTroubleshooting({
         </p>
       </div>
 
-      {/* =========================
-                REPAIR CONTEXT
-            ========================== */}
       <div className="ai-repair-context">
         <div>
           <span>Device</span>
-
-          <strong>{repair.device}</strong>
+          <strong>{deviceLabel}</strong>
         </div>
 
         <div>
           <span>Reported Problem</span>
-
           <strong>{repair.reportedProblem}</strong>
         </div>
 
         <div>
           <span>Service Type</span>
-
           <strong>{repair.serviceType}</strong>
         </div>
       </div>
 
-      {/* =========================
-                PREVIOUS REPAIR CONTEXT
-            ========================== */}
-      {previousRepairs.length > 0 ? (
-        <div className="ai-history-context">
-          <h4>Previous Repair Context</h4>
-
-          <p>
-            Previous Repairs: <strong>{previousRepairs.length}</strong>
-          </p>
-
-          {repeatedProblems.length > 0 ? (
-            <div className="repeated-problem-alert">
-              <strong>Repeated Problem Detected</strong>
-
-              {repeatedProblems.map(([problemCategory, count]) => (
-                <p key={problemCategory}>
-                  {problemCategory} issue appeared {count} times in previous
-                  repairs.
-                </p>
-              ))}
-            </div>
-          ) : (
-            <p>No repeated problem pattern detected.</p>
-          )}
-        </div>
-      ) : (
-        <div className="workspace-empty-state ai-history-empty">
-          <strong>No previous repair history</strong>
-
-          <p>
-            This device has no previous repair records available for
-            troubleshooting context.
-          </p>
+      {loading && (
+        <div className="workspace-empty-state" role="status">
+          <p>Loading AI conversation and repair context...</p>
         </div>
       )}
 
-      {/* =========================
-                CONVERSATION
-            ========================== */}
-      <div className="ai-conversation">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`ai-message ${
-              message.sender === "user"
-                ? "technician-message"
-                : "assistant-message"
-            }`}
+      {loadError && (
+        <div className="customer-form-error" role="alert">
+          <p>{loadError}</p>
+
+          <button
+            type="button"
+            className="ai-status-button"
+            disabled={loading || isResponding}
+            onClick={() => setReloadCount((current) => current + 1)}
           >
-            <div className="ai-message-icon">
-              {message.sender === "user" ? (
-                <User size={18} />
-              ) : (
-                <Bot size={18} />
-              )}
-            </div>
+            Try Again
+          </button>
+        </div>
+      )}
 
-            <div className="ai-message-content">
-              <span>
-                {message.sender === "user" ? "Technician" : "AI Assistant"}
-              </span>
+      {!loading &&
+        !loadError &&
+        context &&
+        (previousRepairs.length > 0 ? (
+          <div className="ai-history-context">
+            <h4>Previous Repair Context</h4>
 
-              <p>{message.text}</p>
+            <p>
+              Previous Repairs: <strong>{previousRepairs.length}</strong>
+            </p>
 
-              {message.attachments?.length > 0 && (
-                <div className="ai-message-attachments">
-                  {message.attachments.map((attachment) => (
-                    <img
-                      key={attachment.id}
-                      src={attachment.previewUrl}
-                      alt={attachment.name}
-                    />
-                  ))}
-                </div>
-              )}
+            {repeatedProblems.length > 0 ? (
+              <div className="repeated-problem-alert">
+                <strong>Repeated Problem Detected</strong>
 
-              {message.suggestedDiagnosis && (
-                <div className="ai-recommendation-block">
-                  <span>Possible Diagnosis</span>
+                {repeatedProblems.map((problem) => (
+                  <p key={problem.problemCategory}>
+                    {getProblemCategoryLabel(problem.problemCategory)} issue
+                    recorded in {problem.repairCount} repair visits.
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p>No repeated problem pattern detected.</p>
+            )}
+          </div>
+        ) : (
+          <div className="workspace-empty-state ai-history-empty">
+            <strong>No previous repair history</strong>
 
-                  <strong>{message.suggestedDiagnosis}</strong>
-                </div>
-              )}
-
-              {message.recommendedParts?.length > 0 && (
-                <div className="ai-recommendation-block">
-                  <span>Recommended Part</span>
-
-                  {message.recommendedParts.map((part) => (
-                    <strong key={part}>{part}</strong>
-                  ))}
-                </div>
-              )}
-
-              {message.suggestedStatus && (
-                <div className="ai-recommendation-block">
-                  <span>Suggested Status</span>
-
-                  <strong>
-                    {getSuggestedStatusLabel(message.suggestedStatus)}
-                  </strong>
-                </div>
-              )}
-
-              {(message.canUseAsFinding ||
-                message.suggestedStatus ||
-                message.recommendedParts?.length > 0) && (
-                <div className="ai-message-actions">
-                  {message.canUseAsFinding && (
-                    <button
-                      className="ai-finding-button"
-                      type="button"
-                      onClick={() => handleUseAsFinding(message)}
-                    >
-                      <ClipboardPlus size={16} />
-
-                      <span>Use as Finding</span>
-                    </button>
-                  )}
-
-                  {message.suggestedStatus && (
-                    <button
-                      className="ai-status-button"
-                      type="button"
-                      onClick={() =>
-                        handleSuggestStatus(message.suggestedStatus)
-                      }
-                    >
-                      <ArrowRightCircle size={16} />
-
-                      <span>Review Suggested Status</span>
-                    </button>
-                  )}
-
-                  {message.recommendedParts?.map((part) => (
-                    <button
-                      key={part}
-                      className="ai-part-button"
-                      type="button"
-                      onClick={() => handleSuggestPart(part)}
-                    >
-                      <PackageSearch size={16} />
-
-                      <span>Add Recommended Part</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <p>
+              This device has no previous repair records available for
+              troubleshooting context.
+            </p>
           </div>
         ))}
 
-        {isResponding && (
+      <div className="ai-conversation" aria-busy={loading || isResponding}>
+        {!loading && !loadError && messages.length === 0 && (
           <div className="ai-message assistant-message">
             <div className="ai-message-icon">
               <Bot size={18} />
@@ -643,16 +424,186 @@ function RepairAiTroubleshooting({
 
             <div className="ai-message-content">
               <span>AI Assistant</span>
+              <p>{INTRODUCTION}</p>
+            </div>
+          </div>
+        )}
 
+        {messages.map((message) => {
+          const isStaff = message.senderType === "STAFF";
+          const isAi = message.senderType === "AI";
+
+          const canUseAsFinding =
+            isAi && Boolean(message.suggestedDiagnosis?.trim());
+
+          const parts = Array.isArray(message.recommendedParts)
+            ? [...new Set(message.recommendedParts)]
+            : [];
+
+          const canReviewStatus = allowedStatuses.includes(
+            message.suggestedStatus,
+          );
+
+          return (
+            <div
+              key={message.id}
+              className={`ai-message ${
+                isStaff ? "technician-message" : "assistant-message"
+              }`}
+            >
+              <div className="ai-message-icon">
+                {isStaff ? <User size={18} /> : <Bot size={18} />}
+              </div>
+
+              <div className="ai-message-content">
+                <span>
+                  {isStaff ? message.senderName || "Staff" : "AI Assistant"}
+                </span>
+
+                {message.messageText && (
+                  <p style={{ whiteSpace: "pre-wrap" }}>
+                    {message.messageText}
+                  </p>
+                )}
+
+                {message.attachments?.length > 0 && (
+                  <div className="ai-message-attachments">
+                    {message.attachments.map((attachment) => (
+                      <img
+                        key={attachment.id}
+                        src={attachment.imageUrl}
+                        alt={attachment.originalFilename || "Repair attachment"}
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {isAi && message.suggestedDiagnosis && (
+                  <div className="ai-recommendation-block">
+                    <span>Possible Diagnosis</span>
+                    <strong>{message.suggestedDiagnosis}</strong>
+                  </div>
+                )}
+
+                {isAi && parts.length > 0 && (
+                  <div className="ai-recommendation-block">
+                    <span>Recommended Part</span>
+
+                    {parts.map((part) => (
+                      <strong key={part}>{part}</strong>
+                    ))}
+                  </div>
+                )}
+
+                {isAi && message.suggestedStatus && (
+                  <div className="ai-recommendation-block">
+                    <span>Suggested Status</span>
+                    <strong>{getStatusLabel(message.suggestedStatus)}</strong>
+                  </div>
+                )}
+
+                {isAi &&
+                  (canUseAsFinding ||
+                    message.suggestedStatus ||
+                    parts.length > 0) && (
+                    <div className="ai-message-actions">
+                      {canUseAsFinding && (
+                        <button
+                          className="ai-finding-button"
+                          type="button"
+                          disabled={
+                            interactionDisabled ||
+                            typeof onUseAsFinding !== "function"
+                          }
+                          onClick={() =>
+                            onUseAsFinding(message.suggestedDiagnosis)
+                          }
+                        >
+                          <ClipboardPlus size={16} />
+                          <span>Use as Finding</span>
+                        </button>
+                      )}
+
+                      {message.suggestedStatus && (
+                        <button
+                          className="ai-status-button"
+                          type="button"
+                          disabled={
+                            interactionDisabled ||
+                            !canReviewStatus ||
+                            typeof onSuggestStatus !== "function"
+                          }
+                          onClick={() =>
+                            onSuggestStatus(message.suggestedStatus)
+                          }
+                        >
+                          <ArrowRightCircle size={16} />
+                          <span>Review Suggested Status</span>
+                        </button>
+                      )}
+
+                      {parts.map((part) => (
+                        <button
+                          key={part}
+                          className="ai-part-button"
+                          type="button"
+                          disabled={
+                            interactionDisabled ||
+                            typeof onSuggestPart !== "function"
+                          }
+                          onClick={() => onSuggestPart(part)}
+                        >
+                          <PackageSearch size={16} />
+                          <span>Add Recommended Part</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            </div>
+          );
+        })}
+
+        {isResponding && (
+          <div className="ai-message assistant-message" role="status">
+            <div className="ai-message-icon">
+              <Bot size={18} />
+            </div>
+
+            <div className="ai-message-content">
+              <span>AI Assistant</span>
               <p>Thinking...</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* =========================
-                MESSAGE INPUT
-            ========================== */}
+      {sendError && (
+        <div className="customer-form-error" role="alert">
+          <p>{sendError}</p>
+
+          {reloadRequired && (
+            <button
+              type="button"
+              className="ai-status-button"
+              onClick={() => window.location.reload()}
+            >
+              Reload Page
+            </button>
+          )}
+        </div>
+      )}
+
+      {isClosed && (
+        <div className="workspace-empty-state">
+          <p>
+            This repair is closed. You can view its saved AI conversation, but
+            cannot send new messages or apply suggestions.
+          </p>
+        </div>
+      )}
+
       <form className="ai-message-form" onSubmit={handleSubmit}>
         {attachments.length > 0 && (
           <div className="ai-attachment-preview-list">
@@ -662,6 +613,7 @@ function RepairAiTroubleshooting({
 
                 <button
                   type="button"
+                  disabled={interactionDisabled}
                   aria-label={`Remove ${attachment.file.name}`}
                   onClick={() => handleRemoveAttachment(attachment.id)}
                 >
@@ -673,18 +625,21 @@ function RepairAiTroubleshooting({
         )}
 
         {attachmentError && (
-          <p className="ai-attachment-error">{attachmentError}</p>
+          <p className="ai-attachment-error" role="alert">
+            {attachmentError}
+          </p>
         )}
 
         <div className="ai-message-composer-row">
           <button
             className="ai-attachment-button"
             type="button"
-            disabled={isResponding || attachments.length >= MAX_ATTACHMENTS}
+            disabled={
+              interactionDisabled || attachments.length >= MAX_ATTACHMENTS
+            }
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus size={18} />
-
             <span>Attach Image</span>
           </button>
 
@@ -694,6 +649,7 @@ function RepairAiTroubleshooting({
             accept="image/jpeg,image/png,image/webp"
             multiple
             hidden
+            disabled={interactionDisabled}
             onChange={handleImageChange}
           />
 
@@ -701,23 +657,25 @@ function RepairAiTroubleshooting({
             value={messageText}
             onChange={(event) => setMessageText(event.target.value)}
             rows="3"
+            maxLength={5000}
+            aria-label="Message to AI troubleshooting assistant"
             placeholder={
               "Describe your observation, attach an image, " +
               "or ask a troubleshooting question..."
             }
-            disabled={isResponding}
+            disabled={interactionDisabled}
           />
 
           <button
             className="create-repair-button"
             type="submit"
             disabled={
-              isResponding || (!messageText.trim() && attachments.length === 0)
+              interactionDisabled ||
+              (!messageText.trim() && attachments.length === 0)
             }
           >
             <Send size={18} />
-
-            <span>Send</span>
+            <span>{isResponding ? "Sending..." : "Send"}</span>
           </button>
         </div>
       </form>

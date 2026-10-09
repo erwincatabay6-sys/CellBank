@@ -113,16 +113,43 @@ function RepairPartsCosts({
   }, [repairId]);
 
   useEffect(() => {
-    if (
-      !suggestedPart ||
-      !canEditPartsCosts ||
-      controlsDisabled ||
-      partFormOpen
-    ) {
+    if (!suggestedPart) return;
+
+    if (!canEditPartsCosts || controlsDisabled) {
+      setLocalError(
+        "An AI part suggestion cannot be applied while this form is unavailable.",
+      );
+      onSuggestionHandled?.();
       return;
     }
 
-    setPartName(suggestedPart);
+    const hasExistingDraft =
+      partFormOpen ||
+      estimateFormOpen ||
+      priceFormOpen ||
+      partName.trim().length > 0 ||
+      unitCost.trim().length > 0 ||
+      String(quantity).trim() !== "1";
+
+    if (hasExistingDraft) {
+      setLocalError(
+        "Your current Parts & Costs draft was kept. Save or cancel the open form before using an AI part suggestion.",
+      );
+      onSuggestionHandled?.();
+      return;
+    }
+
+    const suggestedName = suggestedPart.trim();
+
+    if (!suggestedName || suggestedName.length > 150) {
+      setLocalError(
+        "The suggested part name must contain 1 to 150 characters.",
+      );
+      onSuggestionHandled?.();
+      return;
+    }
+
+    setPartName(suggestedName);
     setQuantity("1");
     setUnitCost("");
     setPartFormOpen(true);
@@ -136,6 +163,11 @@ function RepairPartsCosts({
     canEditPartsCosts,
     controlsDisabled,
     partFormOpen,
+    estimateFormOpen,
+    priceFormOpen,
+    partName,
+    quantity,
+    unitCost,
     onSuggestionHandled,
   ]);
 

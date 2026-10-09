@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { UserPlus, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { createRepair, getRepairTechnicians } from "../../../api/repairApi.js";
+import {
+  createRepair,
+  getRepairTechnicians,
+  getDeviceRepairHistory,
+} from "../../../api/repairApi.js";
 import { hasRole } from "../../../config/accessControl.js";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
@@ -77,6 +81,11 @@ function NewRepairPage() {
   const [techniciansLoading, setTechniciansLoading] = useState(true);
   const [technicianError, setTechnicianError] = useState("");
   const [technicianReload, setTechnicianReload] = useState(0);
+  const [deviceHistory, setDeviceHistory] = useState({
+    key: "",
+    count: null,
+    error: false,
+  });
 
   const [saving, setSaving] = useState(false);
   const [savedRepair, setSavedRepair] = useState(null);
@@ -136,6 +145,81 @@ function NewRepairPage() {
   const selectedDevice = selectedCustomer?.devices.find(
     (device) => String(device.id) === values.deviceId,
   );
+
+  const historyCustomerId = selectedCustomer?.id ?? null;
+  const historyDeviceId = selectedDevice?.id ?? null;
+
+  const deviceHistoryKey =
+    historyCustomerId !== null && historyDeviceId !== null
+      ? `${historyCustomerId}:${historyDeviceId}`
+      : "";
+
+  useEffect(() => {
+    if (!canCreate || !deviceHistoryKey) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    setDeviceHistory({
+      key: deviceHistoryKey,
+      count: null,
+      error: false,
+    });
+
+    async function loadDeviceHistory() {
+      try {
+        const result = await getDeviceRepairHistory(
+          historyCustomerId,
+          historyDeviceId,
+          { signal: controller.signal },
+        );
+
+        if (!Array.isArray(result)) {
+          throw new Error("The server returned invalid repair history.");
+        }
+
+        if (active) {
+          setDeviceHistory({
+            key: deviceHistoryKey,
+            count: result.length,
+            error: false,
+          });
+        }
+      } catch {
+        if (active && !controller.signal.aborted) {
+          setDeviceHistory({
+            key: deviceHistoryKey,
+            count: null,
+            error: true,
+          });
+        }
+      }
+    }
+
+    void loadDeviceHistory();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [canCreate, historyCustomerId, historyDeviceId, deviceHistoryKey]);
+
+  let previousRepairsText = "Loading...";
+
+  if (deviceHistory.key === deviceHistoryKey) {
+    if (deviceHistory.error) {
+      previousRepairsText = "Unable to load — reselect device to retry";
+    } else if (deviceHistory.count !== null) {
+      previousRepairsText =
+        deviceHistory.count === 0
+          ? "No previous repairs"
+          : `${deviceHistory.count} previous ${
+              deviceHistory.count === 1 ? "repair" : "repairs"
+            }`;
+    }
+  }
 
   const modalOpen = customerModalOpen || deviceModalOpen;
 
@@ -530,7 +614,7 @@ function NewRepairPage() {
                       selectedDevice.serialNumber || "Not recorded",
                     ],
                     ["IMEI", selectedDevice.imei || "Not recorded"],
-                    ["Previous Repairs", "History connection pending"],
+                    ["Previous Repairs", previousRepairsText],
                     ["Notes", selectedDevice.notes || "Not recorded"],
                   ].map(([label, value]) => (
                     <div key={label}>

@@ -54,9 +54,51 @@ function RepairFindings({
   useEffect(() => {
     if (!aiDraft) return;
 
-    setFindingText(aiDraft);
+    if (!canRecord || controlsDisabled) {
+      setLocalError(
+        "An AI suggestion cannot be applied while this finding form is unavailable.",
+      );
+      onDraftUsed?.();
+      return;
+    }
+
+    const hasUnsavedInput = [findingText, diagnosis, actionTaken].some(
+      (value) => value.trim().length > 0,
+    );
+
+    if (hasUnsavedInput) {
+      setLocalError(
+        "Your unsaved finding was kept. Save or cancel it before using an AI suggestion.",
+      );
+      setFormOpen(true);
+      onDraftUsed?.();
+      return;
+    }
+
+    const suggestedText = aiDraft.trim();
+
+    if (suggestedText.length > 5000) {
+      setLocalError(
+        "This AI suggestion exceeds the 5000-character finding limit. Enter a shorter finding manually.",
+      );
+      setFormOpen(true);
+      onDraftUsed?.();
+      return;
+    }
+
+    setFindingText(suggestedText);
     setFormOpen(true);
-  }, [aiDraft]);
+    setLocalError("");
+    onDraftUsed?.();
+  }, [
+    aiDraft,
+    canRecord,
+    controlsDisabled,
+    findingText,
+    diagnosis,
+    actionTaken,
+    onDraftUsed,
+  ]);
 
   function resetForm() {
     setFindingText("");

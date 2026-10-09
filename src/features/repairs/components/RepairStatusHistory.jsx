@@ -37,6 +37,8 @@ function RepairStatusHistory({
   blocked = false,
   error = "",
   message = "",
+  suggestedStatus = "",
+  onSuggestionHandled,
 }) {
   const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
@@ -66,6 +68,47 @@ function RepairStatusHistory({
   );
 
   const controlsDisabled = saving || disabled || blocked;
+
+  useEffect(() => {
+    if (!suggestedStatus) return;
+
+    const suggestionAllowed =
+      canTransitionRepairStatus(currentStatus, suggestedStatus) &&
+      canChangeRepairStatus(currentRoles, suggestedStatus);
+
+    if (!canChangeStatus || controlsDisabled || !suggestionAllowed) {
+      setLocalError(
+        "This AI status suggestion is not currently available for your role or this repair.",
+      );
+      onSuggestionHandled?.();
+      return;
+    }
+
+    if (formOpen || status || note.trim()) {
+      setLocalError(
+        "Your current status draft was kept. Confirm or cancel it before using an AI status suggestion.",
+      );
+      onSuggestionHandled?.();
+      return;
+    }
+
+    setStatus(suggestedStatus);
+    setNote("");
+    setFormOpen(true);
+    setLocalError("");
+
+    onSuggestionHandled?.();
+  }, [
+    suggestedStatus,
+    currentStatus,
+    currentRoles,
+    canChangeStatus,
+    controlsDisabled,
+    formOpen,
+    status,
+    note,
+    onSuggestionHandled,
+  ]);
 
   const newestFirst = [...history].sort(
     (a, b) =>
