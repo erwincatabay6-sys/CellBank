@@ -717,3 +717,57 @@
     transition: none;
   }
 }
+
+.notification-panel {
+  width: min(380px, calc(100vw - 32px));
+}
+
+.notification-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.notification-message {
+  overflow-wrap: anywhere;
+}
+
+.notification-time {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.notification-status,
+.notification-feedback {
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.notification-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-feedback button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.notification-item:disabled,
+.notification-mark-all:disabled,
+.notification-feedback button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
