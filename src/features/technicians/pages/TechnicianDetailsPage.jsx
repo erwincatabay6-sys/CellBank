@@ -1,332 +1,324 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
+import { getTechnician } from "../../../api/technicianApi.js";
+import { hasAccess } from "../../../config/accessControl.js";
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 
-import { mockTechnicians } from "../data/mockTechnicians.js";
+import "../technicians.css";
 
-import { mockRepairs } from "../../repairs/data/mockRepairs.js";
-
-const terminalStatuses = ["COMPLETED", "CANCELLED"];
+const activeStatuses = [
+  ["RECEIVED", "Received"],
+  ["AWAITING_APPROVAL", "Awaiting Approval"],
+  ["IN_PROGRESS", "In Progress"],
+  ["AWAITING_PARTS", "Awaiting Parts"],
+  ["READY_FOR_RELEASE", "Ready for Release"],
+];
 
 function TechnicianDetailsPage() {
   const { technicianId } = useParams();
+  const { user } = useAuth();
 
+  const pageKey = JSON.stringify([
+    technicianId,
+    user?.id,
+    [...(user?.roles ?? [])].sort(),
+  ]);
+
+  return (
+    <TechnicianDetails key={pageKey} technicianId={technicianId} user={user} />
+  );
+}
+
+function TechnicianDetails({ technicianId, user }) {
   const navigate = useNavigate();
 
-  // -----------------------------
-  // TECHNICIAN
-  // -----------------------------
+  const [details, setDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [reloadCount, setReloadCount] = useState(0);
 
-  const technician = mockTechnicians.find(
-    (technician) => technician.id === Number(technicianId),
-  );
+  const roles = user?.roles ?? [];
+  const canView = hasAccess(roles, "technicians");
+  const canViewRepairs = hasAccess(roles, "repairs");
 
-  // -----------------------------
-  // ASSIGNED REPAIRS
-  // -----------------------------
+  useEffect(() => {
+    if (!canView) {
+      return;
+    }
 
-  const assignedRepairs = technician
-    ? mockRepairs.filter((repair) => repair.technicianId === technician.id)
-    : [];
+    const controller = new AbortController();
 
-  // -----------------------------
-  // ACTIVE REPAIRS
-  // -----------------------------
+    setLoading(true);
+    setError("");
+    setNotFound(false);
+    setDetails(null);
 
-  const activeRepairs = assignedRepairs.filter(
-    (repair) => !terminalStatuses.includes(repair.status),
-  );
+    async function loadTechnician() {
+      try {
+        const result = await getTechnician(technicianId, {
+          signal: controller.signal,
+        });
 
-  // -----------------------------
-  // REPAIR HISTORY
-  // -----------------------------
+        if (
+          !result?.technician ||
+          String(result.technician.id) !== technicianId ||
+          typeof result.technician.name !== "string" ||
+          !["ACTIVE", "INACTIVE"].includes(result.technician.status) ||
+          !Number.isInteger(result.technician.activeRepairs) ||
+          !Number.isInteger(result.technician.totalRepairs) ||
+          !result.statusCounts ||
+          !Array.isArray(result.activeRepairs) ||
+          !Array.isArray(result.repairHistory)
+        ) {
+          throw new Error("The server returned invalid technician details.");
+        }
 
-  const repairHistory = assignedRepairs.filter((repair) =>
-    terminalStatuses.includes(repair.status),
-  );
+        if (!controller.signal.aborted) {
+          setDetails(result);
+        }
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setNotFound(requestError?.status === 404);
+          setError(
+            requestError?.message ||
+              "The technician details could not be loaded.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
 
-  // -----------------------------
-  // STATUS COUNTS
-  // -----------------------------
+    void loadTechnician();
 
-  const receivedCount = activeRepairs.filter(
-    (repair) => repair.status === "RECEIVED",
-  ).length;
+    return () => controller.abort();
+  }, [canView, technicianId, reloadCount]);
 
-  const awaitingApprovalCount = activeRepairs.filter(
-    (repair) => repair.status === "AWAITING_APPROVAL",
-  ).length;
+  function handleRepairClick(repairId) {
+    if (canViewRepairs) {
+      navigate(`/repairs/${repairId}`);
+    }
+  }
 
-  const inProgressCount = activeRepairs.filter(
-    (repair) => repair.status === "IN_PROGRESS",
-  ).length;
-
-  const awaitingPartsCount = activeRepairs.filter(
-    (repair) => repair.status === "AWAITING_PARTS",
-  ).length;
-
-  const readyForReleaseCount = activeRepairs.filter(
-    (repair) => repair.status === "READY_FOR_RELEASE",
-  ).length;
-
-  // -----------------------------
-  // TECHNICIAN NOT FOUND
-  // -----------------------------
-
-  if (!technician) {
+  if (!canView) {
     return (
-      <>
-        <section className="page-header">
-          <h2>Technician Not Found</h2>
-
-          <p>The requested technician record does not exist.</p>
-        </section>
-
-        <section className="page-content">
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={() => navigate("/technicians")}
-          >
-            Back to Technicians
-          </button>
-        </section>
-      </>
+      <section className="page-header">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to view technicians.</p>
+      </section>
     );
   }
 
-  // -----------------------------
-  // REPAIR NAVIGATION
-  // -----------------------------
-
-  function handleRepairClick(repairId) {
-    navigate(`/repairs/${repairId}`);
-  }
+  const technician = details?.technician;
 
   return (
     <>
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
       <section className="page-header">
-        <h2>{technician.name}</h2>
+        <h2>
+          {notFound
+            ? "Technician Not Found"
+            : technician?.name || "Technician Details"}
+        </h2>
 
         <p>View technician workload and assigned repair jobs.</p>
       </section>
 
-      {/* =========================
-                TECHNICIAN INFORMATION
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Technician Information</h3>
+      {loading && (
+        <section className="page-content" aria-busy="true">
+          <div className="workspace-empty-state" role="status">
+            <p>Loading technician details...</p>
+          </div>
+        </section>
+      )}
 
-            <p className="workspace-section-description">
-              Basic operational information for this technician.
+      {!loading && error && (
+        <section className="page-content">
+          <div className="customer-form-error" role="alert">
+            <p>
+              {notFound
+                ? "The requested technician record does not exist."
+                : error}
             </p>
           </div>
-        </div>
 
-        <div className="technician-info-grid">
+          {notFound ? (
+            <button
+              className="secondary-repair-button"
+              type="button"
+              onClick={() => navigate("/technicians")}
+            >
+              Back to Technicians
+            </button>
+          ) : (
+            <button
+              className="create-repair-button"
+              type="button"
+              onClick={() => setReloadCount((current) => current + 1)}
+            >
+              Try Again
+            </button>
+          )}
+        </section>
+      )}
+
+      {!loading && !error && details && (
+        <>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Technician Information</h3>
+                <p className="workspace-section-description">
+                  Basic operational information for this technician.
+                </p>
+              </div>
+            </div>
+
+            <div className="technician-info-grid">
+              <div>
+                <span>Technician</span>
+                <strong>{technician.name}</strong>
+              </div>
+
+              <div>
+                <span>Role</span>
+                <strong>{technician.role}</strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong>
+                  {technician.status === "ACTIVE" ? "Active" : "Inactive"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Active Repairs</span>
+                <strong>{technician.activeRepairs}</strong>
+              </div>
+
+              <div>
+                <span>Total Assigned</span>
+                <strong>{technician.totalRepairs}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Workload Summary</h3>
+                <p className="workspace-section-description">
+                  Current assigned repairs grouped by repair status.
+                </p>
+              </div>
+            </div>
+
+            <div className="technician-workload-grid">
+              {activeStatuses.map(([status, label]) => (
+                <div key={status}>
+                  <span>{label}</span>
+                  <strong>{details.statusCounts[status] ?? 0}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Active Assigned Repairs</h3>
+                <p className="workspace-section-description">
+                  Repair jobs currently assigned to this technician.
+                </p>
+              </div>
+            </div>
+
+            <TechnicianRepairList
+              repairs={details.activeRepairs}
+              canViewRepairs={canViewRepairs}
+              onRepairClick={handleRepairClick}
+              emptyTitle="No active repairs"
+              emptyMessage="This technician currently has no active repair assignments."
+            />
+          </section>
+
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Repair History</h3>
+                <p className="workspace-section-description">
+                  Completed or cancelled repairs recorded under this technician.
+                </p>
+              </div>
+            </div>
+
+            <TechnicianRepairList
+              repairs={details.repairHistory}
+              canViewRepairs={canViewRepairs}
+              onRepairClick={handleRepairClick}
+              emptyTitle="No repair history"
+              emptyMessage="Completed or cancelled repairs will appear here."
+            />
+          </section>
+        </>
+      )}
+    </>
+  );
+}
+
+function TechnicianRepairList({
+  repairs,
+  canViewRepairs,
+  onRepairClick,
+  emptyTitle,
+  emptyMessage,
+}) {
+  if (repairs.length === 0) {
+    return (
+      <div className="workspace-empty-state">
+        <strong>{emptyTitle}</strong>
+        <p>{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="technician-repair-list">
+      {repairs.map((repair) => (
+        <button
+          key={repair.id}
+          className="technician-repair-item"
+          type="button"
+          disabled={!canViewRepairs}
+          onClick={() => onRepairClick(repair.id)}
+        >
           <div>
-            <span>Technician</span>
-
-            <strong>{technician.name}</strong>
+            <span>Repair Reference</span>
+            <strong>{repair.reference}</strong>
           </div>
 
           <div>
-            <span>Role</span>
+            <span>Customer</span>
+            <strong>{repair.customer}</strong>
+          </div>
 
-            <strong>{technician.role}</strong>
+          <div>
+            <span>Device</span>
+            <strong>{repair.device}</strong>
           </div>
 
           <div>
             <span>Status</span>
-
-            <strong>
-              {technician.status === "ACTIVE" ? "Active" : "Inactive"}
-            </strong>
+            <StatusBadge status={repair.status} />
           </div>
-
-          <div>
-            <span>Active Repairs</span>
-
-            <strong>{activeRepairs.length}</strong>
-          </div>
-
-          <div>
-            <span>Total Assigned</span>
-
-            <strong>{assignedRepairs.length}</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================
-                WORKLOAD SUMMARY
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Workload Summary</h3>
-
-            <p className="workspace-section-description">
-              Current assigned repairs grouped by repair status.
-            </p>
-          </div>
-        </div>
-
-        <div className="technician-workload-grid">
-          <div>
-            <span>Received</span>
-
-            <strong>{receivedCount}</strong>
-          </div>
-
-          <div>
-            <span>Awaiting Approval</span>
-
-            <strong>{awaitingApprovalCount}</strong>
-          </div>
-
-          <div>
-            <span>In Progress</span>
-
-            <strong>{inProgressCount}</strong>
-          </div>
-
-          <div>
-            <span>Awaiting Parts</span>
-
-            <strong>{awaitingPartsCount}</strong>
-          </div>
-
-          <div>
-            <span>Ready for Release</span>
-
-            <strong>{readyForReleaseCount}</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================
-                ACTIVE ASSIGNED REPAIRS
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Active Assigned Repairs</h3>
-
-            <p className="workspace-section-description">
-              Repair jobs currently assigned to this technician.
-            </p>
-          </div>
-        </div>
-
-        {activeRepairs.length > 0 ? (
-          <div className="technician-repair-list">
-            {activeRepairs.map((repair) => (
-              <button
-                key={repair.id}
-                className="technician-repair-item"
-                type="button"
-                onClick={() => handleRepairClick(repair.id)}
-              >
-                <div>
-                  <span>Repair Reference</span>
-
-                  <strong>{repair.reference}</strong>
-                </div>
-
-                <div>
-                  <span>Customer</span>
-
-                  <strong>{repair.customer}</strong>
-                </div>
-
-                <div>
-                  <span>Device</span>
-
-                  <strong>{repair.device}</strong>
-                </div>
-
-                <div>
-                  <span>Status</span>
-
-                  <StatusBadge status={repair.status} />
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="workspace-empty-state">
-            <strong>No active repairs</strong>
-
-            <p>This technician currently has no active repair assignments.</p>
-          </div>
-        )}
-      </section>
-
-      {/* =========================
-                REPAIR HISTORY
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Repair History</h3>
-
-            <p className="workspace-section-description">
-              Completed or cancelled repairs previously assigned to this
-              technician.
-            </p>
-          </div>
-        </div>
-
-        {repairHistory.length > 0 ? (
-          <div className="technician-repair-list">
-            {repairHistory.map((repair) => (
-              <button
-                key={repair.id}
-                className="technician-repair-item"
-                type="button"
-                onClick={() => handleRepairClick(repair.id)}
-              >
-                <div>
-                  <span>Repair Reference</span>
-
-                  <strong>{repair.reference}</strong>
-                </div>
-
-                <div>
-                  <span>Customer</span>
-
-                  <strong>{repair.customer}</strong>
-                </div>
-
-                <div>
-                  <span>Device</span>
-
-                  <strong>{repair.device}</strong>
-                </div>
-
-                <div>
-                  <span>Status</span>
-
-                  <StatusBadge status={repair.status} />
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="workspace-empty-state">
-            <strong>No repair history</strong>
-
-            <p>Completed or cancelled repairs will appear here.</p>
-          </div>
-        )}
-      </section>
-    </>
+        </button>
+      ))}
+    </div>
   );
 }
 
