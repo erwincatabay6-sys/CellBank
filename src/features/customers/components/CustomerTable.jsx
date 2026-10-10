@@ -22,7 +22,7 @@ function CustomerTable({ customers, onCustomerClick }) {
 
               <td>{customer.phone}</td>
 
-              <td>{customer.email}</td>
+              <td>{customer.email?.trim() || "-"}</td>
 
               <td>{customer.devices.length}</td>
             </tr>

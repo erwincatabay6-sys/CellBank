@@ -541,3 +541,15 @@
   margin: 16px 0 0;
   color: #78350f;
 }
+
+.customer-new-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.customer-new-button svg {
+  display: block;
+  flex-shrink: 0;
+}

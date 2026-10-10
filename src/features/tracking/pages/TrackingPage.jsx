@@ -1,130 +1,122 @@
-import { useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
+import { trackRepair } from "../../../api/trackingApi.js";
 
 import "../tracking.css";
 
-// =====================================================
-// TEMPORARY PUBLIC TRACKING DATA
-// =====================================================
-// This will later come from:
-// GET /api/tracking/{trackingCode}
+const TRACKING_CODE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
-const mockTrackingRecords = [
-  {
-    trackingCode: "CB-2026-001",
+const NOT_FOUND_MESSAGE =
+  "Repair not found. Check the tracking code and try again.";
 
-    device: "Samsung Galaxy A54",
+function formatDate(value) {
+  const date = new Date(value);
 
-    status: "IN_PROGRESS",
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
 
-    receivedAt: "September 1, 2026",
-
-    lastUpdated: "September 8, 2026",
-
-    statusHistory: [
-      {
-        id: 1,
-
-        status: "RECEIVED",
-
-        date: "September 1, 2026",
-
-        description: "Device received by Cellbank.",
-      },
-
-      {
-        id: 2,
-
-        status: "AWAITING_APPROVAL",
-
-        date: "September 2, 2026",
-
-        description: "Repair assessment completed and awaiting approval.",
-      },
-
-      {
-        id: 3,
-
-        status: "IN_PROGRESS",
-
-        date: "September 3, 2026",
-
-        description: "Repair work is currently in progress.",
-      },
-    ],
-  },
-];
+  return date.toLocaleDateString("en-US", {
+    timeZone: "Asia/Manila",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 function TrackingPage() {
-  // -----------------------------
-  // TRACKING STATE
-  // -----------------------------
-
   const [trackingCode, setTrackingCode] = useState("");
-
   const [trackingResult, setTrackingResult] = useState(null);
-
   const [errorMessage, setErrorMessage] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
 
-  // -----------------------------
-  // TRACK REPAIR
-  // -----------------------------
+  const requestRef = useRef(null);
+  const inputRef = useRef(null);
 
-  function handleSubmit(event) {
+  useEffect(() => {
+    return () => {
+      requestRef.current?.abort();
+    };
+  }, []);
+
+  async function handleSubmit(event) {
     event.preventDefault();
+
+    if (requestRef.current) {
+      return;
+    }
+
+    const code = trackingCode.trim();
 
     setErrorMessage("");
 
-    const normalizedCode = trackingCode.trim().toUpperCase();
-
-    if (!normalizedCode) {
+    if (!code) {
       setErrorMessage("Enter your tracking code.");
-
       return;
     }
+
+    if (!TRACKING_CODE_PATTERN.test(code)) {
+      setErrorMessage(NOT_FOUND_MESSAGE);
+      return;
+    }
+
+    const controller = new AbortController();
+    requestRef.current = controller;
 
     setSubmitting(true);
+    setTrackingResult(null);
 
-    // Frontend mock lookup only.
-    // Spring Boot will later perform
-    // the actual tracking request.
+    try {
+      const result = await trackRepair(code, {
+        signal: controller.signal,
+      });
 
-    const repair = mockTrackingRecords.find(
-      (record) => record.trackingCode === normalizedCode,
-    );
+      if (
+        result?.trackingCode !== code ||
+        typeof result.device !== "string" ||
+        typeof result.status !== "string" ||
+        !result.receivedAt ||
+        !result.lastUpdated ||
+        !Array.isArray(result.statusHistory)
+      ) {
+        throw new Error(
+          "The server returned unexpected tracking data. Please try again.",
+        );
+      }
 
-    if (!repair) {
-      setTrackingResult(null);
+      if (!controller.signal.aborted) {
+        setTrackingResult(result);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setErrorMessage(
+          error?.status === 404
+            ? NOT_FOUND_MESSAGE
+            : error?.message ||
+                "Repair tracking is temporarily unavailable. Please try again.",
+        );
+      }
+    } finally {
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+      }
 
-      setErrorMessage(
-        "Repair not found. Check the tracking code and try again.",
-      );
-
-      setSubmitting(false);
-
-      return;
+      if (!controller.signal.aborted) {
+        setSubmitting(false);
+      }
     }
-
-    setTrackingResult(repair);
-
-    setSubmitting(false);
   }
-
-  // -----------------------------
-  // NEW SEARCH
-  // -----------------------------
 
   function handleNewSearch() {
     setTrackingCode("");
-
     setTrackingResult(null);
-
     setErrorMessage("");
+
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   }
 
   return (
@@ -132,15 +124,12 @@ function TrackingPage() {
       className={`public-card tracking-card ${
         trackingResult ? "has-result" : ""
       }`}
+      aria-busy={submitting}
     >
       {!trackingResult ? (
         <>
-          {/* =========================
-                        TRACKING FORM
-                    ========================== */}
           <div className="public-card-header">
             <h2>Track Your Repair</h2>
-
             <p>Enter the tracking code provided by Cellbank.</p>
           </div>
 
@@ -149,22 +138,36 @@ function TrackingPage() {
               <label htmlFor="tracking-code">Tracking Code</label>
 
               <input
+                ref={inputRef}
                 type="text"
                 id="tracking-code"
                 name="tracking-code"
                 value={trackingCode}
                 onChange={(event) => setTrackingCode(event.target.value)}
-                placeholder="e.g. CB-2026-001"
+                placeholder="Paste your tracking code"
                 autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
                 disabled={submitting}
+                aria-invalid={Boolean(errorMessage)}
+                aria-describedby={
+                  errorMessage
+                    ? "tracking-code-help tracking-error"
+                    : "tracking-code-help"
+                }
               />
+
+              <small id="tracking-code-help">
+                Codes are case-sensitive. Paste the code exactly as provided.
+              </small>
             </div>
 
-            {/* =========================
-                            TRACKING ERROR
-                        ========================== */}
             {errorMessage && (
-              <div className="public-form-error" role="alert">
+              <div
+                id="tracking-error"
+                className="public-form-error"
+                role="alert"
+              >
                 {errorMessage}
               </div>
             )}
@@ -175,81 +178,73 @@ function TrackingPage() {
               disabled={submitting}
             >
               <Search size={20} />
-
               <span>{submitting ? "Checking..." : "Check Status"}</span>
             </button>
           </form>
         </>
       ) : (
         <>
-          {/* =========================
-                        RESULT HEADER
-                    ========================== */}
           <div className="tracking-result-header">
-            <div>
+            <div style={{ minWidth: 0 }}>
               <span className="tracking-result-label">Tracking Code</span>
 
-              <h3>{trackingResult.trackingCode}</h3>
+              <h3 style={{ overflowWrap: "anywhere" }}>
+                {trackingResult.trackingCode}
+              </h3>
             </div>
 
             <StatusBadge status={trackingResult.status} />
           </div>
 
-          {/* =========================
-                        REPAIR INFORMATION
-                    ========================== */}
           <div className="tracking-summary">
             <div>
               <span>Device</span>
-
               <strong>{trackingResult.device}</strong>
             </div>
 
             <div>
               <span>Date Received</span>
-
-              <strong>{trackingResult.receivedAt}</strong>
+              <strong>{formatDate(trackingResult.receivedAt)}</strong>
             </div>
 
             <div>
               <span>Last Updated</span>
-
-              <strong>{trackingResult.lastUpdated}</strong>
+              <strong>{formatDate(trackingResult.lastUpdated)}</strong>
             </div>
           </div>
 
-          {/* =========================
-                        REPAIR PROGRESS
-                    ========================== */}
           <div className="tracking-history">
             <div className="tracking-section-header">
               <h3>Repair Progress</h3>
-
               <p>Follow the latest progress of your repair.</p>
             </div>
 
-            <div className="tracking-history-list">
-              {trackingResult.statusHistory.map((entry) => (
-                <article key={entry.id} className="tracking-history-item">
-                  <div className="tracking-history-marker" />
+            {trackingResult.statusHistory.length > 0 ? (
+              <div className="tracking-history-list">
+                {trackingResult.statusHistory.map((entry, index) => (
+                  <article
+                    key={`${entry.changedAt}-${entry.status}-${index}`}
+                    className="tracking-history-item"
+                  >
+                    <div className="tracking-history-marker" />
 
-                  <div className="tracking-history-content">
-                    <div className="tracking-history-top">
-                      <StatusBadge status={entry.status} />
+                    <div className="tracking-history-content">
+                      <div className="tracking-history-top">
+                        <StatusBadge status={entry.status} />
 
-                      <span>{entry.date}</span>
+                        <span>{formatDate(entry.changedAt)}</span>
+                      </div>
+
+                      <p>{entry.description}</p>
                     </div>
-
-                    <p>{entry.description}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p>No status history is available for this repair yet.</p>
+            )}
           </div>
 
-          {/* =========================
-                        TRACK ANOTHER REPAIR
-                    ========================== */}
           <div className="tracking-result-actions">
             <button
               className="secondary-repair-button"
@@ -257,7 +252,6 @@ function TrackingPage() {
               onClick={handleNewSearch}
             >
               <RotateCcw size={18} />
-
               <span>Track Another Repair</span>
             </button>
           </div>
