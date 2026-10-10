@@ -553,3 +553,10 @@
       28px;
   }
 }
+
+/* Keep the payment chart compact on wide screens. */
+.report-payment-chart-card .report-line-chart-wrapper {
+  max-width: 960px;
+  margin-left: 0;
+  margin-right: auto;
+}

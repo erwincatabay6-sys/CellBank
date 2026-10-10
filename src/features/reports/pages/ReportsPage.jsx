@@ -1,274 +1,181 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { CalendarDays, RotateCcw, Search, TrendingUp } from "lucide-react";
 
+import { getReport } from "../../../api/reportApi.js";
+import { hasAccess } from "../../../config/accessControl.js";
+import { useAuth } from "../../auth/context/AuthContext.jsx";
+
 import RepairReportTable from "../components/RepairReportTable.jsx";
-
 import FinancialReportTable from "../components/FinancialReportTable.jsx";
-
 import ReportLineChart from "../components/ReportLineChart.jsx";
-
 import ReportBarChart from "../components/ReportBarChart.jsx";
-
-import { mockRepairs } from "../../repairs/data/mockRepairs.js";
-
-import { mockPayments } from "../../repairs/data/mockPayments.js";
-
-import { mockTechnicians } from "../../technicians/data/mockTechnicians.js";
 
 import "../reports.css";
 
-const terminalStatuses = ["COMPLETED", "CANCELLED"];
-
 const reportStatuses = [
-  {
-    value: "RECEIVED",
-    label: "Received",
-  },
-  {
-    value: "AWAITING_APPROVAL",
-    label: "Awaiting Approval",
-  },
-  {
-    value: "IN_PROGRESS",
-    label: "In Progress",
-  },
-  {
-    value: "AWAITING_PARTS",
-    label: "Awaiting Parts",
-  },
-  {
-    value: "READY_FOR_RELEASE",
-    label: "Ready for Release",
-  },
-  {
-    value: "COMPLETED",
-    label: "Completed",
-  },
-  {
-    value: "CANCELLED",
-    label: "Cancelled",
-  },
+  { value: "RECEIVED", label: "Received" },
+  { value: "AWAITING_APPROVAL", label: "Awaiting Approval" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "AWAITING_PARTS", label: "Awaiting Parts" },
+  { value: "READY_FOR_RELEASE", label: "Ready for Release" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
-function isWithinDateRange(date, startDate, endDate) {
-  if (!date) {
-    return false;
-  }
-
-  if (startDate && date < startDate) {
-    return false;
-  }
-
-  if (endDate && date > endDate) {
-    return false;
-  }
-
-  return true;
-}
-
-function formatMonthLabel(monthKey) {
-  const date = new Date(`${monthKey}-01T00:00:00`);
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function groupMonthlyTotals(records, dateKey, valueSelector = () => 1) {
-  const totals = new Map();
-
-  records.forEach((record) => {
-    const date = record[dateKey];
-
-    if (!date) {
-      return;
-    }
-
-    const monthKey = date.slice(0, 7);
-
-    totals.set(monthKey, (totals.get(monthKey) ?? 0) + valueSelector(record));
-  });
-
-  return [...totals.entries()]
-    .sort(([monthA], [monthB]) => monthA.localeCompare(monthB))
-    .map(([month, value]) => ({
-      key: month,
-      label: formatMonthLabel(month),
-      value,
-    }));
+function toChartData(points) {
+  return points.map((point) => ({
+    key: point.month,
+    label: new Date(`${point.month}-01T00:00:00`).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    }),
+    value: point.value,
+  }));
 }
 
 function ReportsPage() {
+  const { user } = useAuth();
+
+  const accountKey = JSON.stringify([
+    user?.id,
+    [...(user?.roles ?? [])].sort(),
+  ]);
+
+  return <ReportsContent key={accountKey} user={user} />;
+}
+
+function ReportsContent({ user }) {
   const navigate = useNavigate();
 
-  // -----------------------------
-  // REPORT PERIOD
-  // -----------------------------
-
   const [startDate, setStartDate] = useState("");
-
   const [endDate, setEndDate] = useState("");
-
-  // -----------------------------
-  // REPAIR RECORD FILTER STATE
-  // -----------------------------
-
   const [searchTerm, setSearchTerm] = useState("");
-
   const [statusFilter, setStatusFilter] = useState("ALL");
-
   const [technicianFilter, setTechnicianFilter] = useState("ALL");
-
-  // -----------------------------
-  // FINANCIAL FILTER STATE
-  // -----------------------------
-
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("ALL");
+  const [reloadCount, setReloadCount] = useState(0);
+
+  const [result, setResult] = useState({
+    key: "",
+    data: null,
+    error: "",
+    loading: true,
+  });
+
+  const canView = hasAccess(user?.roles ?? [], "reports");
 
   const hasInvalidDateRange = Boolean(
     startDate && endDate && startDate > endDate,
   );
 
-  // -----------------------------
-  // PERIOD DATA
-  // -----------------------------
+  const requestKey = JSON.stringify([startDate, endDate, reloadCount]);
 
-  const periodRepairs = hasInvalidDateRange
-    ? []
-    : mockRepairs.filter((repair) =>
-        isWithinDateRange(repair.createdAt, startDate, endDate),
-      );
+  useEffect(() => {
+    if (!canView || hasInvalidDateRange) {
+      return;
+    }
 
-  const periodPayments = hasInvalidDateRange
-    ? []
-    : mockPayments.filter((payment) =>
-        isWithinDateRange(payment.recordedDate, startDate, endDate),
-      );
+    const controller = new AbortController();
 
-  // -----------------------------
-  // REPAIR SUMMARY
-  // -----------------------------
+    setResult({
+      key: requestKey,
+      data: null,
+      error: "",
+      loading: true,
+    });
 
-  const totalRepairs = periodRepairs.length;
+    async function loadReport() {
+      try {
+        const data = await getReport(
+          { startDate, endDate },
+          { signal: controller.signal },
+        );
 
-  const activeRepairs = periodRepairs.filter(
-    (repair) => !terminalStatuses.includes(repair.status),
-  ).length;
+        if (
+          !data?.repairSummary ||
+          !data?.financialSummary ||
+          !data?.statusCounts ||
+          !Array.isArray(data.repairVolume) ||
+          !Array.isArray(data.paymentTrend) ||
+          !Array.isArray(data.financialRecords) ||
+          !Array.isArray(data.technicianActivity) ||
+          !Array.isArray(data.repairRecords)
+        ) {
+          throw new Error("The server returned invalid report data.");
+        }
 
-  const completedRepairs = periodRepairs.filter(
-    (repair) => repair.status === "COMPLETED",
-  ).length;
+        if (!controller.signal.aborted) {
+          setResult({
+            key: requestKey,
+            data,
+            error: "",
+            loading: false,
+          });
+        }
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setResult({
+            key: requestKey,
+            data: null,
+            error: requestError?.message || "The report could not be loaded.",
+            loading: false,
+          });
+        }
+      }
+    }
 
-  const cancelledRepairs = periodRepairs.filter(
-    (repair) => repair.status === "CANCELLED",
-  ).length;
+    const timer = window.setTimeout(() => {
+      void loadReport();
+    }, 300);
 
-  // -----------------------------
-  // REPAIR ANALYTICS
-  // -----------------------------
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [canView, hasInvalidDateRange, startDate, endDate, requestKey]);
 
-  const repairVolumeData = groupMonthlyTotals(periodRepairs, "createdAt");
+  const matchesPeriod = result.key === requestKey;
 
-  const statusCounts = periodRepairs.reduce((counts, repair) => {
-    counts[repair.status] = (counts[repair.status] ?? 0) + 1;
+  const loading = !hasInvalidDateRange && (!matchesPeriod || result.loading);
 
-    return counts;
-  }, {});
+  const error = !hasInvalidDateRange && matchesPeriod ? result.error : "";
+
+  const report =
+    !hasInvalidDateRange && matchesPeriod && !result.loading
+      ? result.data
+      : null;
+
+  const {
+    totalRepairs = 0,
+    activeRepairs = 0,
+    completedRepairs = 0,
+    cancelledRepairs = 0,
+  } = report?.repairSummary ?? {};
+
+  const {
+    totalAgreedValue = 0,
+    totalPaymentsCollected = 0,
+    totalOutstandingBalance = 0,
+    paidRepairs = 0,
+    partiallyPaidRepairs = 0,
+    unpaidRepairs = 0,
+    priceNotAgreedRepairs = 0,
+  } = report?.financialSummary ?? {};
+
+  const periodRepairs = report?.repairRecords ?? [];
+  const financialRecords = report?.financialRecords ?? [];
+  const technicianActivity = report?.technicianActivity ?? [];
+
+  const repairVolumeData = toChartData(report?.repairVolume ?? []);
+  const paymentTrendData = toChartData(report?.paymentTrend ?? []);
 
   const statusChartData = reportStatuses.map((status) => ({
     key: status.value,
     label: status.label,
-    value: statusCounts[status.value] ?? 0,
+    value: report?.statusCounts?.[status.value] ?? 0,
   }));
-
-  // -----------------------------
-  // FINANCIAL RECORDS
-  // -----------------------------
-
-  const financialRecords = periodRepairs.map((repair) => {
-    const repairPayments = mockPayments.filter(
-      (payment) => payment.repairId === repair.id,
-    );
-
-    const totalPaid = repairPayments.reduce(
-      (total, payment) => total + payment.amount,
-      0,
-    );
-
-    let balance = null;
-    let paymentStatus = "Price Not Agreed";
-
-    if (repair.agreedPrice != null) {
-      balance = Math.max(repair.agreedPrice - totalPaid, 0);
-
-      if (totalPaid >= repair.agreedPrice && repair.agreedPrice > 0) {
-        paymentStatus = "Paid";
-      } else if (totalPaid > 0) {
-        paymentStatus = "Partially Paid";
-      } else {
-        paymentStatus = "Unpaid";
-      }
-    }
-
-    return {
-      id: repair.id,
-      reference: repair.reference,
-      customer: repair.customer,
-      agreedPrice: repair.agreedPrice,
-      totalPaid,
-      balance,
-      paymentStatus,
-    };
-  });
-
-  // -----------------------------
-  // FINANCIAL SUMMARY
-  // -----------------------------
-
-  const totalAgreedValue = financialRecords.reduce(
-    (total, record) => total + (record.agreedPrice ?? 0),
-    0,
-  );
-
-  const totalPaymentsCollected = periodPayments.reduce(
-    (total, payment) => total + payment.amount,
-    0,
-  );
-
-  const totalOutstandingBalance = financialRecords.reduce(
-    (total, record) => total + (record.balance ?? 0),
-    0,
-  );
-
-  const paidRepairs = financialRecords.filter(
-    (record) => record.paymentStatus === "Paid",
-  ).length;
-
-  const partiallyPaidRepairs = financialRecords.filter(
-    (record) => record.paymentStatus === "Partially Paid",
-  ).length;
-
-  const unpaidRepairs = financialRecords.filter(
-    (record) => record.paymentStatus === "Unpaid",
-  ).length;
-
-  const priceNotAgreedRepairs = financialRecords.filter(
-    (record) => record.paymentStatus === "Price Not Agreed",
-  ).length;
-
-  const paymentTrendData = groupMonthlyTotals(
-    periodPayments,
-    "recordedDate",
-    (payment) => payment.amount,
-  );
-
-  // -----------------------------
-  // FILTERED FINANCIAL RECORDS
-  // -----------------------------
 
   const filteredFinancialRecords = financialRecords.filter(
     (record) =>
@@ -276,52 +183,26 @@ function ReportsPage() {
       record.paymentStatus === paymentStatusFilter,
   );
 
-  // -----------------------------
-  // TECHNICIAN ACTIVITY
-  // -----------------------------
-
-  const technicianActivity = mockTechnicians.map((technician) => {
-    const assignedRepairs = periodRepairs.filter(
-      (repair) => repair.technicianId === technician.id,
-    );
-
-    return {
-      ...technician,
-      repairsHandled: assignedRepairs.length,
-      completedRepairs: assignedRepairs.filter(
-        (repair) => repair.status === "COMPLETED",
-      ).length,
-      activeRepairs: assignedRepairs.filter(
-        (repair) => !terminalStatuses.includes(repair.status),
-      ).length,
-    };
-  });
-
-  // -----------------------------
-  // FILTERED REPAIR RECORDS
-  // -----------------------------
-
   const filteredRepairs = periodRepairs.filter((repair) => {
     const search = searchTerm.trim().toLowerCase();
 
-    const matchesSearch =
-      repair.reference.toLowerCase().includes(search) ||
-      repair.customer.toLowerCase().includes(search) ||
-      repair.device.toLowerCase().includes(search);
+    const matchesSearch = [
+      repair.reference,
+      repair.customer,
+      repair.device,
+    ].some((value) => (value ?? "").toLowerCase().includes(search));
 
     const matchesStatus =
       statusFilter === "ALL" || repair.status === statusFilter;
 
     const matchesTechnician =
       technicianFilter === "ALL" ||
-      repair.technicianId === Number(technicianFilter);
+      (technicianFilter === "UNASSIGNED"
+        ? repair.technicianId == null
+        : String(repair.technicianId) === technicianFilter);
 
     return matchesSearch && matchesStatus && matchesTechnician;
   });
-
-  // -----------------------------
-  // ACTIONS
-  // -----------------------------
 
   function handleRepairClick(repairId) {
     navigate(`/repairs/${repairId}`);
@@ -332,31 +213,32 @@ function ReportsPage() {
     setEndDate("");
   }
 
+  if (!canView) {
+    return (
+      <section className="page-header">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to view reports.</p>
+      </section>
+    );
+  }
+
   return (
     <>
-      {/* =========================
-                PAGE HEADER
-            ========================== */}
       <section className="page-header">
         <h2>Reports</h2>
-
         <p>
           Analyze repair activity and financial performance over a selected
           reporting period.
         </p>
       </section>
 
-      {/* =========================
-                REPORT PERIOD
-            ========================== */}
       <section className="page-content report-period-section">
         <div className="workspace-section-header">
           <div>
             <h3>Report Period</h3>
-
             <p className="workspace-section-description">
-              Filter historical report data by repair and payment date. Leave
-              both dates blank to view all available records.
+              Dates use Philippine time. Repairs are filtered by date received;
+              payments by date recorded. Leave both dates blank for All Time.
             </p>
           </div>
         </div>
@@ -364,10 +246,8 @@ function ReportsPage() {
         <div className="report-period-controls">
           <label className="report-date-field">
             <span>Start Date</span>
-
             <div>
               <CalendarDays size={17} />
-
               <input
                 type="date"
                 value={startDate}
@@ -378,10 +258,8 @@ function ReportsPage() {
 
           <label className="report-date-field">
             <span>End Date</span>
-
             <div>
               <CalendarDays size={17} />
-
               <input
                 type="date"
                 value={endDate}
@@ -402,320 +280,335 @@ function ReportsPage() {
         </div>
 
         {hasInvalidDateRange && (
-          <p className="report-date-error">
+          <p className="report-date-error" role="alert">
             Start Date cannot be later than End Date.
           </p>
         )}
       </section>
 
-      {/* =========================
-                REPAIR SUMMARY
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Repair Summary</h3>
-
-            <p className="workspace-section-description">
-              Repair activity recorded during the selected reporting period.
-            </p>
+      {loading && (
+        <section className="page-content" aria-busy="true">
+          <div className="workspace-empty-state" role="status">
+            <p>Loading report...</p>
           </div>
-        </div>
+        </section>
+      )}
 
-        <div className="report-summary-grid">
-          <div>
-            <span>Total Repairs</span>
-            <strong>{totalRepairs}</strong>
+      {!loading && error && (
+        <section className="page-content">
+          <div className="customer-form-error" role="alert">
+            <p>{error}</p>
           </div>
 
-          <div>
-            <span>Active Repairs</span>
-            <strong>{activeRepairs}</strong>
-          </div>
+          <button
+            type="button"
+            className="create-repair-button"
+            onClick={() => setReloadCount((current) => current + 1)}
+          >
+            Try Again
+          </button>
+        </section>
+      )}
 
-          <div>
-            <span>Completed</span>
-            <strong>{completedRepairs}</strong>
-          </div>
-
-          <div>
-            <span>Cancelled</span>
-            <strong>{cancelledRepairs}</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================
-                REPAIR ANALYTICS
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Repair Analytics</h3>
-
-            <p className="workspace-section-description">
-              Historical trends and repair distribution for the selected period.
-            </p>
-          </div>
-
-          <TrendingUp size={22} className="report-section-icon" />
-        </div>
-
-        <div className="report-chart-grid">
-          <article className="report-chart-card">
-            <div className="report-chart-header">
-              <h4>Repair Volume Over Time</h4>
-              <p>New repair jobs recorded by month.</p>
+      {report && (
+        <>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Repair Summary</h3>
+                <p className="workspace-section-description">
+                  Current status of repairs received during the selected period.
+                </p>
+              </div>
             </div>
 
-            <ReportLineChart
-              data={repairVolumeData}
-              ariaLabel={"Line chart showing repair volume over time"}
-            />
-          </article>
+            <div className="report-summary-grid">
+              <div>
+                <span>Total Repairs</span>
+                <strong>{totalRepairs}</strong>
+              </div>
+              <div>
+                <span>Active Repairs</span>
+                <strong>{activeRepairs}</strong>
+              </div>
+              <div>
+                <span>Completed</span>
+                <strong>{completedRepairs}</strong>
+              </div>
+              <div>
+                <span>Cancelled</span>
+                <strong>{cancelledRepairs}</strong>
+              </div>
+            </div>
+          </section>
 
-          <article className="report-chart-card">
-            <div className="report-chart-header">
-              <h4>Repairs by Status</h4>
-              <p>Distribution of repair records by their current status.</p>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Repair Analytics</h3>
+                <p className="workspace-section-description">
+                  Monthly intake and current status distribution for repairs
+                  received in the selected period.
+                </p>
+              </div>
+
+              <TrendingUp size={22} className="report-section-icon" />
             </div>
 
-            <ReportBarChart
-              data={statusChartData}
-              ariaLabel={"Bar chart showing repair count by status"}
-            />
-          </article>
-        </div>
-      </section>
+            <div className="report-chart-grid">
+              <article className="report-chart-card">
+                <div className="report-chart-header">
+                  <h4>Repair Volume Over Time</h4>
+                  <p>New repair jobs recorded by month.</p>
+                </div>
 
-      {/* =========================
-                FINANCIAL SUMMARY
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Financial Summary</h3>
+                <ReportLineChart
+                  data={repairVolumeData}
+                  ariaLabel="Line chart showing repair volume over time"
+                />
+              </article>
 
-            <p className="workspace-section-description">
-              Financial performance associated with the selected reporting
-              period.
-            </p>
-          </div>
-        </div>
+              <article className="report-chart-card">
+                <div className="report-chart-header">
+                  <h4>Repairs by Status</h4>
+                  <p>Distribution of repair records by their current status.</p>
+                </div>
 
-        <div className="financial-summary-grid">
-          <div>
-            <span>Agreed Repair Value</span>
-            <strong>₱{totalAgreedValue.toFixed(2)}</strong>
-          </div>
+                <ReportBarChart
+                  data={statusChartData}
+                  ariaLabel="Bar chart showing repair count by status"
+                />
+              </article>
+            </div>
+          </section>
 
-          <div>
-            <span>Payments Received</span>
-            <strong>₱{totalPaymentsCollected.toFixed(2)}</strong>
-          </div>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Financial Summary</h3>
+                <p className="workspace-section-description">
+                  Agreed values and current balances belong to repairs received
+                  in the selected period. Payments Received includes all
+                  payments recorded during that period, including payments for
+                  older repairs.
+                </p>
+              </div>
+            </div>
 
-          <div>
-            <span>Outstanding Balance</span>
-            <strong>₱{totalOutstandingBalance.toFixed(2)}</strong>
-          </div>
-        </div>
+            <div className="financial-summary-grid">
+              <div>
+                <span>Agreed Repair Value</span>
+                <strong>₱{totalAgreedValue.toFixed(2)}</strong>
+              </div>
+              <div>
+                <span>Payments Received</span>
+                <strong>₱{totalPaymentsCollected.toFixed(2)}</strong>
+              </div>
+              <div>
+                <span>Outstanding Balance</span>
+                <strong>₱{totalOutstandingBalance.toFixed(2)}</strong>
+              </div>
+            </div>
 
-        <div className="financial-status-grid">
-          <div>
-            <span>Paid Repairs</span>
-            <strong>{paidRepairs}</strong>
-          </div>
+            <div className="financial-status-grid">
+              <div>
+                <span>Paid Repairs</span>
+                <strong>{paidRepairs}</strong>
+              </div>
+              <div>
+                <span>Partially Paid</span>
+                <strong>{partiallyPaidRepairs}</strong>
+              </div>
+              <div>
+                <span>Unpaid</span>
+                <strong>{unpaidRepairs}</strong>
+              </div>
+              <div>
+                <span>Price Not Agreed</span>
+                <strong>{priceNotAgreedRepairs}</strong>
+              </div>
+            </div>
 
-          <div>
-            <span>Partially Paid</span>
-            <strong>{partiallyPaidRepairs}</strong>
-          </div>
+            <article className="report-chart-card report-payment-chart-card">
+              <div className="report-chart-header">
+                <h4>Payments Received Over Time</h4>
+                <p>
+                  Recorded payments by month during the selected reporting
+                  period.
+                </p>
+              </div>
 
-          <div>
-            <span>Unpaid</span>
-            <strong>{unpaidRepairs}</strong>
-          </div>
+              <ReportLineChart
+                data={paymentTrendData}
+                valueType="currency"
+                ariaLabel="Line chart showing payments received over time"
+              />
+            </article>
+          </section>
 
-          <div>
-            <span>Price Not Agreed</span>
-            <strong>{priceNotAgreedRepairs}</strong>
-          </div>
-        </div>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Financial Records</h3>
+                <p className="workspace-section-description">
+                  Current payment totals and balances for repairs received in
+                  the selected period, including payments recorded outside that
+                  period.
+                </p>
+              </div>
+            </div>
 
-        <article className="report-chart-card report-payment-chart-card">
-          <div className="report-chart-header">
-            <h4>Payments Received Over Time</h4>
-            <p>
-              Recorded payments by month during the selected reporting period.
-            </p>
-          </div>
+            <div className="financial-record-filters">
+              <select
+                value={paymentStatusFilter}
+                onChange={(event) => setPaymentStatusFilter(event.target.value)}
+                aria-label="Filter by payment status"
+              >
+                <option value="ALL">All Payment Statuses</option>
+                <option value="Paid">Paid</option>
+                <option value="Partially Paid">Partially Paid</option>
+                <option value="Unpaid">Unpaid</option>
+                <option value="Price Not Agreed">Price Not Agreed</option>
+              </select>
+            </div>
 
-          <ReportLineChart
-            data={paymentTrendData}
-            valueType="currency"
-            ariaLabel={"Line chart showing payments received over time"}
-          />
-        </article>
-      </section>
+            <div className="report-result-count">
+              Showing <strong>{filteredFinancialRecords.length}</strong> of{" "}
+              <strong>{financialRecords.length}</strong> financial records
+            </div>
 
-      {/* =========================
-                FINANCIAL RECORDS
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Financial Records</h3>
+            {filteredFinancialRecords.length > 0 ? (
+              <FinancialReportTable
+                records={filteredFinancialRecords}
+                onRepairClick={handleRepairClick}
+              />
+            ) : (
+              <div className="workspace-empty-state">
+                <strong>No financial records found</strong>
+                <p>Try changing the report period or payment-status filter.</p>
+              </div>
+            )}
+          </section>
 
-            <p className="workspace-section-description">
-              Review payment totals and outstanding balances for repairs in the
-              selected period.
-            </p>
-          </div>
-        </div>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Technician Repair Activity</h3>
+                <p className="workspace-section-description">
+                  Saved technician assignments for repairs received during the
+                  selected period, showing their current status.
+                </p>
+              </div>
+            </div>
 
-        <div className="financial-record-filters">
-          <select
-            value={paymentStatusFilter}
-            onChange={(event) => setPaymentStatusFilter(event.target.value)}
-            aria-label="Filter by payment status"
-          >
-            <option value="ALL">All Payment Statuses</option>
-            <option value="Paid">Paid</option>
-            <option value="Partially Paid">Partially Paid</option>
-            <option value="Unpaid">Unpaid</option>
-            <option value="Price Not Agreed">Price Not Agreed</option>
-          </select>
-        </div>
+            {technicianActivity.length > 0 ? (
+              <div className="report-table-wrapper">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Technician</th>
+                      <th>Repairs Handled</th>
+                      <th>Active</th>
+                      <th>Completed</th>
+                    </tr>
+                  </thead>
 
-        <div className="report-result-count">
-          Showing <strong>{filteredFinancialRecords.length}</strong> of{" "}
-          <strong>{financialRecords.length}</strong> financial records
-        </div>
+                  <tbody>
+                    {technicianActivity.map((technician) => (
+                      <tr key={technician.id}>
+                        <td>{technician.name}</td>
+                        <td>{technician.repairsHandled}</td>
+                        <td>{technician.activeRepairs}</td>
+                        <td>{technician.completedRepairs}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="workspace-empty-state">
+                <strong>No technician activity available</strong>
+                <p>
+                  Technician accounts and assignments will appear here when
+                  available.
+                </p>
+              </div>
+            )}
+          </section>
 
-        {filteredFinancialRecords.length > 0 ? (
-          <FinancialReportTable
-            records={filteredFinancialRecords}
-            onRepairClick={handleRepairClick}
-          />
-        ) : (
-          <div className="workspace-empty-state">
-            <strong>No financial records found</strong>
-            <p>Try changing the report period or payment-status filter.</p>
-          </div>
-        )}
-      </section>
+          <section className="page-content">
+            <div className="workspace-section-header">
+              <div>
+                <h3>Detailed Repair Records</h3>
+                <p className="workspace-section-description">
+                  Search and filter the repair records included in the selected
+                  report period.
+                </p>
+              </div>
+            </div>
 
-      {/* =========================
-                TECHNICIAN ACTIVITY
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Technician Repair Activity</h3>
+            <div className="report-filters">
+              <div className="report-search">
+                <Search size={18} />
 
-            <p className="workspace-section-description">
-              Repair assignments handled by each technician during the selected
-              period.
-            </p>
-          </div>
-        </div>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search reference, customer, or device..."
+                  aria-label="Search repair records"
+                />
+              </div>
 
-        <div className="report-table-wrapper">
-          <table className="report-table">
-            <thead>
-              <tr>
-                <th>Technician</th>
-                <th>Repairs Handled</th>
-                <th>Active</th>
-                <th>Completed</th>
-              </tr>
-            </thead>
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                aria-label="Filter by repair status"
+              >
+                <option value="ALL">All Statuses</option>
+                {reportStatuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
 
-            <tbody>
-              {technicianActivity.map((technician) => (
-                <tr key={technician.id}>
-                  <td>{technician.name}</td>
-                  <td>{technician.repairsHandled}</td>
-                  <td>{technician.activeRepairs}</td>
-                  <td>{technician.completedRepairs}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              <select
+                value={technicianFilter}
+                onChange={(event) => setTechnicianFilter(event.target.value)}
+                aria-label="Filter by technician"
+              >
+                <option value="ALL">All Technicians</option>
+                <option value="UNASSIGNED">Unassigned</option>
+                {technicianActivity.map((technician) => (
+                  <option key={technician.id} value={technician.id}>
+                    {technician.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {/* =========================
-                REPAIR RECORDS
-            ========================== */}
-      <section className="page-content">
-        <div className="workspace-section-header">
-          <div>
-            <h3>Detailed Repair Records</h3>
+            <div className="report-result-count">
+              Showing <strong>{filteredRepairs.length}</strong> of{" "}
+              <strong>{periodRepairs.length}</strong> repair records
+            </div>
 
-            <p className="workspace-section-description">
-              Search and filter the repair records included in the selected
-              report period.
-            </p>
-          </div>
-        </div>
-
-        <div className="report-filters">
-          <div className="report-search">
-            <Search size={18} />
-
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder={"Search reference, customer, or device..."}
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            aria-label="Filter by repair status"
-          >
-            <option value="ALL">All Statuses</option>
-            {reportStatuses.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={technicianFilter}
-            onChange={(event) => setTechnicianFilter(event.target.value)}
-            aria-label="Filter by technician"
-          >
-            <option value="ALL">All Technicians</option>
-            {mockTechnicians.map((technician) => (
-              <option key={technician.id} value={technician.id}>
-                {technician.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="report-result-count">
-          Showing <strong>{filteredRepairs.length}</strong> of{" "}
-          <strong>{periodRepairs.length}</strong> repair records
-        </div>
-
-        {filteredRepairs.length > 0 ? (
-          <RepairReportTable
-            repairs={filteredRepairs}
-            onRepairClick={handleRepairClick}
-          />
-        ) : (
-          <div className="workspace-empty-state">
-            <strong>No repair records found</strong>
-            <p>Try changing the report period, search, or record filters.</p>
-          </div>
-        )}
-      </section>
+            {filteredRepairs.length > 0 ? (
+              <RepairReportTable
+                repairs={filteredRepairs}
+                onRepairClick={handleRepairClick}
+              />
+            ) : (
+              <div className="workspace-empty-state">
+                <strong>No repair records found</strong>
+                <p>
+                  Try changing the report period, search, or record filters.
+                </p>
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </>
   );
 }

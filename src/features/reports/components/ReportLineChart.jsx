@@ -34,7 +34,8 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
   let yMax;
 
   if (valueType === "currency") {
-    const step = Math.max(Math.ceil(maxValue / 4 / 500) * 500, 500);
+    const paddedMax = maxValue * 1.15;
+    const step = Math.max(Math.ceil(paddedMax / 4 / 500) * 500, 500);
 
     yMax = step * 4;
   } else {
