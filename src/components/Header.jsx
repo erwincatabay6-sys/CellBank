@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { RequestError } from "../api/http.js";
 
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
@@ -25,8 +26,15 @@ function Header() {
     try {
       await logout();
       navigate("/login", { replace: true });
-    } catch {
-      setLogoutError("Could not sign out. Please try again.");
+    } catch (error) {
+      setLogoutError(
+        error instanceof RequestError
+          ? error.outcomeUncertain
+            ? "Could not confirm sign-out because the connection was interrupted. " +
+              "Refresh the page to check your session."
+            : error.message
+          : error.message || "Could not sign out. Please try again.",
+      );
     } finally {
       setLoggingOut(false);
     }
