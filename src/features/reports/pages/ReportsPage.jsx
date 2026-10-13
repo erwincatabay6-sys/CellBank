@@ -11,7 +11,7 @@ import RepairReportTable from "../components/RepairReportTable.jsx";
 import FinancialReportTable from "../components/FinancialReportTable.jsx";
 import ReportLineChart from "../components/ReportLineChart.jsx";
 import ReportBarChart from "../components/ReportBarChart.jsx";
-
+import ReportsSkeleton from "../components/ReportsSkeleton.jsx";
 import "../reports.css";
 
 const reportStatuses = [
@@ -286,13 +286,7 @@ function ReportsContent({ user }) {
         )}
       </section>
 
-      {loading && (
-        <section className="page-content" aria-busy="true">
-          <div className="workspace-empty-state" role="status">
-            <p>Loading report...</p>
-          </div>
-        </section>
-      )}
+      {loading && <ReportsSkeleton />}
 
       {!loading && error && (
         <section className="page-content">

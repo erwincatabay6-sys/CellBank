@@ -5,6 +5,7 @@ import StatusBadge from "../../../components/StatusBadge.jsx";
 import { getTechnician } from "../../../api/technicianApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
+import TechnicianDetailsSkeleton from "../components/TechnicianDetailsSkeleton.jsx";
 
 import "../technicians.css";
 
@@ -128,13 +129,7 @@ function TechnicianDetails({ technicianId, user }) {
         <p>View technician workload and assigned repair jobs.</p>
       </section>
 
-      {loading && (
-        <section className="page-content" aria-busy="true">
-          <div className="workspace-empty-state" role="status">
-            <p>Loading technician details...</p>
-          </div>
-        </section>
-      )}
+      {loading && <TechnicianDetailsSkeleton />}
 
       {!loading && error && (
         <section className="page-content">

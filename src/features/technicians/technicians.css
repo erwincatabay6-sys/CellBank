@@ -206,3 +206,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+.technician-skeleton-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.technician-skeleton-row {
+  pointer-events: none;
+  cursor: default;
+}
+
+.technician-skeleton-row > div {
+  min-width: 0;
+}

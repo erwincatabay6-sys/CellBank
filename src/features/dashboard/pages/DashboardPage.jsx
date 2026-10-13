@@ -11,6 +11,7 @@ import DashboardAttentionRepairs from "../components/DashboardAttentionRepairs.j
 import DashboardTechnicianWorkload from "../components/DashboardTechnicianWorkload.jsx";
 import DashboardRecentRepairs from "../components/DashboardRecentRepairs.jsx";
 import DashboardFinancialSnapshot from "../components/DashboardFinancialSnapshot.jsx";
+import DashboardSkeleton from "../components/DashboardSkeleton.jsx";
 
 import "../dashboard.css";
 
@@ -128,11 +129,14 @@ function DashboardContent({ user }) {
       </section>
 
       {loading && (
-        <section className="page-content" aria-busy="true">
-          <div className="workspace-empty-state" role="status">
-            <p>Loading dashboard...</p>
-          </div>
-        </section>
+        <DashboardSkeleton
+          isAdmin={isAdmin}
+          technicianOnly={
+            hasRole(currentRoles, "TECHNICIAN") &&
+            !isAdmin &&
+            !hasRole(currentRoles, "FRONT_DESK")
+          }
+        />
       )}
 
       {!loading && error && (

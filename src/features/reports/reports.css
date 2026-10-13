@@ -560,3 +560,17 @@
   margin-left: 0;
   margin-right: auto;
 }
+
+.report-skeleton-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.report-skeleton-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}

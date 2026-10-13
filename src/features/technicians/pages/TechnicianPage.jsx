@@ -7,6 +7,7 @@ import { hasAccess } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import TechnicianTable from "../components/TechnicianTable.jsx";
+import TechnicianTableSkeleton from "../components/TechnicianTableSkeleton.jsx";
 
 import "../technicians.css";
 
@@ -137,11 +138,7 @@ function TechnicianList({ user }) {
           </div>
         </div>
 
-        {loading && (
-          <div className="workspace-empty-state" role="status">
-            <p>Loading technicians...</p>
-          </div>
-        )}
+        {loading && <TechnicianTableSkeleton />}
 
         {!loading && error && (
           <>

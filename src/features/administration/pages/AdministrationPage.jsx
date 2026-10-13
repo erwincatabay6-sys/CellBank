@@ -16,6 +16,7 @@ import StaffTable from "../components/StaffTable.jsx";
 import StaffAccountModal from "../components/StaffAccountModal.jsx";
 
 import "../administration.css";
+import StaffTableSkeleton from "../components/StaffTableSkeleton.jsx";
 
 function getErrorMessage(error) {
   if (error instanceof RequestError) {
@@ -333,7 +334,7 @@ function AdministrationPage() {
         {saving && <p role="status">Saving changes...</p>}
 
         {loading ? (
-          <p role="status">Loading staff accounts...</p>
+          <StaffTableSkeleton />
         ) : loadError ? (
           <div className="administration-error" role="alert">
             <p>{loadError}</p>
