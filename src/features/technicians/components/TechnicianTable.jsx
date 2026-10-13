@@ -1,6 +1,6 @@
 function TechnicianTable({ technicians, onTechnicianClick }) {
   return (
-    <div className="technician-table-wrapper">
+    <div className="technician-table-wrapper" role="region" aria-label="Technician records" tabIndex={0}>
       <table className="technician-table">
         <thead>
           <tr>

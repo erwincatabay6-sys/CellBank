@@ -1,6 +1,6 @@
 function FinancialReportTable({ records, onRepairClick }) {
   return (
-    <div className="report-table-wrapper">
+    <div className="report-table-wrapper" role="region" aria-label="Financial records" tabIndex={0}>
       <table className="report-table">
         <thead>
           <tr>

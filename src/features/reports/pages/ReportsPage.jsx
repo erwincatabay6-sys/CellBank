@@ -496,7 +496,7 @@ function ReportsContent({ user }) {
             </div>
 
             {technicianActivity.length > 0 ? (
-              <div className="report-table-wrapper">
+              <div className="report-table-wrapper" role="region" aria-label="Technician repair activity" tabIndex={0}>
                 <table className="report-table">
                   <thead>
                     <tr>

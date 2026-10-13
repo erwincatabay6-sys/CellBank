@@ -359,7 +359,7 @@ function RepairPayments({
       )}
 
       {payments.length > 0 ? (
-        <div className="payment-list">
+        <div className="payment-list" role="region" aria-label="Payment history" tabIndex={0}>
           {payments.map((payment) => (
             <article key={payment.id} className="payment-item">
               <div className="payment-item-top">

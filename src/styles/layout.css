@@ -771,3 +771,63 @@
   cursor: wait;
   opacity: 0.65;
 }
+
+.customer-table-wrapper,
+.technician-table-wrapper,
+.staff-table-wrapper {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.customer-table thead th,
+.technician-table thead th,
+.staff-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f9fafb;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.customer-table-wrapper:focus-visible,
+.technician-table-wrapper:focus-visible,
+.staff-table-wrapper:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px), (max-height: 700px) {
+  .customer-table-wrapper,
+  .technician-table-wrapper,
+  .staff-table-wrapper {
+    max-height: min(360px, 60vh);
+  }
+}
+
+.report-table-wrapper,
+.parts-table-wrapper {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.report-table thead th,
+.parts-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f9fafb;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.report-table-wrapper:focus-visible,
+.parts-table-wrapper:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px), (max-height: 700px) {
+  .report-table-wrapper,
+  .parts-table-wrapper {
+    max-height: min(360px, 60vh);
+  }
+}

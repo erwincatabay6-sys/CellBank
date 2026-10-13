@@ -1,6 +1,6 @@
 function StaffTable({ users, saving = false, onUserClick, onToggleStatus }) {
   return (
-    <div className="staff-table-wrapper">
+    <div className="staff-table-wrapper" role="region" aria-label="Staff accounts" tabIndex={0}>
       <table className="staff-table">
         <thead>
           <tr>

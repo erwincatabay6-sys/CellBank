@@ -1,5 +1,6 @@
 .repair-table-wrapper {
   width: 100%;
+  max-height: 480px;
   overflow-x: auto;
 }
 
@@ -1719,4 +1720,56 @@
 .repair-category-section > .customer-form-error {
   margin: 0 0 16px;
   overflow-wrap: anywhere;
+}
+
+/* Keep column headings visible inside the scrolling repair table. */
+.repair-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f9fafb;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.repair-table-wrapper:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px), (max-height: 700px) {
+  .repair-table-wrapper {
+    max-height: min(360px, 60vh);
+  }
+}
+
+.findings-list,
+.payment-list,
+.status-history-list {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 4px;
+}
+
+.findings-list > *,
+.payment-list > *,
+.status-history-list > * {
+  flex-shrink: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.findings-list:focus-visible,
+.payment-list:focus-visible,
+.status-history-list:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px), (max-height: 700px) {
+  .findings-list,
+  .payment-list,
+  .status-history-list {
+    max-height: min(320px, 60vh);
+  }
 }

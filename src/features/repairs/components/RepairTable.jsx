@@ -15,7 +15,12 @@ function RepairTable({ repairs = [], canOpen = true }) {
   }
 
   return (
-    <div className="repair-table-wrapper">
+    <div
+      className="repair-table-wrapper"
+      role="region"
+      aria-label="Repair records"
+      tabIndex={0}
+    >
       <table className="repair-table">
         <thead>
           <tr>

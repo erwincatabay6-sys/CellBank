@@ -1,6 +1,6 @@
 function CustomerTable({ customers, onCustomerClick }) {
   return (
-    <div className="customer-table-wrapper">
+    <div className="customer-table-wrapper" role="region" aria-label="Customer records" tabIndex={0}>
       <table className="customer-table">
         <thead>
           <tr>

@@ -315,7 +315,7 @@ function RepairFindings({
       )}
 
       {findings.length > 0 ? (
-        <div className="findings-list">
+        <div className="findings-list" role="region" aria-label="Saved repair findings" tabIndex={0}>
           {newestFirst.map((entry) => (
             <article key={entry.id} className="finding-item">
               <div className="finding-field">

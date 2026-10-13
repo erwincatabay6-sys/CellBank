@@ -648,7 +648,7 @@ function RepairPartsCosts({
 
       {parts.length > 0 ? (
         <>
-          <div className="parts-table-wrapper">
+          <div className="parts-table-wrapper" role="region" aria-label="Repair parts" tabIndex={0}>
             <table className="parts-table">
               <thead>
                 <tr>

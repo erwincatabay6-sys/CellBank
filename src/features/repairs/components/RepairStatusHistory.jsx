@@ -286,7 +286,7 @@ function RepairStatusHistory({
       )}
 
       {history.length > 0 ? (
-        <div className="status-history-list">
+        <div className="status-history-list" role="region" aria-label="Repair status history" tabIndex={0}>
           {newestFirst.map((entry) => (
             <article key={entry.id} className="status-history-item">
               <div className="status-history-top">
