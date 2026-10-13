@@ -19,6 +19,7 @@ import {
 
 import { RequestError } from "../../../api/http.js";
 import { getProblemCategoryLabel } from "../problemCategories.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const MAX_ATTACHMENTS = 3;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -674,7 +675,7 @@ function RepairAiConversation({
               (!messageText.trim() && attachments.length === 0)
             }
           >
-            <Send size={18} />
+            {isResponding ? <LoadingSpinner size={18} /> : <Send size={18} />}
             <span>{isResponding ? "Sending..." : "Send"}</span>
           </button>
         </div>

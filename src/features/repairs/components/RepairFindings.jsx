@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 function formatTimestamp(value) {
   if (!value) return "—";
@@ -306,7 +307,8 @@ function RepairFindings({
               type="submit"
               disabled={controlsDisabled || !findingText.trim()}
             >
-              {saving ? "Saving…" : "Save Finding"}
+              {saving && <LoadingSpinner size={16} />}
+              <span>{saving ? "Saving..." : "Save Finding"}</span>
             </button>
           </div>
         </form>

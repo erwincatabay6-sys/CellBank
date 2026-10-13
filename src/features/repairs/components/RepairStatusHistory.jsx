@@ -6,6 +6,7 @@ import {
   canChangeRepairStatus,
   canTransitionRepairStatus,
 } from "../../../config/accessControl.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const repairStatuses = [
   { value: "RECEIVED", label: "Received" },
@@ -277,7 +278,8 @@ function RepairStatusHistory({
               type="submit"
               disabled={controlsDisabled || !selectedStatusAllowed}
             >
-              {saving ? "Saving…" : "Confirm Status Change"}
+              {saving && <LoadingSpinner size={16} />}
+              <span>{saving ? "Saving..." : "Confirm Status Change"}</span>
             </button>
           </div>
         </form>

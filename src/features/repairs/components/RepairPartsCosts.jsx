@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { hasAccess } from "../../../config/accessControl.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 
@@ -490,7 +491,8 @@ function RepairPartsCosts({
                 type="submit"
                 disabled={controlsDisabled}
               >
-                {saving ? "Saving…" : "Save Estimate"}
+                {saving && <LoadingSpinner size={16} />}
+                <span>{saving ? "Saving..." : "Save Estimate"}</span>
               </button>
             </div>
           </form>
@@ -538,7 +540,8 @@ function RepairPartsCosts({
                 type="submit"
                 disabled={controlsDisabled}
               >
-                {saving ? "Saving…" : "Confirm Agreement"}
+                {saving && <LoadingSpinner size={16} />}
+                <span>{saving ? "Saving..." : "Confirm Agreement"}</span>
               </button>
             </div>
           </form>
@@ -636,7 +639,8 @@ function RepairPartsCosts({
               type="submit"
               disabled={controlsDisabled || !partName.trim()}
             >
-              {saving ? "Saving…" : "Add Part"}
+              {saving && <LoadingSpinner size={16} />}
+              <span>{saving ? "Saving..." : "Add Part"}</span>
             </button>
           </div>
         </form>

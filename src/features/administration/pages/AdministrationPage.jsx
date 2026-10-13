@@ -3,6 +3,7 @@ import { Plus, Search } from "lucide-react";
 
 import { isValidRoleCombination } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
+import { RequestError } from "../../../api/http.js";
 
 import {
   getStaffAccounts,
@@ -17,6 +18,10 @@ import StaffAccountModal from "../components/StaffAccountModal.jsx";
 import "../administration.css";
 
 function getErrorMessage(error) {
+  if (error instanceof RequestError) {
+    return error.message;
+  }
+
   if (error.status === 401) {
     return "Your session has expired. Please sign in again.";
   }
@@ -31,9 +36,10 @@ function getErrorMessage(error) {
     return validationMessages.join(" ");
   }
 
-  return error.status
-    ? error.message
-    : "Unable to connect to the server. Please try again.";
+  return (
+    error.message ||
+    "Unable to complete the request. Please try again."
+  );
 }
 
 function AdministrationPage() {

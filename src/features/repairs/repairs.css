@@ -1713,3 +1713,10 @@
   flex-wrap: wrap;
   margin: 0;
 }
+
+
+.repair-payments > .customer-form-error,
+.repair-category-section > .customer-form-error {
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}

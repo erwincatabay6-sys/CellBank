@@ -33,7 +33,7 @@ import RepairPartsCosts from "../components/RepairPartsCosts.jsx";
 import RepairPayments from "../components/RepairPayments.jsx";
 import RepairStatusHistory from "../components/RepairStatusHistory.jsx";
 import RepairAiTroubleshooting from "../components/RepairAiTroubleshooting.jsx";
-
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import "../../customers/customers.css";
 import "../repairs.css";
 
@@ -1189,7 +1189,10 @@ function RepairWorkspace({ repairId, user }) {
                     type="submit"
                     disabled={controlsDisabled || assignmentUnchanged}
                   >
-                    {assignmentSaving ? "Saving..." : "Save Assignment"}
+                    {assignmentSaving && <LoadingSpinner size={16} />}
+                    <span>
+                      {assignmentSaving ? "Saving..." : "Save Assignment"}
+                    </span>
                   </button>
                 </div>
               </form>

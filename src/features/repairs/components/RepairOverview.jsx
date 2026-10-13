@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { hasAccess } from "../../../config/accessControl.js";
 
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+
 import {
   problemCategoryOptions,
   getProblemCategoryLabel,
@@ -294,7 +296,8 @@ function RepairOverview({
                   selectedCategory === repair.problemCategory
                 }
               >
-                {categorySaving ? "Saving..." : "Save Category"}
+                {categorySaving && <LoadingSpinner size={16} />}
+                <span>{categorySaving ? "Saving..." : "Save Category"}</span>
               </button>
             </div>
           </form>

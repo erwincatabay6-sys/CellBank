@@ -19,7 +19,7 @@ function EmailVerificationSettings({ user }) {
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusError, setStatusError] = useState("");
-
+  const [statusReload, setStatusReload] = useState(0);
   const [resendAvailableAt, setResendAvailableAt] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
 
@@ -107,8 +107,8 @@ function EmailVerificationSettings({ user }) {
         if (active && error.status !== 401) {
           setStatusError(
             error instanceof RequestError
-              ? `${error.message} Refresh the page to check verification status again.`
-              : "Unable to refresh verification status. Please refresh the page.",
+              ? error.message
+              : "Unable to check verification status. Please try again.",
           );
         }
       } finally {
@@ -136,7 +136,7 @@ function EmailVerificationSettings({ user }) {
       window.removeEventListener("focus", handleReturnToPage);
       document.removeEventListener("visibilitychange", handleReturnToPage);
     };
-  }, [emailVerified, sending, refreshUser, user.id, user.email]);
+  }, [emailVerified, sending, refreshUser, user.id, user.email, statusReload]);
 
   async function handleSendVerification() {
     if (
@@ -233,7 +233,6 @@ function EmailVerificationSettings({ user }) {
             </span>
           </button>
         )}
-        
       </div>
 
       {verificationRequested && !emailVerified && (
@@ -250,9 +249,24 @@ function EmailVerificationSettings({ user }) {
       )}
 
       {statusError && !emailVerified && (
-        <p className="account-form-message" role="alert">
-          {statusError}
-        </p>
+        <div>
+          <p className="account-form-message" role="alert">
+            {statusError}
+          </p>
+
+          <button
+            className="secondary-repair-button"
+            type="button"
+            disabled={checkingStatus || sending}
+            onClick={() => {
+              setCheckingStatus(true);
+              setStatusError("");
+              setStatusReload((current) => current + 1);
+            }}
+          >
+            Retry Status Check
+          </button>
+        </div>
       )}
     </section>
   );

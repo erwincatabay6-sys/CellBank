@@ -86,6 +86,7 @@ function NewRepairPage() {
     count: null,
     error: false,
   });
+  const [deviceHistoryReload, setDeviceHistoryReload] = useState(0);
 
   const [saving, setSaving] = useState(false);
   const [savedRepair, setSavedRepair] = useState(null);
@@ -192,7 +193,7 @@ function NewRepairPage() {
           setDeviceHistory({
             key: deviceHistoryKey,
             count: null,
-            error: true,
+            error: error.message || "Unable to load repair history.",
           });
         }
       }
@@ -204,13 +205,19 @@ function NewRepairPage() {
       active = false;
       controller.abort();
     };
-  }, [canCreate, historyCustomerId, historyDeviceId, deviceHistoryKey]);
+  }, [
+    canCreate,
+    historyCustomerId,
+    historyDeviceId,
+    deviceHistoryKey,
+    deviceHistoryReload,
+  ]);
 
   let previousRepairsText = "Loading...";
 
   if (deviceHistory.key === deviceHistoryKey) {
     if (deviceHistory.error) {
-      previousRepairsText = "Unable to load — reselect device to retry";
+      previousRepairsText = "Unable to load previous repairs";
     } else if (deviceHistory.count !== null) {
       previousRepairsText =
         deviceHistory.count === 0
@@ -620,6 +627,34 @@ function NewRepairPage() {
                     <div key={label}>
                       <span>{label}</span>
                       <strong>{value}</strong>
+
+                      {label === "Previous Repairs" &&
+                        deviceHistory.key === deviceHistoryKey &&
+                        deviceHistory.error && (
+                          <>
+                            <p className="customer-field-error" role="alert">
+                              {deviceHistory.error}
+                            </p>
+
+                            <button
+                              className="secondary-repair-button"
+                              type="button"
+                              disabled={formDisabled}
+                              onClick={() => {
+                                setDeviceHistory({
+                                  key: deviceHistoryKey,
+                                  count: null,
+                                  error: false,
+                                });
+                                setDeviceHistoryReload(
+                                  (current) => current + 1,
+                                );
+                              }}
+                            >
+                              Retry
+                            </button>
+                          </>
+                        )}
                     </div>
                   ))}
                 </div>

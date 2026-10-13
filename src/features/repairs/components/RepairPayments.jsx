@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { hasAccess } from "../../../config/accessControl.js";
+import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 
@@ -350,7 +351,8 @@ function RepairPayments({
               type="submit"
               disabled={controlsDisabled || !canAcceptPayment}
             >
-              {saving ? "Recording…" : "Record Payment"}
+              {saving && <LoadingSpinner size={16} />}
+              <span>{saving ? "Recording..." : "Record Payment"}</span>
             </button>
           </div>
         </form>
