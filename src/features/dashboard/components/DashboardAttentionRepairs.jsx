@@ -12,7 +12,14 @@ function DashboardAttentionRepairs({ repairs, onRepairClick }) {
   }
 
   return (
-    <div className="dashboard-attention-list">
+    <div
+      className={`dashboard-attention-list ${
+        repairs.length > 5 ? "dashboard-scroll-list" : ""
+      }`}
+      role="region"
+      aria-label="Repairs needing attention"
+      tabIndex={repairs.length > 5 ? 0 : undefined}
+    >
       {repairs.map((repair) => (
         <button
           key={repair.id}

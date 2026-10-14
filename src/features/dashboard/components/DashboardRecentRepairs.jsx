@@ -12,7 +12,14 @@ function DashboardRecentRepairs({ repairs, onRepairClick }) {
   }
 
   return (
-    <div className="dashboard-recent-list">
+    <div
+      className={`dashboard-recent-list ${
+        repairs.length > 5 ? "dashboard-scroll-list" : ""
+      }`}
+      role="region"
+      aria-label="Recent active repairs"
+      tabIndex={repairs.length > 5 ? 0 : undefined}
+    >
       {repairs.map((repair) => (
         <button
           key={repair.id}

@@ -1,0 +1,29 @@
+.report-column-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.report-column-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.report-column-bar {
+  fill: var(--primary);
+}
+
+.report-column-bar:hover {
+  fill: var(--primary-dark);
+}
+
+.report-column-value {
+  fill: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-column-chart-wrapper:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

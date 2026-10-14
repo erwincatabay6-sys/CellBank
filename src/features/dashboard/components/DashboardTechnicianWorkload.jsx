@@ -10,7 +10,14 @@ function DashboardTechnicianWorkload({ technicians }) {
   }
 
   return (
-    <div className="dashboard-workload-list">
+    <div
+      className={`dashboard-workload-list ${
+        technicians.length > 5 ? "dashboard-scroll-list" : ""
+      }`}
+      role="region"
+      aria-label="Technician workload"
+      tabIndex={technicians.length > 5 ? 0 : undefined}
+    >
       {technicians.map((technician) => (
         <div key={technician.id} className="dashboard-workload-item">
           <div>

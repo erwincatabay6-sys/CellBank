@@ -382,3 +382,27 @@
     width: 100%;
   }
 }
+
+.dashboard-scroll-list {
+  max-height: 470px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 3px 6px 3px 3px;
+}
+
+.dashboard-scroll-list > * {
+  flex-shrink: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-scroll-list:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px), (max-height: 700px) {
+  .dashboard-scroll-list {
+    max-height: min(300px, 60vh);
+  }
+}

@@ -12,6 +12,8 @@ import FinancialReportTable from "../components/FinancialReportTable.jsx";
 import ReportLineChart from "../components/ReportLineChart.jsx";
 import ReportBarChart from "../components/ReportBarChart.jsx";
 import ReportsSkeleton from "../components/ReportsSkeleton.jsx";
+import ReportColumnChart from "../components/ReportColumnChart.jsx";
+import buildPaymentChart from "../utils/buildPaymentChart.js";
 import "../reports.css";
 
 const reportStatuses = [
@@ -169,7 +171,9 @@ function ReportsContent({ user }) {
   const technicianActivity = report?.technicianActivity ?? [];
 
   const repairVolumeData = toChartData(report?.repairVolume ?? []);
-  const paymentTrendData = toChartData(report?.paymentTrend ?? []);
+  const paymentChart = report
+    ? buildPaymentChart(report.paymentTrend, startDate, endDate)
+    : { data: [], periodLabel: "" };
 
   const statusChartData = reportStatuses.map((status) => ({
     key: status.value,
@@ -425,17 +429,19 @@ function ReportsContent({ user }) {
 
             <article className="report-chart-card report-payment-chart-card">
               <div className="report-chart-header">
-                <h4>Payments Received Over Time</h4>
+                <h4>Payments Received — {paymentChart.periodLabel}</h4>
+
                 <p>
-                  Recorded payments by month during the selected reporting
-                  period.
+                  {!startDate && !endDate
+                    ? "Monthly payments for the current year. All Time totals above include every year."
+                    : "Monthly payments within the selected date filters; boundary months may cover only part of the month."}{" "}
+                  Months without recorded payments show ₱0.
                 </p>
               </div>
 
-              <ReportLineChart
-                data={paymentTrendData}
-                valueType="currency"
-                ariaLabel="Line chart showing payments received over time"
+              <ReportColumnChart
+                data={paymentChart.data}
+                ariaLabel={`Monthly payments received: ${paymentChart.periodLabel}`}
               />
             </article>
           </section>
@@ -496,7 +502,12 @@ function ReportsContent({ user }) {
             </div>
 
             {technicianActivity.length > 0 ? (
-              <div className="report-table-wrapper" role="region" aria-label="Technician repair activity" tabIndex={0}>
+              <div
+                className="report-table-wrapper"
+                role="region"
+                aria-label="Technician repair activity"
+                tabIndex={0}
+              >
                 <table className="report-table">
                   <thead>
                     <tr>
