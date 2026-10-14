@@ -92,3 +92,30 @@ button {
     justify-content: center;
   }
 }
+
+/* Content-width, left-aligned feedback messages */
+.customer-form-error,
+.repair-success-message,
+.public-form-error,
+.public-form-success,
+.public-form-message,
+.account-form-message,
+.administration-error {
+  box-sizing: border-box;
+
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+
+  align-self: flex-start;
+  justify-self: start;
+
+  margin-left: 0;
+  margin-right: auto;
+
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+
