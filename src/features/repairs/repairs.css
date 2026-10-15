@@ -51,13 +51,16 @@
 .repair-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
 
   margin-bottom: 16px;
 }
 
 .repair-search {
-  min-width: 260px;
+  width: 260px;
+  max-width: 100%;
+  min-width: 0;
 
   display: flex;
   align-items: center;
@@ -78,6 +81,7 @@
 
 .repair-search input {
   width: 100%;
+  min-width: 0;
 
   border: none;
   outline: none;
@@ -87,6 +91,7 @@
 
 .repair-toolbar select {
   min-height: 42px;
+  max-width: 100%;
 
   padding: 0 12px;
 
@@ -146,8 +151,13 @@
   border-radius: 10px;
 }
 
+.repair-form-section + .repair-form-section {
+  margin-top: 20px;
+}
+
 .repair-form-section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
@@ -173,6 +183,7 @@
 .repair-form-group {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 
   gap: 8px;
 }
@@ -185,6 +196,7 @@
 .repair-form-group select,
 .repair-form-group textarea {
   width: 100%;
+  min-width: 0;
 
   padding: 11px 12px;
 
@@ -211,6 +223,8 @@
 
 .secondary-repair-button {
   min-height: 40px;
+  flex-shrink: 0;
+  max-width: 100%;
 
   display: inline-flex;
   align-items: center;
@@ -290,6 +304,10 @@
 
 .create-repair-button {
   border: 1px solid var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 
   background-color: var(--primary);
   color: #ffffff;
@@ -298,6 +316,12 @@
 .create-repair-button:hover {
   border-color: var(--primary-dark);
   background-color: var(--primary-dark);
+}
+
+.secondary-repair-button svg,
+.create-repair-button svg,
+.new-repair-button svg {
+  flex-shrink: 0;
 }
 
 .cancel-repair-button:active,
@@ -331,6 +355,8 @@
   flex-direction: column;
 
   gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .selected-device-grid span {
@@ -435,6 +461,7 @@
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
 
   gap: 12px;
 
@@ -475,6 +502,8 @@
   flex-direction: column;
 
   gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .workspace-label {
@@ -593,6 +622,7 @@
 
 .workspace-section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
 
@@ -858,6 +888,8 @@
   flex-direction: column;
 
   gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 
   padding: 14px;
 
@@ -923,6 +955,8 @@
 }
 
 .ai-message-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 12px 14px;
 
   background-color: var(--surface);
@@ -956,6 +990,7 @@
 
 .ai-message-form textarea {
   flex: 1;
+  min-width: 0;
 
   min-height: 80px;
 
@@ -1068,6 +1103,12 @@
   font-weight: 600;
 }
 
+.ai-finding-button svg,
+.ai-status-button svg,
+.ai-part-button svg {
+  flex-shrink: 0;
+}
+
 .ai-finding-button {
   color: var(--primary-dark);
 }
@@ -1094,6 +1135,7 @@
 .price-agreement-header,
 .parts-section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
 
@@ -1295,6 +1337,23 @@
 @media (max-width: 650px) {
   .repair-workspace-header {
     grid-template-columns: 1fr;
+  }
+
+  .repair-form-grid,
+  .modal-form-grid,
+  .selected-device-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .repair-form-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .repair-form-actions,
+  .status-history-top,
+  .payment-item-top {
+    flex-wrap: wrap;
   }
 
   .repair-overview-grid {

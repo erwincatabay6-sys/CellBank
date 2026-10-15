@@ -25,6 +25,7 @@
 
 .technician-search input {
   width: 100%;
+  min-width: 0;
 
   padding: 11px 0;
 
@@ -118,6 +119,8 @@
   flex-direction: column;
 
   gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 
   padding: 14px;
 
@@ -178,6 +181,8 @@
   align-items: flex-start;
 
   gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .technician-repair-item .status-badge {

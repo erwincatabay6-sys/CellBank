@@ -32,6 +32,7 @@
 
 .customer-search input {
   width: 100%;
+  min-width: 0;
 
   padding: 11px 0;
 
@@ -126,6 +127,7 @@
 
 .customer-info-grid strong {
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 900px) {
@@ -177,6 +179,8 @@
   flex-direction: column;
 
   gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .customer-device-card span {
@@ -232,6 +236,7 @@
 .device-info-grid strong,
 .device-repair-item strong {
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .device-repair-history {
@@ -346,6 +351,7 @@
 
 .customer-repair-item strong {
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 900px) {

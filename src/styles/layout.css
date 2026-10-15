@@ -1,11 +1,13 @@
 .app-header {
-  height: 64px;
+  min-height: 64px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 
-  padding: 0 24px;
+  padding: 12px 24px;
 
   background-color: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -168,6 +170,11 @@
   color: var(--primary-dark);
 }
 
+.nav-item svg,
+.logout-button svg {
+  flex-shrink: 0;
+}
+
 .sidebar.collapsed .nav-item {
   justify-content: center;
 }
@@ -247,6 +254,7 @@
 
 .page-header {
   margin-bottom: 24px;
+  overflow-wrap: anywhere;
 }
 
 .page-header h2 {
@@ -265,6 +273,16 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
+}
+
+.page-content + .page-content {
+  margin-top: 20px;
+}
+
+.customer-form-error + button,
+.customer-form-error > button,
+.administration-error > button {
+  margin-top: 12px;
 }
 
 .public-layout {
@@ -720,6 +738,70 @@
 
 .notification-panel {
   width: min(380px, calc(100vw - 32px));
+}
+
+.app-header:has([role="alert"]) > .header-actions {
+  flex-wrap: wrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.header-actions > [role="alert"] {
+  width: fit-content;
+  max-width: min(420px, 100%);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 650px) {
+  .app-header {
+    position: relative;
+    padding: 12px 16px;
+  }
+
+  .staff-body {
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .sidebar.collapsed {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-item {
+    gap: 8px;
+    padding: 10px 8px;
+  }
+
+  .sidebar.collapsed .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sidebar.collapsed .sidebar-profile {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+
+  .notification-wrapper {
+    position: static;
+  }
+
+  .notification-panel {
+    right: 16px;
+  }
 }
 
 .notification-content {
