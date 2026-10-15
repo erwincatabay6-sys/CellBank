@@ -96,6 +96,8 @@
 
 .account-information-item {
   display: flex;
+  min-width: 0;
+  overflow-wrap: anywhere;
 
   flex-direction: column;
 
@@ -254,6 +256,7 @@
 
 .email-verification-card {
   display: flex;
+  flex-wrap: wrap;
 
   align-items: center;
 
@@ -280,6 +283,8 @@
 
 .email-verification-details {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 
   display: flex;
 
