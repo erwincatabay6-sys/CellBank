@@ -119,7 +119,7 @@
 }
 
 .dashboard-attention-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 }
 
 .dashboard-attention-main {
@@ -276,7 +276,7 @@
 }
 
 .dashboard-recent-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 }
 
 .dashboard-recent-main {

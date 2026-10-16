@@ -326,15 +326,15 @@
 }
 
 .email-verification-status .verified {
-  background: #e8f5e9;
+  background: var(--verification-success-bg);
 
-  color: #2e7d32;
+  color: var(--verification-success-text);
 }
 
 .email-verification-status .unverified {
-  background: #fff3e0;
+  background: var(--verification-pending-bg);
 
-  color: #b26a00;
+  color: var(--verification-pending-text);
 }
 
 /* =====================================================

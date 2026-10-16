@@ -76,7 +76,7 @@
 }
 
 .staff-table th {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 
   color: var(--text-secondary);
 
@@ -91,7 +91,7 @@
 }
 
 .staff-row:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 }
 
 .staff-role-list {
@@ -118,17 +118,17 @@
 }
 
 .staff-role-badge {
-  background-color: #eef2ff;
-  color: #4338ca;
+  background-color: var(--badge-role-bg);
+  color: var(--badge-role-text);
 }
 
 .staff-status-badge.active {
-  background-color: #e8f7ee;
-  color: #237a45;
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
 }
 
 .staff-status-badge.inactive {
-  background-color: #f1f3f5;
+  background-color: var(--surface-inactive);
   color: var(--text-secondary);
 }
 
@@ -157,7 +157,7 @@
 
   padding: 10px 12px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 
@@ -183,27 +183,27 @@
 }
 
 .staff-activate-button {
-  background-color: #e8f7ee;
-  color: #237a45;
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
 
-  border: 1px solid #b8dfc6;
+  border: 1px solid var(--feedback-success-border);
 }
 
 .staff-deactivate-button {
-  background-color: #fdeaea;
-  color: #b42318;
+  background-color: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
 
-  border: 1px solid #f1b8b5;
+  border: 1px solid var(--feedback-danger-border);
 }
 .administration-error {
   margin-bottom: 12px;
   padding: 10px 12px;
 
-  background-color: #fdeaea;
-  border: 1px solid #f1b8b5;
+  background-color: var(--feedback-danger-bg);
+  border: 1px solid var(--feedback-danger-border);
   border-radius: 8px;
 
-  color: #b42318;
+  color: var(--feedback-danger-text);
 
   font-size: 0.85rem;
   line-height: 1.4;

@@ -12,12 +12,116 @@
   --text-primary: #111827;
   --text-secondary: #6b7280;
 
+  /* Shared semantic colors; the light palette preserves existing values. */
+  --button-primary: var(--primary);
+  --button-primary-hover: var(--primary-dark);
+  --surface-muted: #f9fafb;
+  --surface-inactive: #f1f3f5;
+  --status-neutral-bg: #e2e8f0;
+  --status-neutral-text: #475569;
+  --status-info-bg: #dbeafe;
+  --status-info-text: #1d4ed8;
+  --status-warning-bg: #fef3c7;
+  --status-warning-text: #b45309;
+  --status-success-bg: #dcfce7;
+  --status-success-text: #15803d;
+  --success-text-strong: #166534;
+  --status-danger-bg: #fee2e2;
+  --status-danger-text: #b91c1c;
+  --status-approval-bg: #ffedd5;
+  --status-approval-text: #c2410c;
+  --badge-success-bg: #e8f7ee;
+  --badge-success-text: #237a45;
+  --badge-role-bg: #eef2ff;
+  --badge-role-text: #4338ca;
+  --badge-warning-bg: #fff4d6;
+  --badge-warning-text: #9a6700;
+  --feedback-danger-bg: #fdeaea;
+  --feedback-danger-text: #b42318;
+  --feedback-danger-border: #f1b8b5;
+  --feedback-success-border: #b8dfc6;
+  --verification-success-bg: #e8f5e9;
+  --verification-success-text: #2e7d32;
+  --verification-pending-bg: #fff3e0;
+  --verification-pending-text: #b26a00;
+  --registration-success-border: #bbf7d0;
+  --ai-warning-border: #fde68a;
+  --success-border: #16a34a;
+  --success-bg: #f0fdf4;
+  --warning-panel-bg: #fff8e6;
+  --warning-panel-border: #f2d38b;
+  --warning-border: #f59e0b;
+  --warning-bg: #fffbeb;
+  --warning-text: #78350f;
+  --chart-axis: #cbd5e1;
+  --chart-track: #e9edf2;
+  --auth-error-bg: rgba(220, 38, 38, 0.06);
+  --modal-backdrop: rgba(15, 23, 42, 0.45);
+
   /* Compatibility aliases used by feature styles. */
   --primary-color: var(--primary);
   --border-color: var(--border);
   --background-color: var(--background);
   --border-radius: 10px;
   --error-color: #dc2626;
+}
+
+:root[data-theme="dark"] {
+  --primary: #f08b8b;
+  --primary-dark: #ffadad;
+  --primary-soft: #412a32;
+
+  --surface-dark: #0c121b;
+  --background: #101722;
+  --surface: #182231;
+  --border: #65778f;
+  --text-primary: #e7edf5;
+  --text-secondary: #b1becf;
+  --error-color: #ffaaaa;
+  --button-primary: #b83d49;
+  --button-primary-hover: #9f3340;
+  --surface-muted: #202c3d;
+  --surface-inactive: #293548;
+  --status-neutral-bg: #334155;
+  --status-neutral-text: #d2dce8;
+  --status-info-bg: #183b61;
+  --status-info-text: #a8ceff;
+  --status-warning-bg: #483713;
+  --status-warning-text: #f8cf7a;
+  --status-success-bg: #163d2d;
+  --status-success-text: #8fe0ae;
+  --success-text-strong: #a0e7ba;
+  --status-danger-bg: #4c252c;
+  --status-danger-text: #ffb1b5;
+  --status-approval-bg: #4b301f;
+  --status-approval-text: #ffc395;
+  --badge-success-bg: #193c2e;
+  --badge-success-text: #9be0b4;
+  --badge-role-bg: #30305b;
+  --badge-role-text: #c8c1ff;
+  --badge-warning-bg: #47381c;
+  --badge-warning-text: #f7d384;
+  --feedback-danger-bg: #45252b;
+  --feedback-danger-text: #ffb1aa;
+  --feedback-danger-border: #a35b65;
+  --feedback-success-border: #568767;
+  --verification-success-bg: #193d2b;
+  --verification-success-text: #a2e2af;
+  --verification-pending-bg: #44351f;
+  --verification-pending-text: #f8d18b;
+  --registration-success-border: #568767;
+  --ai-warning-border: #907437;
+  --success-border: #64bf83;
+  --success-bg: #183b29;
+  --warning-panel-bg: #3c321f;
+  --warning-panel-border: #907437;
+  --warning-border: #c69b47;
+  --warning-bg: #3c321f;
+  --warning-text: #f4d49a;
+  --chart-axis: #73849b;
+  --chart-track: #3b4b61;
+  --auth-error-bg: #45252b;
+  --modal-backdrop: rgba(3, 7, 18, 0.72);
 }
 
 * {
@@ -119,3 +223,21 @@ button {
 }
 
 
+/* Native controls and focus indicators follow the selected dark palette. */
+:root[data-theme="dark"] :is(input, select, textarea) {
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] :is(input, textarea)::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] :is(select option, .ai-message-form textarea) {
+  background-color: var(--surface);
+}
+
+:root[data-theme="dark"] :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
