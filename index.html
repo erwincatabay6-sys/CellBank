@@ -9,6 +9,28 @@
         content="width=device-width, initial-scale=1.0">
 
     <title>Cellbank</title>
+
+    <script>
+        // Apply the theme before styles and React load to avoid a light/dark flash.
+        (() => {
+            let preference = null;
+
+            try {
+                preference = localStorage.getItem("cellbank-theme");
+            } catch {
+                // Storage may be unavailable; the system preference still works.
+            }
+
+            const theme = preference === "light" || preference === "dark"
+                ? preference
+                : window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "light";
+
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
 </head>
 
 <body>

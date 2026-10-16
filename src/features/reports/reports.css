@@ -21,7 +21,7 @@
 
   padding: 16px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -60,7 +60,7 @@
 }
 
 .report-table th {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 
   color: var(--text-secondary);
 
@@ -137,7 +137,7 @@
 }
 
 .report-repair-row:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 }
 
 .report-repair-row .status-badge {
@@ -186,7 +186,7 @@
 
   padding: 16px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -246,22 +246,22 @@
 }
 
 .financial-status.paid {
-  background-color: #e8f7ee;
-  color: #237a45;
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
 }
 
 .financial-status.partially-paid {
-  background-color: #fff4d6;
-  color: #9a6700;
+  background-color: var(--badge-warning-bg);
+  color: var(--badge-warning-text);
 }
 
 .financial-status.unpaid {
-  background-color: #fdeaea;
-  color: #b42318;
+  background-color: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
 }
 
 .financial-status.price-not-agreed {
-  background-color: #f1f3f5;
+  background-color: var(--surface-inactive);
   color: var(--text-secondary);
 }
 
@@ -382,7 +382,7 @@
 
   padding: 18px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -423,12 +423,12 @@
 }
 
 .report-chart-grid-line {
-  stroke: #e5e7eb;
+  stroke: var(--border);
   stroke-width: 1;
 }
 
 .report-chart-axis-line {
-  stroke: #cbd5e1;
+  stroke: var(--chart-axis);
   stroke-width: 1.2;
 }
 
@@ -503,7 +503,7 @@
 
   overflow: hidden;
 
-  background-color: #e9edf2;
+  background-color: var(--chart-track);
   border-radius: 999px;
 }
 

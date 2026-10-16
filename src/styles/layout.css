@@ -75,6 +75,19 @@
   background-color: var(--primary-soft);
 }
 
+.icon-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.theme-toggle {
+  flex-shrink: 0;
+}
+
+.public-header > .theme-toggle {
+  margin-left: auto;
+}
+
 .logout-button {
   display: flex;
   align-items: center;
@@ -387,14 +400,14 @@
 }
 
 .primary-action {
-  border: 1px solid var(--primary);
-  background-color: var(--primary);
+  border: 1px solid var(--button-primary);
+  background-color: var(--button-primary);
   color: #ffffff;
 }
 
 .primary-action:hover {
-  background-color: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background-color: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
 }
 
 .secondary-action {
@@ -517,7 +530,7 @@
 
   border-radius: 999px;
 
-  background-color: var(--primary);
+  background-color: var(--button-primary);
   color: #ffffff;
 
   font-size: 0.65rem;
@@ -602,33 +615,33 @@
 }
 
 .status-received {
-  background-color: #e2e8f0;
-  color: #475569;
+  background-color: var(--status-neutral-bg);
+  color: var(--status-neutral-text);
 }
 
 .status-in-progress {
-  background-color: #dbeafe;
-  color: #1d4ed8;
+  background-color: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .status-awaiting-parts {
-  background-color: #fef3c7;
-  color: #b45309;
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
 }
 
 .status-ready-for-release {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: var(--status-success-bg);
+  color: var(--status-success-text);
 }
 
 .status-completed {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: var(--status-success-bg);
+  color: var(--success-text-strong);
 }
 
 .status-cancelled {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
 }
 
 /* =====================================================
@@ -867,7 +880,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   box-shadow: inset 0 -1px 0 var(--border);
 }
 
@@ -897,7 +910,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   box-shadow: inset 0 -1px 0 var(--border);
 }
 

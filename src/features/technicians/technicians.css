@@ -57,7 +57,7 @@
 }
 
 .technician-table th {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 
   color: var(--text-secondary);
 
@@ -91,12 +91,12 @@
 }
 
 .technician-status.active {
-  background-color: #e8f7ee;
-  color: #237a45;
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
 }
 
 .technician-status.inactive {
-  background-color: #f1f3f5;
+  background-color: var(--surface-inactive);
   color: var(--text-secondary);
 }
 
@@ -124,7 +124,7 @@
 
   padding: 14px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -170,7 +170,7 @@
 }
 
 .technician-repair-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border-color: var(--primary);
 }
 

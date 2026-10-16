@@ -64,7 +64,7 @@
 }
 
 .customer-table th {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
 
   color: var(--text-secondary);
 
@@ -114,7 +114,7 @@
 
   padding: 14px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -170,7 +170,7 @@
 }
 
 .customer-device-card:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border-color: var(--primary);
 }
 
@@ -221,7 +221,7 @@
 
   padding: 14px;
 
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -272,7 +272,7 @@
 }
 
 .device-repair-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border-color: var(--primary);
 }
 
@@ -332,7 +332,7 @@
 }
 
 .customer-repair-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--surface-muted);
   border-color: var(--primary);
 }
 
@@ -375,8 +375,8 @@
   margin-bottom: 16px;
   padding: 16px;
 
-  background-color: #fff8e6;
-  border: 1px solid #f2d38b;
+  background-color: var(--warning-panel-bg);
+  border: 1px solid var(--warning-panel-border);
   border-radius: 8px;
 }
 
@@ -396,8 +396,8 @@
 .device-repeat-list span {
   padding: 6px 10px;
 
-  background-color: white;
-  border: 1px solid #f2d38b;
+  background-color: var(--surface);
+  border: 1px solid var(--warning-panel-border);
   border-radius: 999px;
 
   font-size: 0.8rem;
@@ -503,10 +503,10 @@
 .customer-repeated-problem-alert {
   margin-bottom: 20px;
   padding: 16px;
-  border: 1px solid #f59e0b;
+  border: 1px solid var(--warning-border);
   border-radius: 8px;
-  background: #fffbeb;
-  color: #78350f;
+  background: var(--warning-bg);
+  color: var(--warning-text);
   overflow-wrap: anywhere;
 }
 
@@ -545,7 +545,7 @@
 
 .customer-repeated-problem-alert .customer-repeat-note {
   margin: 16px 0 0;
-  color: #78350f;
+  color: var(--warning-text);
 }
 
 .customer-new-button {

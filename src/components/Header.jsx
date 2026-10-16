@@ -7,6 +7,7 @@ import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
 import Brand from "./Brand.jsx";
 import NotificationBell from "./NotificationBell.jsx";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 function Header() {
   const { user, logout } = useAuth();
@@ -46,6 +47,7 @@ function Header() {
 
       <div className="header-actions">
         {user?.id != null && <NotificationBell key={user.id} />}
+        <ThemeToggle />
 
         {logoutError && <span role="alert">{logoutError}</span>}
 
