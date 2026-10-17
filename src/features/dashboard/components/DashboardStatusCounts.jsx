@@ -1,48 +1,22 @@
-const statusItems = [
-  {
-    status: "RECEIVED",
-    label: "Received",
-  },
+import StatusBadge from "../../../components/StatusBadge.jsx";
 
-  {
-    status: "AWAITING_APPROVAL",
-    label: "Awaiting Approval",
-  },
-
-  {
-    status: "IN_PROGRESS",
-    label: "In Progress",
-  },
-
-  {
-    status: "AWAITING_PARTS",
-    label: "Awaiting Parts",
-  },
-
-  {
-    status: "READY_FOR_RELEASE",
-    label: "Ready for Release",
-  },
-
-  {
-    status: "COMPLETED",
-    label: "Completed",
-  },
-
-  {
-    status: "CANCELLED",
-    label: "Cancelled",
-  },
+const statuses = [
+  "RECEIVED",
+  "AWAITING_APPROVAL",
+  "IN_PROGRESS",
+  "AWAITING_PARTS",
+  "READY_FOR_RELEASE",
+  "COMPLETED",
+  "CANCELLED",
 ];
 
 function DashboardStatusCounts({ statusCounts }) {
   return (
     <div className="dashboard-status-grid">
-      {statusItems.map((item) => (
-        <div key={item.status} className="dashboard-status-card">
-          <span>{item.label}</span>
-
-          <strong>{statusCounts[item.status] ?? 0}</strong>
+      {statuses.map((status) => (
+        <div key={status} className="dashboard-status-card">
+          <StatusBadge status={status} />
+          <strong>{statusCounts[status] ?? 0}</strong>
         </div>
       ))}
     </div>

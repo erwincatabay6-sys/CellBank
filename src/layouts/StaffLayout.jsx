@@ -13,7 +13,7 @@ function StaffLayout({ children, currentRoles, currentUserName }) {
   }
 
   return (
-    <div className="staff-layout">
+    <div className={`staff-layout ${sidebarCollapsed ? "sidebar-is-collapsed" : ""}`}>
       <Header
         currentRoles={currentRoles}
         currentUserName={currentUserName}

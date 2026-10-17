@@ -146,6 +146,8 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
               className={`nav-item ${isActivePath(item.path) ? "active" : ""}`}
               type="button"
               title={collapsed ? item.label : undefined}
+              aria-label={item.label}
+              aria-current={isActivePath(item.path) ? "page" : undefined}
               onClick={() => navigate(item.path)}
             >
               <Icon size={20} />

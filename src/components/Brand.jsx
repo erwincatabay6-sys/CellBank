@@ -11,7 +11,7 @@ function Brand() {
       />
 
       <div className="header-brand-text">
-        <h1>Cellbank</h1>
+        <h1><span className="brand-name">Cell</span>bank</h1>
         <span className="header-brand-subtitle">
           Repair Management System
         </span>

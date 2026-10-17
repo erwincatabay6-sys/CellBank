@@ -20,10 +20,17 @@ function DashboardTechnicianWorkload({ technicians }) {
     >
       {technicians.map((technician) => (
         <div key={technician.id} className="dashboard-workload-item">
-          <div>
+          <div className="dashboard-technician-identity">
+            <span className="dashboard-technician-avatar" aria-hidden="true">
+              {(technician.name ?? "")
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")
+                .toUpperCase()}
+            </span>
             <strong>{technician.name}</strong>
-
-            <span>Technician</span>
           </div>
 
           <div className="dashboard-workload-values">

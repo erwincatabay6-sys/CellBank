@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { hasAccess, hasRole } from "../../../config/accessControl.js";
@@ -123,9 +124,29 @@ function DashboardContent({ user }) {
 
   return (
     <>
-      <section className="page-header">
-        <h2>Dashboard</h2>
-        <p>Current operational overview of Cellbank repair activity.</p>
+      <section className="page-header dashboard-page-header">
+        <div>
+          <h2>
+            {user?.name?.trim()
+              ? `Welcome back, ${user.name.trim().split(/\s+/)[0]}`
+              : "Dashboard"}
+          </h2>
+          <p>
+            {isTechnicianOnly
+              ? "Here is the latest on your assigned repairs."
+              : "Here is the latest on your repair operations."}
+          </p>
+        </div>
+        {hasAccess(currentRoles, "createRepair") && (
+          <button
+            type="button"
+            className="new-repair-button"
+            onClick={() => navigate("/repairs/new")}
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>New Repair</span>
+          </button>
+        )}
       </section>
 
       {loading && (
@@ -156,19 +177,8 @@ function DashboardContent({ user }) {
       )}
 
       {!loading && !error && dashboard && (
-        <>
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Repair Summary</h3>
-                <p className="workspace-section-description">
-                  {isTechnicianOnly
-                    ? "Summary of repairs currently assigned to you."
-                    : "Current repair activity across the system."}
-                </p>
-              </div>
-            </div>
-
+        <div className="dashboard-layout">
+          <section className="dashboard-summary-section" aria-label="Repair summary">
             <DashboardSummaryCards
               totalRepairs={dashboard.summary.totalRepairs}
               activeRepairs={dashboard.summary.activeRepairs}
@@ -177,100 +187,94 @@ function DashboardContent({ user }) {
             />
           </section>
 
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Repair Status</h3>
-                <p className="workspace-section-description">
-                  {isTechnicianOnly
-                    ? "Current status of repairs assigned to you."
-                    : "Current repair jobs grouped by status."}
-                </p>
-              </div>
-            </div>
+          <div className="dashboard-columns">
+            <div className="dashboard-main-column">
+              <section className="page-content dashboard-attention-section">
+                <div className="dashboard-panel-header">
+                  <div>
+                    <h3>Needs Attention</h3>
+                  </div>
+                </div>
 
-            <DashboardStatusCounts statusCounts={dashboard.statusCounts} />
-          </section>
+                <DashboardAttentionRepairs
+                  repairs={dashboard.attentionRepairs}
+                  onRepairClick={handleRepairClick}
+                />
+              </section>
 
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Repairs Needing Attention</h3>
-                <p className="workspace-section-description">
-                  {isTechnicianOnly
-                    ? "Assigned repairs that currently require your attention."
-                    : "Repair jobs that currently require staff follow-up."}
-                </p>
-              </div>
-            </div>
-
-            <DashboardAttentionRepairs
-              repairs={dashboard.attentionRepairs}
-              onRepairClick={handleRepairClick}
-            />
-          </section>
-
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>
-                  {isTechnicianOnly ? "Your Workload" : "Technician Workload"}
-                </h3>
-                <p className="workspace-section-description">
-                  {isTechnicianOnly
-                    ? "Current and total repair assignments assigned to you."
-                    : "Current repair workload across Cellbank technicians."}
-                </p>
-              </div>
-            </div>
-
-            <DashboardTechnicianWorkload
-              technicians={dashboard.technicianWorkload}
-            />
-          </section>
-
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>
-                  {isTechnicianOnly
-                    ? "Your Active Repairs"
-                    : "Recent Active Repairs"}
-                </h3>
-                <p className="workspace-section-description">
+              <section className="page-content dashboard-recent-section">
+                <div className="dashboard-panel-header">
+                  <div>
+                    <h3>
+                      {isTechnicianOnly
+                        ? "Your Active Repairs"
+                        : "Recent Active Repairs"}
+                    </h3>
+                  </div>
+                  {canViewRepairs && (
+                    <button
+                      type="button"
+                      className="dashboard-view-all"
+                      onClick={() => navigate("/repairs")}
+                    >
+                      View repairs
+                    </button>
+                  )}
+                </div>
+                <p className="dashboard-table-description">
                   {isTechnicianOnly
                     ? "Your five most recently updated active repair jobs."
                     : "The five most recently updated active repair jobs."}
                 </p>
-              </div>
+
+                <DashboardRecentRepairs
+                  repairs={dashboard.recentActiveRepairs}
+                  onRepairClick={handleRepairClick}
+                />
+              </section>
             </div>
-
-            <DashboardRecentRepairs
-              repairs={dashboard.recentActiveRepairs}
-              onRepairClick={handleRepairClick}
-            />
-          </section>
-
-          {isAdmin && financial && (
-            <section className="page-content">
-              <div className="workspace-section-header">
-                <div>
-                  <h3>Financial Snapshot</h3>
-                  <p className="workspace-section-description">
-                    Current repair value, collected payments, and outstanding
-                    balances.
-                  </p>
+            <div className="dashboard-side-column">
+              <section className="page-content dashboard-workload-section">
+                <div className="dashboard-panel-header">
+                  <div>
+                    <h3>
+                      {isTechnicianOnly ? "Your Workload" : "Technician Workload"}
+                    </h3>
+                  </div>
                 </div>
-              </div>
 
-              <DashboardFinancialSnapshot
-                totalAgreedValue={financial.totalAgreedValue}
-                totalCollected={financial.totalCollected}
-                outstandingBalance={financial.outstandingBalance}
-              />
-            </section>
-          )}
-        </>
+                <DashboardTechnicianWorkload
+                  technicians={dashboard.technicianWorkload}
+                />
+              </section>
+
+              <section className="page-content dashboard-status-section">
+                <div className="dashboard-panel-header">
+                  <div>
+                    <h3>Repair Status</h3>
+                  </div>
+                </div>
+
+                <DashboardStatusCounts statusCounts={dashboard.statusCounts} />
+              </section>
+              {isAdmin && financial && (
+                <section className="page-content dashboard-financial-section">
+                  <div className="dashboard-panel-header">
+                    <div>
+                      <h3>Financial Snapshot</h3>
+                    </div>
+                  </div>
+
+                  <DashboardFinancialSnapshot
+                    totalAgreedValue={financial.totalAgreedValue}
+                    totalCollected={financial.totalCollected}
+                    outstandingBalance={financial.outstandingBalance}
+                  />
+                </section>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

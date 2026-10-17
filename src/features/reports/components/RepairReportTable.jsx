@@ -6,12 +6,12 @@ function RepairReportTable({ repairs, onRepairClick }) {
       <table className="report-table">
         <thead>
           <tr>
-            <th>Reference</th>
-            <th>Date Received</th>
-            <th>Customer</th>
-            <th>Device</th>
-            <th>Technician</th>
-            <th>Status</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Date Received</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Device</th>
+            <th scope="col">Technician</th>
+            <th scope="col">Status</th>
           </tr>
         </thead>
 
@@ -23,7 +23,17 @@ function RepairReportTable({ repairs, onRepairClick }) {
               onClick={() => onRepairClick(repair.id)}
             >
               <td>
-                <strong>{repair.reference}</strong>
+                <button
+                  type="button"
+                  className="record-link"
+                  aria-label={`Open repair ${repair.reference}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onRepairClick(repair.id);
+                  }}
+                >
+                  {repair.reference}
+                </button>
               </td>
 
               <td>

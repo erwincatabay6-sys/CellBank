@@ -4,7 +4,7 @@
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 .customer-toolbar > button {
@@ -56,7 +56,7 @@
 
 .customer-table th,
 .customer-table td {
-  padding: 14px;
+  padding: 12px;
 
   text-align: left;
 
@@ -112,11 +112,11 @@
 
   gap: 5px;
 
-  padding: 14px;
+  padding: 8px 12px;
 
-  background-color: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
 }
 
 .customer-info-grid span {
@@ -219,11 +219,11 @@
 
   gap: 5px;
 
-  padding: 14px;
+  padding: 8px 12px;
 
-  background-color: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
 }
 
 .device-info-grid span,
@@ -501,7 +501,7 @@
 }
 
 .customer-repeated-problem-alert {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 16px;
   border: 1px solid var(--warning-border);
   border-radius: 8px;
@@ -558,4 +558,20 @@
 .customer-new-button svg {
   display: block;
   flex-shrink: 0;
+}
+
+.customer-repair-history:has(> .customer-repair-item:nth-child(6)) {
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.customer-repair-history > .customer-repair-item {
+  flex-shrink: 0;
+}
+
+@media (max-width: 650px) {
+  .customer-repair-history:has(> .customer-repair-item:nth-child(6)) {
+    max-height: 60vh;
+  }
 }

@@ -4,12 +4,12 @@ function StaffTable({ users, saving = false, onUserClick, onToggleStatus }) {
       <table className="staff-table">
         <thead>
           <tr>
-            <th>Staff Member</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Access</th>
+            <th scope="col">Staff Member</th>
+            <th scope="col">Username</th>
+            <th scope="col">Email</th>
+            <th scope="col">Role</th>
+            <th scope="col">Status</th>
+            <th scope="col">Access</th>
           </tr>
         </thead>
 
@@ -17,7 +17,17 @@ function StaffTable({ users, saving = false, onUserClick, onToggleStatus }) {
           {users.map((user) => (
             <tr key={user.id} className="staff-row">
               <td onClick={() => onUserClick(user.id)}>
-                <strong>{user.name}</strong>
+                <button
+                  type="button"
+                  className="record-link"
+                  aria-label={`Edit staff member ${user.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onUserClick(user.id);
+                  }}
+                >
+                  {user.name}
+                </button>
               </td>
 
               <td onClick={() => onUserClick(user.id)}>{user.username}</td>

@@ -1,11 +1,10 @@
 import Skeleton from "../../../components/Skeleton.jsx";
 
-function SkeletonSection({ children }) {
+function SkeletonSection({ children, className = "" }) {
   return (
-    <section className="page-content">
+    <section className={`page-content ${className}`}>
       <div className="dashboard-skeleton-heading">
-        <Skeleton width={180} height={22} />
-        <Skeleton width={320} height={14} />
+        <Skeleton width={180} height={20} />
       </div>
 
       {children}
@@ -49,44 +48,46 @@ export default function DashboardSkeleton({
 }) {
   return (
     <div role="status" aria-label="Loading dashboard">
-      <div aria-hidden="true">
-        <SkeletonSection>
+      <div className="dashboard-layout" aria-hidden="true">
+        <div className="dashboard-summary-section">
           <SkeletonCards
             count={4}
             gridClass="dashboard-summary-grid"
             cardClass="dashboard-summary-card"
           />
-        </SkeletonSection>
+        </div>
 
-        <SkeletonSection>
-          <SkeletonCards
-            count={7}
-            gridClass="dashboard-status-grid"
-            cardClass="dashboard-status-card"
-          />
-        </SkeletonSection>
-
-        <SkeletonSection>
-          <SkeletonRows />
-        </SkeletonSection>
-
-        <SkeletonSection>
-          <SkeletonRows count={technicianOnly ? 1 : 3} />
-        </SkeletonSection>
-
-        <SkeletonSection>
-          <SkeletonRows count={5} />
-        </SkeletonSection>
-
-        {isAdmin && (
-          <SkeletonSection>
-            <SkeletonCards
-              count={3}
-              gridClass="dashboard-financial-grid"
-              cardClass="dashboard-financial-card"
-            />
-          </SkeletonSection>
-        )}
+        <div className="dashboard-columns">
+          <div className="dashboard-main-column">
+            <SkeletonSection>
+              <SkeletonRows />
+            </SkeletonSection>
+            <SkeletonSection>
+              <SkeletonRows count={5} />
+            </SkeletonSection>
+          </div>
+          <div className="dashboard-side-column">
+            <SkeletonSection>
+              <SkeletonRows count={technicianOnly ? 1 : 3} />
+            </SkeletonSection>
+            <SkeletonSection>
+              <SkeletonCards
+                count={7}
+                gridClass="dashboard-status-grid"
+                cardClass="dashboard-status-card"
+              />
+            </SkeletonSection>
+            {isAdmin && (
+              <SkeletonSection>
+                <SkeletonCards
+                  count={3}
+                  gridClass="dashboard-financial-grid"
+                  cardClass="dashboard-financial-card"
+                />
+              </SkeletonSection>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

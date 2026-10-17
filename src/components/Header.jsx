@@ -13,6 +13,7 @@ function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
@@ -44,6 +45,7 @@ function Header() {
   return (
     <header className="app-header">
       <Brand />
+      
 
       <div className="header-actions">
         {user?.id != null && <NotificationBell key={user.id} />}
