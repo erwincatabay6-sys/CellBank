@@ -75,7 +75,7 @@
 }
 
 .tracking-section-header {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 .tracking-section-header h3 {

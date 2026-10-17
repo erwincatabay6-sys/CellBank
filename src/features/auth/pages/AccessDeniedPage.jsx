@@ -24,8 +24,8 @@ function AccessDeniedPage({ currentRoles }) {
   }
 
   return (
-    <section className="page-content">
-      <div className="workspace-empty-state">
+    <section className="public-card">
+      <div className="public-state-content">
         <ShieldX size={40} />
 
         <strong>Access Denied</strong>

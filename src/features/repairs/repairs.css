@@ -11,7 +11,7 @@
 
 .repair-table th,
 .repair-table td {
-  padding: 14px 16px;
+  padding: 12px 14px;
 
   border-bottom: 1px solid var(--border);
 
@@ -144,7 +144,7 @@
 }
 
 .repair-form-section {
-  padding: 24px;
+  padding: var(--panel-padding);
 
   background-color: var(--surface);
   border: 1px solid var(--border);
@@ -152,7 +152,7 @@
 }
 
 .repair-form-section + .repair-form-section {
-  margin-top: 20px;
+  margin-top: var(--section-gap);
 }
 
 .repair-form-section-header {
@@ -162,7 +162,7 @@
   justify-content: space-between;
   gap: 16px;
 
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap);
 }
 
 .repair-form-section-header h3 {
@@ -383,7 +383,7 @@
   align-items: center;
   justify-content: center;
 
-  padding: 24px;
+  padding: var(--panel-padding);
 
   background-color: var(--modal-backdrop);
 
@@ -397,7 +397,7 @@
   max-height: 90vh;
   overflow-y: auto;
 
-  padding: 24px;
+  padding: var(--panel-padding);
 
   background-color: var(--surface);
 
@@ -413,7 +413,7 @@
 
   gap: 16px;
 
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap);
 }
 
 .modal-header h3 {
@@ -489,8 +489,8 @@
 
   gap: 16px;
 
-  margin-bottom: 20px;
-  padding: 20px;
+  margin-bottom: var(--section-gap);
+  padding: var(--panel-padding);
 
   background-color: var(--surface);
   border: 1px solid var(--border);
@@ -544,20 +544,21 @@
 
   gap: 4px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 4px;
 
   overflow-x: auto;
 
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .workspace-tab {
   flex-shrink: 0;
 
-  padding: 10px 14px;
+  min-height: 42px;
+  padding: 10px 12px;
 
   border: none;
   border-radius: 7px;
@@ -580,6 +581,7 @@
 .workspace-tab.active {
   background-color: var(--primary-soft);
   color: var(--primary-dark);
+  box-shadow: inset 0 -2px 0 var(--primary);
 }
 .repair-workspace-header .status-badge {
   align-self: flex-start;
@@ -587,7 +589,9 @@
 }
 
 .workspace-section-description {
-  margin-bottom: 18px;
+  margin-top: 4px;
+  margin-bottom: 0;
+  font-size: 0.875rem;
 
   color: var(--text-secondary);
 }
@@ -637,7 +641,7 @@
 
   gap: 16px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 20px;
 
   background-color: var(--surface-muted);
@@ -688,7 +692,7 @@
 
   gap: 16px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 20px;
 
   background-color: var(--surface-muted);
@@ -739,7 +743,7 @@
 
   gap: 16px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 20px;
 
   background-color: var(--surface-muted);
@@ -800,7 +804,7 @@
 
   gap: 12px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 .payment-summary > div {
@@ -831,7 +835,7 @@
 
   gap: 16px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 20px;
 
   background-color: var(--surface-muted);
@@ -880,7 +884,7 @@
 
   gap: 12px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 .ai-repair-context > div {
@@ -891,7 +895,7 @@
   min-width: 0;
   overflow-wrap: anywhere;
 
-  padding: 14px;
+  padding: 12px;
 
   background-color: var(--surface-muted);
   border: 1px solid var(--border);
@@ -1041,7 +1045,7 @@
 }
 
 .ai-history-context {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 16px;
 
   background-color: var(--surface-muted);
@@ -1164,7 +1168,7 @@
 
   gap: 5px;
 
-  padding: 14px;
+  padding: 12px;
 
   background-color: var(--surface);
   border: 1px solid var(--border);
@@ -1206,11 +1210,11 @@
 
   gap: 5px;
 
-  padding: 14px;
+  padding: 8px 12px;
 
-  background-color: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
 }
 
 .repair-overview-grid span {
@@ -1258,11 +1262,11 @@
 
   gap: 5px;
 
-  padding: 14px;
+  padding: 8px 12px;
 
-  background-color: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
 }
 
 .repair-overview-grid .overview-wide {
@@ -1301,7 +1305,7 @@
   color: var(--text-secondary);
 }
 .ai-history-empty {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 /* =========================================
@@ -1443,7 +1447,7 @@
 }
 
 .technician-assignment-panel {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
 }
 
 .technician-assignment-form {
@@ -1474,7 +1478,7 @@
 
   gap: 10px;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap);
   padding: 12px 14px;
 
   background-color: var(--surface-muted);

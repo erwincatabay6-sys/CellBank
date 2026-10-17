@@ -4,10 +4,10 @@ function TechnicianTable({ technicians, onTechnicianClick }) {
       <table className="technician-table">
         <thead>
           <tr>
-            <th>Technician</th>
-            <th>Status</th>
-            <th>Active Repairs</th>
-            <th>Total Assigned</th>
+            <th scope="col">Technician</th>
+            <th scope="col">Status</th>
+            <th scope="col">Active Repairs</th>
+            <th scope="col">Total Assigned</th>
           </tr>
         </thead>
 
@@ -18,7 +18,19 @@ function TechnicianTable({ technicians, onTechnicianClick }) {
               className="technician-row"
               onClick={() => onTechnicianClick(technician.id)}
             >
-              <td>{technician.name}</td>
+              <td>
+                <button
+                  type="button"
+                  className="record-link"
+                  aria-label={`Open technician ${technician.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTechnicianClick(technician.id);
+                  }}
+                >
+                  {technician.name}
+                </button>
+              </td>
 
               <td>
                 <span

@@ -49,25 +49,27 @@ function AccountSettingsPage() {
         <p>Manage your personal account information and security.</p>
       </section>
 
-      {/* =========================
-                PROFILE
-            ========================== */}
-      <ProfileSettings user={currentUser} />
+      <div className="account-settings-grid">
+        {/* =========================
+                  PROFILE
+              ========================== */}
+        <ProfileSettings user={currentUser} />
 
-      {/* =========================
-                ACCOUNT INFORMATION
-            ========================== */}
-      <AccountInformation user={currentUser} currentRoles={currentRoles} />
+        {/* =========================
+                  ACCOUNT INFORMATION
+              ========================== */}
+        <AccountInformation user={currentUser} currentRoles={currentRoles} />
 
-      {/* =========================
-                CHANGE PASSWORD
-            ========================== */}
-      <PasswordSettings />
+        {/* =========================
+                  CHANGE PASSWORD
+              ========================== */}
+        <PasswordSettings />
 
-      {/* =========================
-                EMAIL VERIFICATION
-            ========================== */}
-      <EmailVerificationSettings user={currentUser} />
+        {/* =========================
+                  EMAIL VERIFICATION
+              ========================== */}
+        <EmailVerificationSettings user={currentUser} />
+      </div>
     </>
   );
 }

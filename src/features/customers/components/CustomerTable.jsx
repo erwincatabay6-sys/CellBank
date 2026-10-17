@@ -4,10 +4,10 @@ function CustomerTable({ customers, onCustomerClick }) {
       <table className="customer-table">
         <thead>
           <tr>
-            <th>Customer</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Devices</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Email</th>
+            <th scope="col">Devices</th>
           </tr>
         </thead>
 
@@ -18,7 +18,19 @@ function CustomerTable({ customers, onCustomerClick }) {
               className="customer-row"
               onClick={() => onCustomerClick(customer.id)}
             >
-              <td>{customer.name}</td>
+              <td>
+                <button
+                  type="button"
+                  className="record-link"
+                  aria-label={`Open customer ${customer.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onCustomerClick(customer.id);
+                  }}
+                >
+                  {customer.name}
+                </button>
+              </td>
 
               <td>{customer.phone}</td>
 

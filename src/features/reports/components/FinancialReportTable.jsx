@@ -4,12 +4,12 @@ function FinancialReportTable({ records, onRepairClick }) {
       <table className="report-table">
         <thead>
           <tr>
-            <th>Reference</th>
-            <th>Customer</th>
-            <th>Agreed Price</th>
-            <th>Total Paid</th>
-            <th>Balance</th>
-            <th>Payment Status</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Agreed Price</th>
+            <th scope="col">Total Paid</th>
+            <th scope="col">Balance</th>
+            <th scope="col">Payment Status</th>
           </tr>
         </thead>
 
@@ -21,7 +21,17 @@ function FinancialReportTable({ records, onRepairClick }) {
               onClick={() => onRepairClick(record.id)}
             >
               <td>
-                <strong>{record.reference}</strong>
+                <button
+                  type="button"
+                  className="record-link"
+                  aria-label={`Open repair ${record.reference}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onRepairClick(record.id);
+                  }}
+                >
+                  {record.reference}
+                </button>
               </td>
 
               <td>{record.customer}</td>

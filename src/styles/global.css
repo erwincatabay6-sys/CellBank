@@ -1,21 +1,22 @@
 :root {
   --primary: #d95c5c;
-  --primary-dark: #b94444;
+  --primary-dark: #b53c44;
   --primary-soft: #fdecec;
 
   --surface-dark: #1f2937;
-  --background: #f8fafc;
+  --background: #f4f5f7;
   --surface: #ffffff;
 
-  --border: #e5e7eb;
+  --border: #dfe3e9;
+  --control-border: #8993a2;
 
   --text-primary: #111827;
-  --text-secondary: #6b7280;
+  --text-secondary: #5c6574;
 
-  /* Shared semantic colors; the light palette preserves existing values. */
-  --button-primary: var(--primary);
+  /* Shared surfaces, controls, and status colors for both themes. */
+  --button-primary: #bf414b;
   --button-primary-hover: var(--primary-dark);
-  --surface-muted: #f9fafb;
+  --surface-muted: #f7f8fa;
   --surface-inactive: #f1f3f5;
   --status-neutral-bg: #e2e8f0;
   --status-neutral-text: #475569;
@@ -35,7 +36,7 @@
   --badge-role-bg: #eef2ff;
   --badge-role-text: #4338ca;
   --badge-warning-bg: #fff4d6;
-  --badge-warning-text: #9a6700;
+  --badge-warning-text: #8c5d00;
   --feedback-danger-bg: #fdeaea;
   --feedback-danger-text: #b42318;
   --feedback-danger-border: #f1b8b5;
@@ -43,7 +44,7 @@
   --verification-success-bg: #e8f5e9;
   --verification-success-text: #2e7d32;
   --verification-pending-bg: #fff3e0;
-  --verification-pending-text: #b26a00;
+  --verification-pending-text: #8c5700;
   --registration-success-border: #bbf7d0;
   --ai-warning-border: #fde68a;
   --success-border: #16a34a;
@@ -62,8 +63,11 @@
   --primary-color: var(--primary);
   --border-color: var(--border);
   --background-color: var(--background);
-  --border-radius: 10px;
-  --error-color: #dc2626;
+  --border-radius: 8px;
+  --panel-padding: 18px;
+  --section-gap: 16px;
+  --focus-ring: #b53c44;
+  --error-color: #b42318;
 }
 
 :root[data-theme="dark"] {
@@ -72,15 +76,17 @@
   --primary-soft: #412a32;
 
   --surface-dark: #0c121b;
-  --background: #101722;
-  --surface: #182231;
-  --border: #65778f;
+  --background: #111720;
+  --surface: #19212d;
+  --border: #354254;
+  --control-border: #73849b;
+  --focus-ring: #f08b8b;
   --text-primary: #e7edf5;
   --text-secondary: #b1becf;
   --error-color: #ffaaaa;
   --button-primary: #b83d49;
   --button-primary-hover: #9f3340;
-  --surface-muted: #202c3d;
+  --surface-muted: #202b3a;
   --surface-inactive: #293548;
   --status-neutral-bg: #334155;
   --status-neutral-text: #d2dce8;
@@ -138,6 +144,8 @@ body,
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
   background-color: var(--background);
   color: var(--text-primary);
 }
@@ -223,7 +231,7 @@ button {
 }
 
 
-/* Native controls and focus indicators follow the selected dark palette. */
+/* Native controls follow the selected palette. */
 :root[data-theme="dark"] :is(input, select, textarea) {
   color: var(--text-primary);
 }
@@ -237,7 +245,7 @@ button {
   background-color: var(--surface);
 }
 
-:root[data-theme="dark"] :is(button, a, input, select, textarea):focus-visible {
-  outline: 2px solid var(--primary);
+:is(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
