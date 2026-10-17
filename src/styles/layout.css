@@ -1,5 +1,5 @@
 .app-header {
-  min-height: 64px;
+  min-height: 56px;
 
   display: flex;
   align-items: center;
@@ -7,7 +7,7 @@
   flex-wrap: wrap;
   gap: 12px;
 
-  padding: 12px 24px;
+  padding: 0 24px;
 
   background-color: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -106,11 +106,11 @@
 .staff-body {
   display: flex;
 
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 56px);
 }
 
 .sidebar {
-  width: 224px;
+  width: var(--sidebar-width);
   flex-shrink: 0;
 
   display: flex;
@@ -493,6 +493,7 @@
 }
 
 .nav-item.active {
+  box-shadow: inset 2px 0 0 var(--primary);
   background-color: var(--primary-soft);
   color: var(--primary-dark);
 
@@ -1106,5 +1107,83 @@
   .cancel-repair-button,
   .new-repair-button {
     min-height: 44px;
+  }
+}
+
+/* Align the wordmark, section title, and workspace with the sample's slim shell. */
+.staff-layout {
+  --sidebar-width: 224px;
+}
+
+.staff-layout.sidebar-is-collapsed {
+  --sidebar-width: 72px;
+}
+
+.brand-name {
+  color: var(--text-primary);
+}
+
+.app-header > .header-brand {
+  width: var(--sidebar-width);
+  min-height: 56px;
+  margin-left: -24px;
+  padding: 0 20px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-header .header-brand-subtitle {
+  display: none;
+}
+
+.header-section-title {
+  margin-right: auto;
+  padding-left: 8px;
+  font-weight: 600;
+}
+
+.app-header > .header-actions {
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.app-header .icon-button {
+  border: 1px solid var(--border);
+}
+
+.page-content > .workspace-section-header {
+  align-items: center;
+  margin: 0 calc(-1 * var(--panel-padding)) 16px;
+  padding: 0 var(--panel-padding) 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 651px) {
+  .sidebar-is-collapsed .app-header .header-brand-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 650px) {
+  .app-header > .header-brand {
+    width: auto;
+    min-height: 0;
+    margin-left: 0;
+    padding: 0;
+    border-right: 0;
+  }
+
+  .header-section-title {
+    display: none;
+  }
+
+  .app-header > .header-actions {
+    gap: 6px;
+    padding: 0;
   }
 }

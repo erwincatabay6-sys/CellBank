@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { RequestError } from "../api/http.js";
 
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
@@ -9,9 +9,21 @@ import Brand from "./Brand.jsx";
 import NotificationBell from "./NotificationBell.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 
+const sectionTitles = {
+  dashboard: "Dashboard",
+  repairs: "Repairs",
+  customers: "Customers",
+  technicians: "Technicians",
+  reports: "Reports",
+  administration: "Administration",
+  account: "Account Settings",
+};
+
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const sectionTitle = sectionTitles[location.pathname.split("/")[1]];
 
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
@@ -44,6 +56,7 @@ function Header() {
   return (
     <header className="app-header">
       <Brand />
+      {sectionTitle && <span className="header-section-title">{sectionTitle}</span>}
 
       <div className="header-actions">
         {user?.id != null && <NotificationBell key={user.id} />}

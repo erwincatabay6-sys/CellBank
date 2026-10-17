@@ -126,8 +126,16 @@ function DashboardContent({ user }) {
     <>
       <section className="page-header dashboard-page-header">
         <div>
-          <h2>Dashboard</h2>
-          <p>Current operational overview of Cellbank repair activity.</p>
+          <h2>
+            {user?.name?.trim()
+              ? `Welcome back, ${user.name.trim().split(/\s+/)[0]}`
+              : "Dashboard"}
+          </h2>
+          <p>
+            {isTechnicianOnly
+              ? "Here is the latest on your assigned repairs."
+              : "Here is the latest on your repair operations."}
+          </p>
         </div>
         {hasAccess(currentRoles, "createRepair") && (
           <button
@@ -170,18 +178,7 @@ function DashboardContent({ user }) {
 
       {!loading && !error && dashboard && (
         <div className="dashboard-layout">
-          <section className="page-content dashboard-summary-section">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Repair Summary</h3>
-                <p className="workspace-section-description">
-                  {isTechnicianOnly
-                    ? "Summary of repairs currently assigned to you."
-                    : "Current repair activity across the system."}
-                </p>
-              </div>
-            </div>
-
+          <section className="dashboard-summary-section" aria-label="Repair summary">
             <DashboardSummaryCards
               totalRepairs={dashboard.summary.totalRepairs}
               activeRepairs={dashboard.summary.activeRepairs}
@@ -193,14 +190,9 @@ function DashboardContent({ user }) {
           <div className="dashboard-columns">
             <div className="dashboard-main-column">
               <section className="page-content dashboard-attention-section">
-                <div className="workspace-section-header">
+                <div className="dashboard-panel-header">
                   <div>
-                    <h3>Repairs Needing Attention</h3>
-                    <p className="workspace-section-description">
-                      {isTechnicianOnly
-                        ? "Assigned repairs that currently require your attention."
-                        : "Repair jobs that currently require staff follow-up."}
-                    </p>
+                    <h3>Needs Attention</h3>
                   </div>
                 </div>
 
@@ -211,20 +203,29 @@ function DashboardContent({ user }) {
               </section>
 
               <section className="page-content dashboard-recent-section">
-                <div className="workspace-section-header">
+                <div className="dashboard-panel-header">
                   <div>
                     <h3>
                       {isTechnicianOnly
                         ? "Your Active Repairs"
                         : "Recent Active Repairs"}
                     </h3>
-                    <p className="workspace-section-description">
-                      {isTechnicianOnly
-                        ? "Your five most recently updated active repair jobs."
-                        : "The five most recently updated active repair jobs."}
-                    </p>
                   </div>
+                  {canViewRepairs && (
+                    <button
+                      type="button"
+                      className="dashboard-view-all"
+                      onClick={() => navigate("/repairs")}
+                    >
+                      View repairs
+                    </button>
+                  )}
                 </div>
+                <p className="dashboard-table-description">
+                  {isTechnicianOnly
+                    ? "Your five most recently updated active repair jobs."
+                    : "The five most recently updated active repair jobs."}
+                </p>
 
                 <DashboardRecentRepairs
                   repairs={dashboard.recentActiveRepairs}
@@ -234,16 +235,11 @@ function DashboardContent({ user }) {
             </div>
             <div className="dashboard-side-column">
               <section className="page-content dashboard-workload-section">
-                <div className="workspace-section-header">
+                <div className="dashboard-panel-header">
                   <div>
                     <h3>
                       {isTechnicianOnly ? "Your Workload" : "Technician Workload"}
                     </h3>
-                    <p className="workspace-section-description">
-                      {isTechnicianOnly
-                        ? "Current and total repair assignments assigned to you."
-                        : "Current repair workload across Cellbank technicians."}
-                    </p>
                   </div>
                 </div>
 
@@ -253,41 +249,31 @@ function DashboardContent({ user }) {
               </section>
 
               <section className="page-content dashboard-status-section">
-                <div className="workspace-section-header">
+                <div className="dashboard-panel-header">
                   <div>
                     <h3>Repair Status</h3>
-                    <p className="workspace-section-description">
-                      {isTechnicianOnly
-                        ? "Current status of repairs assigned to you."
-                        : "Current repair jobs grouped by status."}
-                    </p>
                   </div>
                 </div>
 
                 <DashboardStatusCounts statusCounts={dashboard.statusCounts} />
               </section>
+              {isAdmin && financial && (
+                <section className="page-content dashboard-financial-section">
+                  <div className="dashboard-panel-header">
+                    <div>
+                      <h3>Financial Snapshot</h3>
+                    </div>
+                  </div>
+
+                  <DashboardFinancialSnapshot
+                    totalAgreedValue={financial.totalAgreedValue}
+                    totalCollected={financial.totalCollected}
+                    outstandingBalance={financial.outstandingBalance}
+                  />
+                </section>
+              )}
             </div>
           </div>
-
-          {isAdmin && financial && (
-            <section className="page-content dashboard-financial-section">
-              <div className="workspace-section-header">
-                <div>
-                  <h3>Financial Snapshot</h3>
-                  <p className="workspace-section-description">
-                    Current repair value, collected payments, and outstanding
-                    balances.
-                  </p>
-                </div>
-              </div>
-
-              <DashboardFinancialSnapshot
-                totalAgreedValue={financial.totalAgreedValue}
-                totalCollected={financial.totalCollected}
-                outstandingBalance={financial.outstandingBalance}
-              />
-            </section>
-          )}
         </div>
       )}
     </>

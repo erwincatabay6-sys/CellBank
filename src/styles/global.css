@@ -4,17 +4,17 @@
   --primary-soft: #fdecec;
 
   --surface-dark: #1f2937;
-  --background: #f4f5f7;
+  --background: #f7f9fc;
   --surface: #ffffff;
 
-  --border: #dfe3e9;
+  --border: #e3e9f0;
   --control-border: #8993a2;
 
   --text-primary: #111827;
   --text-secondary: #5c6574;
 
   /* Shared surfaces, controls, and status colors for both themes. */
-  --button-primary: #bf414b;
+  --button-primary: #c2474b;
   --button-primary-hover: var(--primary-dark);
   --surface-muted: #f7f8fa;
   --surface-inactive: #f1f3f5;
@@ -76,9 +76,9 @@
   --primary-soft: #412a32;
 
   --surface-dark: #0c121b;
-  --background: #111720;
-  --surface: #19212d;
-  --border: #354254;
+  --background: #151f27;
+  --surface: #202c36;
+  --border: #364653;
   --control-border: #73849b;
   --focus-ring: #f08b8b;
   --text-primary: #e7edf5;
@@ -86,7 +86,7 @@
   --error-color: #ffaaaa;
   --button-primary: #b83d49;
   --button-primary-hover: #9f3340;
-  --surface-muted: #202b3a;
+  --surface-muted: #25343f;
   --surface-inactive: #293548;
   --status-neutral-bg: #334155;
   --status-neutral-text: #d2dce8;
@@ -143,7 +143,7 @@ body,
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.875rem;
   line-height: 1.5;
   background-color: var(--background);

@@ -4,8 +4,7 @@ function SkeletonSection({ children, className = "" }) {
   return (
     <section className={`page-content ${className}`}>
       <div className="dashboard-skeleton-heading">
-        <Skeleton width={180} height={22} />
-        <Skeleton width={320} height={14} />
+        <Skeleton width={180} height={20} />
       </div>
 
       {children}
@@ -50,13 +49,13 @@ export default function DashboardSkeleton({
   return (
     <div role="status" aria-label="Loading dashboard">
       <div className="dashboard-layout" aria-hidden="true">
-        <SkeletonSection className="dashboard-summary-section">
+        <div className="dashboard-summary-section">
           <SkeletonCards
             count={4}
             gridClass="dashboard-summary-grid"
             cardClass="dashboard-summary-card"
           />
-        </SkeletonSection>
+        </div>
 
         <div className="dashboard-columns">
           <div className="dashboard-main-column">
@@ -78,18 +77,17 @@ export default function DashboardSkeleton({
                 cardClass="dashboard-status-card"
               />
             </SkeletonSection>
+            {isAdmin && (
+              <SkeletonSection>
+                <SkeletonCards
+                  count={3}
+                  gridClass="dashboard-financial-grid"
+                  cardClass="dashboard-financial-card"
+                />
+              </SkeletonSection>
+            )}
           </div>
         </div>
-
-        {isAdmin && (
-          <SkeletonSection>
-            <SkeletonCards
-              count={3}
-              gridClass="dashboard-financial-grid"
-              cardClass="dashboard-financial-card"
-            />
-          </SkeletonSection>
-        )}
       </div>
     </div>
   );
