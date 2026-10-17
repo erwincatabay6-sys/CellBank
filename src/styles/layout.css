@@ -1050,10 +1050,6 @@
     --section-gap: 14px;
   }
 
-  .app-header .header-brand-subtitle {
-    display: none;
-  }
-
   .app-header > .header-actions {
     gap: 6px;
   }
@@ -1132,15 +1128,6 @@
   flex-shrink: 0;
 }
 
-.app-header .header-brand-subtitle {
-  display: none;
-}
-
-.header-section-title {
-  margin-right: auto;
-  padding-left: 8px;
-  font-weight: 600;
-}
 
 .app-header > .header-actions {
   gap: 8px;
@@ -1176,10 +1163,6 @@
     margin-left: 0;
     padding: 0;
     border-right: 0;
-  }
-
-  .header-section-title {
-    display: none;
   }
 
   .app-header > .header-actions {

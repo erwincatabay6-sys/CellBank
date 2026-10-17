@@ -228,3 +228,19 @@
 .technician-skeleton-row > div {
   min-width: 0;
 }
+
+.technician-repair-list:has(> .technician-repair-item:nth-child(6)) {
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.technician-repair-list > .technician-repair-item {
+  flex-shrink: 0;
+}
+
+@media (max-width: 650px) {
+  .technician-repair-list:has(> .technician-repair-item:nth-child(6)) {
+    max-height: 60vh;
+  }
+}
