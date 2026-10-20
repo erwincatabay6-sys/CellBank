@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 
 import { hasAccess, hasRole } from "../../../config/accessControl.js";
@@ -137,16 +137,7 @@ function DashboardContent({ user }) {
               : "Here is the latest on your repair operations."}
           </p>
         </div>
-        {hasAccess(currentRoles, "createRepair") && (
-          <button
-            type="button"
-            className="new-repair-button"
-            onClick={() => navigate("/repairs/new")}
-          >
-            <Plus size={18} aria-hidden="true" />
-            <span>New Repair</span>
-          </button>
-        )}
+        
       </section>
 
       {loading && (
