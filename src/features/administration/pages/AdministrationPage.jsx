@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { isValidRoleCombination } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { RequestError } from "../../../api/http.js";
@@ -48,7 +51,7 @@ function AdministrationPage() {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -56,7 +59,7 @@ function AdministrationPage() {
 
   const [staffModalOpen, setStaffModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [formError, setFormError] = useState("");
+  const [formError, setFormError, formErrorVersion] = useFeedbackState("");
 
   const [saving, setSaving] = useState(false);
   const mutationInProgress = useRef(false);
@@ -326,9 +329,13 @@ function AdministrationPage() {
         </div>
 
         {!staffModalOpen && formError && (
-          <div className="administration-error" role="alert">
+          <FeedbackNotice
+            className="administration-error"
+            role="alert"
+            resetKey={[formError, formErrorVersion]}
+          >
             {formError}
-          </div>
+          </FeedbackNotice>
         )}
 
         {saving && <p role="status">Saving changes...</p>}
@@ -336,12 +343,18 @@ function AdministrationPage() {
         {loading ? (
           <StaffTableSkeleton />
         ) : loadError ? (
-          <div className="administration-error" role="alert">
+          <FeedbackNotice
+            className="administration-error"
+            role="alert"
+            resetKey={[loadError, loadErrorVersion]}
+            actions={
+              <button type="button" onClick={() => void loadStaff()}>
+                Try again
+              </button>
+            }
+          >
             <p>{loadError}</p>
-            <button type="button" onClick={() => void loadStaff()}>
-              Try again
-            </button>
-          </div>
+          </FeedbackNotice>
         ) : (
           <>
             <div className="administration-result-count">
@@ -368,6 +381,7 @@ function AdministrationPage() {
 
       {staffModalOpen && (
         <StaffAccountModal
+          feedbackVersion={formErrorVersion}
           initialUser={selectedUser}
           errorMessage={formError}
           saving={saving}

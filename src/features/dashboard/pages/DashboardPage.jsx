@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { hasAccess, hasRole } from "../../../config/accessControl.js";
 import { getDashboard } from "../../../api/dashboardApi.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -33,7 +36,7 @@ function DashboardContent({ user }) {
 
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError, errorVersion] = useFeedbackState("");
   const [reloadCount, setReloadCount] = useState(0);
 
   const currentRoles = user?.roles ?? [];
@@ -162,9 +165,13 @@ function DashboardContent({ user }) {
 
       {!loading && error && (
         <section className="page-content">
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[error, errorVersion]}
+          >
             <p>{error}</p>
-          </div>
+          </FeedbackNotice>
 
           <button
             type="button"

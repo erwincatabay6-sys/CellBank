@@ -1,5 +1,7 @@
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import {
   getProblemCategoryLabel,
   getRepeatedDeviceProblems,
@@ -70,22 +72,27 @@ function CustomerRepairHistory({
       </div>
 
       {error && (
-        <div className="customer-form-error" role="alert">
+        <FeedbackNotice
+          className="customer-form-error"
+          role="alert"
+          resetKey={[error]}
+          actions={
+            <button
+              className="secondary-repair-button"
+              type="button"
+              onClick={onRetry}
+              disabled={loading || disabled}
+            >
+              Try Again
+            </button>
+          }
+        >
           <p>{error}</p>
 
           {loaded && (
             <p>Previously loaded history is shown and may be out of date.</p>
           )}
-
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={onRetry}
-            disabled={loading || disabled}
-          >
-            Try Again
-          </button>
-        </div>
+        </FeedbackNotice>
       )}
 
       {!loaded && loading && (

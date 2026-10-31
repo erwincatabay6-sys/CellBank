@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { Plus } from "lucide-react";
 
 import { hasAccess } from "../../../config/accessControl.js";
@@ -55,6 +58,7 @@ function formatDate(value) {
 }
 
 function RepairPayments({
+  feedbackVersion,
   currentRoles = [],
   repairId,
   currentStatus,
@@ -70,7 +74,7 @@ function RepairPayments({
   const [formOpen, setFormOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -261,15 +265,23 @@ function RepairPayments({
       </div>
 
       {displayedError && (
-        <div className="customer-form-error" role="alert">
+        <FeedbackNotice
+          className="customer-form-error"
+          role="alert"
+          resetKey={[displayedError, feedbackVersion, localErrorVersion]}
+        >
           {displayedError}
-        </div>
+        </FeedbackNotice>
       )}
 
       {message && (
-        <div className="repair-success-message" role="status">
+        <FeedbackNotice
+          className="repair-success-message"
+          role="status"
+          resetKey={[message, feedbackVersion]}
+        >
           {message}
-        </div>
+        </FeedbackNotice>
       )}
 
       <div className="payment-summary">

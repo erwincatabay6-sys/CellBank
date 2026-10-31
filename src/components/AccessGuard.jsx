@@ -2,6 +2,8 @@ import { Navigate } from "react-router-dom";
 import { hasAccess } from "../config/accessControl.js";
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
+import FeedbackNotice from "./FeedbackNotice.jsx";
+
 export default function AccessGuard({ permission, children }) {
   const { user, loading, authError, refreshSession } = useAuth();
 
@@ -11,12 +13,17 @@ export default function AccessGuard({ permission, children }) {
 
   if (authError) {
     return (
-      <div role="alert">
+      <FeedbackNotice
+        role="alert"
+        resetKey={[authError]}
+        actions={
+          <button type="button" onClick={() => void refreshSession()}>
+            Try again
+          </button>
+        }
+      >
         <p>{authError}</p>
-        <button type="button" onClick={() => void refreshSession()}>
-          Try again
-        </button>
-      </div>
+      </FeedbackNotice>
     );
   }
 

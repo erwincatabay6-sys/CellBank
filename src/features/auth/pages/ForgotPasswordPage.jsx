@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { requestPasswordRecovery } from "../../../api/authApi.js";
 
 import { ArrowLeft, Mail } from "lucide-react";
@@ -31,7 +34,7 @@ function ForgotPasswordPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage, messageVersion] = useFeedbackState("");
 
   const [resendAvailableAt, setResendAvailableAt] =
     useState(readRecoveryDeadline);
@@ -160,9 +163,13 @@ function ForgotPasswordPage() {
                     RESPONSE MESSAGE
                 ========================== */}
         {message && (
-          <div className="public-form-message" role="status">
+          <FeedbackNotice
+            className="public-form-message"
+            role="status"
+            resetKey={[message, messageVersion]}
+          >
             {message}
-          </div>
+          </FeedbackNotice>
         )}
 
         {/* =========================

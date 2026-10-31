@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import StatusBadge from "../../../components/StatusBadge.jsx";
 
 import {
@@ -27,6 +30,7 @@ function formatTimestamp(value) {
 }
 
 function RepairStatusHistory({
+  feedbackVersion,
   repairId,
   history = [],
   staffName = (id) => (id == null ? "Unknown staff" : `Staff #${id}`),
@@ -44,7 +48,7 @@ function RepairStatusHistory({
   const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
 
   const submittingRef = useRef(false);
 
@@ -200,19 +204,24 @@ function RepairStatusHistory({
       </div>
 
       {displayedError && (
-        <div
+        <FeedbackNotice
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
+          resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </div>
+        </FeedbackNotice>
       )}
 
       {message && (
-        <div className="repair-success-message" role="status">
+        <FeedbackNotice
+          className="repair-success-message"
+          role="status"
+          resetKey={[message, feedbackVersion]}
+        >
           {message}
-        </div>
+        </FeedbackNotice>
       )}
 
       {formOpen && canChangeStatus && (

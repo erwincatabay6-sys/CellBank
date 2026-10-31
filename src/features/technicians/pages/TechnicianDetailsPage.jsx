@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import { getTechnician } from "../../../api/technicianApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
@@ -37,7 +40,7 @@ function TechnicianDetails({ technicianId, user }) {
 
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError, errorVersion] = useFeedbackState("");
   const [notFound, setNotFound] = useState(false);
   const [reloadCount, setReloadCount] = useState(0);
 
@@ -133,13 +136,17 @@ function TechnicianDetails({ technicianId, user }) {
 
       {!loading && error && (
         <section className="page-content">
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[error, errorVersion, notFound]}
+          >
             <p>
               {notFound
                 ? "The requested technician record does not exist."
                 : error}
             </p>
-          </div>
+          </FeedbackNotice>
 
           {notFound ? (
             <button

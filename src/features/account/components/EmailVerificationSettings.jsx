@@ -8,6 +8,9 @@ import {
   getEmailVerificationStatus,
 } from "../../../api/authApi.js";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 function EmailVerificationSettings({ user }) {
   const { refreshUser } = useAuth();
 
@@ -17,8 +20,10 @@ function EmailVerificationSettings({ user }) {
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [sending, setSending] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [statusError, setStatusError] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
+  const [statusError, setStatusError, statusErrorVersion] =
+    useFeedbackState("");
   const [statusReload, setStatusReload] = useState(0);
   const [resendAvailableAt, setResendAvailableAt] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
@@ -236,23 +241,31 @@ function EmailVerificationSettings({ user }) {
       </div>
 
       {verificationRequested && !emailVerified && (
-        <p className="account-form-message">
+        <FeedbackNotice className="account-form-message" role="status">
           Verification instructions have been sent to your registered email
           address.
-        </p>
+        </FeedbackNotice>
       )}
 
       {errorMessage && !emailVerified && (
-        <p className="account-form-message" role="alert">
+        <FeedbackNotice
+          className="account-form-message"
+          role="alert"
+          resetKey={[errorMessage, errorMessageVersion]}
+        >
           {errorMessage}
-        </p>
+        </FeedbackNotice>
       )}
 
       {statusError && !emailVerified && (
         <div>
-          <p className="account-form-message" role="alert">
+          <FeedbackNotice
+            className="account-form-message"
+            role="alert"
+            resetKey={[statusError, statusErrorVersion]}
+          >
             {statusError}
-          </p>
+          </FeedbackNotice>
 
           <button
             className="secondary-repair-button"

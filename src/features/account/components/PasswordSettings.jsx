@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -27,7 +30,7 @@ function PasswordSettings() {
 
   const [saving, setSaving] = useState(false);
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage, messageVersion] = useFeedbackState("");
 
   // -----------------------------
   // FORM RESET
@@ -219,9 +222,13 @@ function PasswordSettings() {
                     MESSAGE
                 ========================== */}
         {message && (
-          <p className="account-form-message" role="alert">
+          <FeedbackNotice
+            className="account-form-message"
+            role="alert"
+            resetKey={[message, messageVersion]}
+          >
             {message}
-          </p>
+          </FeedbackNotice>
         )}
 
         {/* =========================

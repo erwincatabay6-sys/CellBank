@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const deviceTypes = [
@@ -37,7 +40,8 @@ function DeviceRegistrationModal({
 
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
   const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
   const submitting = useRef(false);
@@ -266,9 +270,13 @@ function DeviceRegistrationModal({
           </div>
 
           {errorMessage && (
-            <div className="customer-form-error" role="alert">
+            <FeedbackNotice
+              className="customer-form-error"
+              role="alert"
+              resetKey={[errorMessage, errorMessageVersion]}
+            >
               {errorMessage}
-            </div>
+            </FeedbackNotice>
           )}
 
           <div className="modal-actions">

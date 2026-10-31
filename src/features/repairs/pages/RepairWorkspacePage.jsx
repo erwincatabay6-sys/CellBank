@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import {
   getRepair,
   getRepairFindings,
@@ -74,7 +77,7 @@ function RepairWorkspace({ repairId, user }) {
 
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
   const [notFound, setNotFound] = useState(false);
   const [reloadVersion, setReloadVersion] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
@@ -83,47 +86,58 @@ function RepairWorkspace({ repairId, user }) {
     useState(false);
   const [technicianSelection, setTechnicianSelection] = useState("");
   const [assignmentSaving, setAssignmentSaving] = useState(false);
-  const [assignmentError, setAssignmentError] = useState("");
+  const [assignmentError, setAssignmentError, assignmentErrorVersion] =
+    useFeedbackState("");
   const [assignmentBlocked, setAssignmentBlocked] = useState(false);
-  const [assignmentMessage, setAssignmentMessage] = useState("");
+  const [assignmentMessage, setAssignmentMessage, assignmentMessageVersion] =
+    useFeedbackState("");
 
   const assignmentSubmitting = useRef(false);
 
   const [statusSaving, setStatusSaving] = useState(false);
-  const [statusError, setStatusError] = useState("");
+  const [statusError, setStatusError, statusErrorVersion] =
+    useFeedbackState("");
   const [statusBlocked, setStatusBlocked] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage, statusMessageVersion] =
+    useFeedbackState("");
   const [aiStatusDraft, setAiStatusDraft] = useState("");
 
   const statusSubmittingRef = useRef(false);
 
   const [findingSaving, setFindingSaving] = useState(false);
-  const [findingError, setFindingError] = useState("");
+  const [findingError, setFindingError, findingErrorVersion] =
+    useFeedbackState("");
   const [findingBlocked, setFindingBlocked] = useState(false);
-  const [findingMessage, setFindingMessage] = useState("");
+  const [findingMessage, setFindingMessage, findingMessageVersion] =
+    useFeedbackState("");
   const [aiFindingDraft, setAiFindingDraft] = useState("");
 
   const findingSubmittingRef = useRef(false);
 
   const [costsSaving, setCostsSaving] = useState(false);
-  const [costsError, setCostsError] = useState("");
+  const [costsError, setCostsError, costsErrorVersion] = useFeedbackState("");
   const [costsBlocked, setCostsBlocked] = useState(false);
-  const [costsMessage, setCostsMessage] = useState("");
+  const [costsMessage, setCostsMessage, costsMessageVersion] =
+    useFeedbackState("");
   const [aiPartDraft, setAiPartDraft] = useState("");
 
   const costsSubmittingRef = useRef(false);
 
   const [paymentSaving, setPaymentSaving] = useState(false);
-  const [paymentError, setPaymentError] = useState("");
+  const [paymentError, setPaymentError, paymentErrorVersion] =
+    useFeedbackState("");
   const [paymentBlocked, setPaymentBlocked] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentMessage, setPaymentMessage, paymentMessageVersion] =
+    useFeedbackState("");
 
   const paymentSubmittingRef = useRef(false);
 
   const [categorySaving, setCategorySaving] = useState(false);
-  const [categoryError, setCategoryError] = useState("");
+  const [categoryError, setCategoryError, categoryErrorVersion] =
+    useFeedbackState("");
   const [categoryBlocked, setCategoryBlocked] = useState(false);
-  const [categoryMessage, setCategoryMessage] = useState("");
+  const [categoryMessage, setCategoryMessage, categoryMessageVersion] =
+    useFeedbackState("");
 
   const categorySubmittingRef = useRef(false);
 
@@ -1007,27 +1021,33 @@ function RepairWorkspace({ repairId, user }) {
       {(loadError || notFound || (!record && loading)) && (
         <section className="page-content">
           {loadError && (
-            <div className="customer-form-error" role="alert">
+            <FeedbackNotice
+              className="customer-form-error"
+              role="alert"
+              resetKey={[loadError, loadErrorVersion]}
+              actions={
+                <button
+                  className="secondary-repair-button"
+                  type="button"
+                  onClick={() => {
+                    if (loading || isSubmitting()) return;
+                    setReloadVersion((value) => value + 1);
+                  }}
+                  disabled={loading || anySaving}
+                >
+                  Try Again
+                </button>
+              }
+            >
               <p>{loadError}</p>
 
               {record && (
                 <p>
-                  Previously loaded information is shown and may be out of date.
+                  Previously loaded information is shown and may be out of
+                  date.
                 </p>
               )}
-
-              <button
-                className="secondary-repair-button"
-                type="button"
-                onClick={() => {
-                  if (loading || isSubmitting()) return;
-                  setReloadVersion((value) => value + 1);
-                }}
-                disabled={loading || anySaving}
-              >
-                Try Again
-              </button>
-            </div>
+            </FeedbackNotice>
           )}
 
           {!record && loading && (
@@ -1093,15 +1113,23 @@ function RepairWorkspace({ repairId, user }) {
           </section>
 
           {assignmentMessage && (
-            <div className="repair-success-message" role="status">
+            <FeedbackNotice
+              className="repair-success-message"
+              role="status"
+              resetKey={[assignmentMessage, assignmentMessageVersion]}
+            >
               {assignmentMessage}
-            </div>
+            </FeedbackNotice>
           )}
 
           {assignmentBlocked && !technicianAssignmentOpen && (
-            <p className="customer-form-error" role="alert">
+            <FeedbackNotice
+              className="customer-form-error"
+              role="alert"
+              resetKey={[assignmentError, assignmentErrorVersion]}
+            >
               {assignmentError}
-            </p>
+            </FeedbackNotice>
           )}
 
           {technicianAssignmentOpen && canManageTechnician && (
@@ -1121,13 +1149,14 @@ function RepairWorkspace({ repairId, user }) {
               </div>
 
               {assignmentError && (
-                <div
+                <FeedbackNotice
                   className="customer-form-error"
                   role="alert"
                   style={{ marginBottom: "16px" }}
+                  resetKey={[assignmentError, assignmentErrorVersion]}
                 >
                   {assignmentError}
-                </div>
+                </FeedbackNotice>
               )}
 
               <form
@@ -1220,6 +1249,7 @@ function RepairWorkspace({ repairId, user }) {
 
           <div hidden={activeTab !== "overview"}>
             <RepairOverview
+              feedbackVersion={[categoryErrorVersion, categoryMessageVersion]}
               repair={repair}
               estimatedCost={repair.estimatedCost}
               agreedPrice={repair.agreedPrice}
@@ -1237,6 +1267,7 @@ function RepairWorkspace({ repairId, user }) {
           {canFindings && (
             <div hidden={activeTab !== "findings"}>
               <RepairFindings
+                feedbackVersion={[findingErrorVersion, findingMessageVersion]}
                 repairId={repairId}
                 findings={record.findings}
                 currentStatus={repair.status}
@@ -1255,6 +1286,7 @@ function RepairWorkspace({ repairId, user }) {
 
           <div hidden={activeTab !== "status-history"}>
             <RepairStatusHistory
+              feedbackVersion={[statusErrorVersion, statusMessageVersion]}
               repairId={repairId}
               history={record.history}
               staffName={staffName}
@@ -1273,6 +1305,7 @@ function RepairWorkspace({ repairId, user }) {
 
           <div hidden={activeTab !== "parts-costs"}>
             <RepairPartsCosts
+              feedbackVersion={[costsErrorVersion, costsMessageVersion]}
               repairId={repairId}
               currentRoles={user?.roles ?? []}
               currentStatus={repair.status}
@@ -1294,6 +1327,7 @@ function RepairWorkspace({ repairId, user }) {
 
           <div hidden={activeTab !== "payments"}>
             <RepairPayments
+              feedbackVersion={[paymentErrorVersion, paymentMessageVersion]}
               repairId={repairId}
               currentRoles={user?.roles ?? []}
               currentStatus={repair.status}
