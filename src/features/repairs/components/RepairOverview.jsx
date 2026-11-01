@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { hasAccess } from "../../../config/accessControl.js";
 
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import RepairTrackingCode from "./RepairTrackingCode.jsx";
 
 import {
   problemCategoryOptions,
@@ -46,6 +50,7 @@ function formatTimestamp(value) {
 }
 
 function RepairOverview({
+  feedbackVersion,
   repair,
   estimatedCost,
   agreedPrice,
@@ -61,7 +66,7 @@ function RepairOverview({
 }) {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -189,14 +194,20 @@ function RepairOverview({
             >
               <span>{label}</span>
 
-              <strong
-                style={{
-                  whiteSpace: "pre-wrap",
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {value}
-              </strong>
+              {label === "Tracking Code" &&
+              typeof value === "string" &&
+              value.trim() ? (
+                <RepairTrackingCode key={`${repair.id}:${value}`} code={value} />
+              ) : (
+                <strong
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {label === "Tracking Code" ? "Not available" : value}
+                </strong>
+              )}
             </div>
           ))}
         </div>
@@ -229,15 +240,23 @@ function RepairOverview({
         </div>
 
         {displayedError && (
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[displayedError, feedbackVersion, localErrorVersion]}
+          >
             {displayedError}
-          </div>
+          </FeedbackNotice>
         )}
 
         {categoryMessage && (
-          <div className="repair-success-message" role="status">
+          <FeedbackNotice
+            className="repair-success-message"
+            role="status"
+            resetKey={[categoryMessage, feedbackVersion]}
+          >
             {categoryMessage}
-          </div>
+          </FeedbackNotice>
         )}
 
         <div className="repair-overview-grid">

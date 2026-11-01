@@ -5,6 +5,9 @@ import { useAuth } from "../context/AuthContext.jsx";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import { verifyEmail } from "../../../api/authApi.js";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import "../auth.css";
 
 function VerifyEmailPage() {
@@ -18,7 +21,8 @@ function VerifyEmailPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
 
   async function handleVerify() {
     if (!validTokenFormat || verified || requestInProgress.current) {
@@ -62,22 +66,34 @@ function VerifyEmailPage() {
 
       <div className="public-form">
         {!validTokenFormat && (
-          <div className="public-form-error" role="alert">
-            This verification link is incomplete or invalid. Request a new link
-            from Account Settings.
-          </div>
+          <FeedbackNotice
+            className="public-form-error"
+            role="alert"
+            resetKey={token}
+          >
+            This verification link is incomplete or invalid. Request a new
+            link from Account Settings.
+          </FeedbackNotice>
         )}
 
         {errorMessage && (
-          <div className="public-form-error" role="alert">
+          <FeedbackNotice
+            className="public-form-error"
+            role="alert"
+            resetKey={[errorMessage, errorMessageVersion]}
+          >
             {errorMessage}
-          </div>
+          </FeedbackNotice>
         )}
 
         {verified && (
-          <div className="public-form-success" role="status">
+          <FeedbackNotice
+            className="public-form-success"
+            role="status"
+            resetKey={token}
+          >
             Email verified successfully. You can return to Cellbank.
-          </div>
+          </FeedbackNotice>
         )}
 
         {validTokenFormat && !verified && (

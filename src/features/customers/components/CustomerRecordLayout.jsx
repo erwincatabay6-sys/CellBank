@@ -1,5 +1,7 @@
 import { useCustomers } from "../context/CustomersContext.jsx";
 
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import "../customers.css";
 
 function CustomerRecordLayout({
@@ -26,24 +28,30 @@ function CustomerRecordLayout({
       {showStatusPanel && (
         <section className="page-content" aria-busy={loading}>
           {loadError && (
-            <div className="customer-form-error" role="alert">
+            <FeedbackNotice
+              className="customer-form-error"
+              role="alert"
+              resetKey={[loadError]}
+              actions={
+                <button
+                  className="secondary-repair-button"
+                  type="button"
+                  onClick={() => void reloadCustomers()}
+                  disabled={loading || busy}
+                >
+                  Try Again
+                </button>
+              }
+            >
               <p>{loadError}</p>
 
               {loaded && found && (
                 <p>
-                  Previously loaded information is shown and may be out of date.
+                  Previously loaded information is shown and may be out of
+                  date.
                 </p>
               )}
-
-              <button
-                className="secondary-repair-button"
-                type="button"
-                onClick={() => void reloadCustomers()}
-                disabled={loading || busy}
-              >
-                Try Again
-              </button>
-            </div>
+            </FeedbackNotice>
           )}
 
           {initialLoading && (

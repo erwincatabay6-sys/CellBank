@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
@@ -26,7 +29,8 @@ function CustomerListPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage, successMessageVersion] =
+    useFeedbackState("");
 
   const canManage =
     hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
@@ -80,25 +84,39 @@ function CustomerListPage() {
           )}
         </div>
 
-        {successMessage && <p role="status">{successMessage}</p>}
+        {successMessage && (
+          <FeedbackNotice
+            role="status"
+            resetKey={[successMessage, successMessageVersion]}
+          >
+            {successMessage}
+          </FeedbackNotice>
+        )}
 
         {loadError && (
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[loadError]}
+            actions={
+              <button
+                className="secondary-repair-button"
+                type="button"
+                onClick={() => void reloadCustomers()}
+                disabled={loading || customerModalOpen}
+              >
+                Try Again
+              </button>
+            }
+          >
             <p>{loadError}</p>
 
             {loaded && (
-              <p>Previously loaded records are shown and may be out of date.</p>
+              <p>
+                Previously loaded records are shown and may be out of date.
+              </p>
             )}
-
-            <button
-              className="secondary-repair-button"
-              type="button"
-              onClick={() => void reloadCustomers()}
-              disabled={loading || customerModalOpen}
-            >
-              Try Again
-            </button>
-          </div>
+          </FeedbackNotice>
         )}
 
         {!loaded && loading ? (

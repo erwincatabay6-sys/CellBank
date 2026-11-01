@@ -3,6 +3,9 @@ import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestError } from "../api/http.js";
 
+import useFeedbackState from "../hooks/useFeedbackState.js";
+import FeedbackNotice from "./FeedbackNotice.jsx";
+
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
 import Brand from "./Brand.jsx";
@@ -15,7 +18,8 @@ function Header() {
 
 
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
+  const [logoutError, setLogoutError, logoutErrorVersion] =
+    useFeedbackState("");
 
   async function handleLogout() {
     if (loggingOut) {
@@ -51,7 +55,14 @@ function Header() {
         {user?.id != null && <NotificationBell key={user.id} />}
         <ThemeToggle />
 
-        {logoutError && <span role="alert">{logoutError}</span>}
+        {logoutError && (
+          <FeedbackNotice
+            role="alert"
+            resetKey={[logoutError, logoutErrorVersion]}
+          >
+            {logoutError}
+          </FeedbackNotice>
+        )}
 
         <button
           className="logout-button"

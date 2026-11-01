@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { getTechnicians } from "../../../api/technicianApi.js";
 import { hasAccess } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -28,7 +31,7 @@ function TechnicianList({ user }) {
   const [technicians, setTechnicians] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError, errorVersion] = useFeedbackState("");
   const [reloadCount, setReloadCount] = useState(0);
 
   const canView = hasAccess(user?.roles ?? [], "technicians");
@@ -142,9 +145,13 @@ function TechnicianList({ user }) {
 
         {!loading && error && (
           <>
-            <div className="customer-form-error" role="alert">
+            <FeedbackNotice
+              className="customer-form-error"
+              role="alert"
+              resetKey={[error, errorVersion]}
+            >
               <p>{error}</p>
-            </div>
+            </FeedbackNotice>
 
             <button
               type="button"

@@ -5,6 +5,9 @@ import { RequestError } from "../../../api/http.js";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 function LoginPage() {
   const navigate = useNavigate();
   const { login, loading, sessionMessage } = useAuth();
@@ -16,7 +19,8 @@ function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
   const [submitting, setSubmitting] = useState(false);
 
   // -----------------------------
@@ -143,9 +147,13 @@ function LoginPage() {
 
         {/* LOGIN ERROR */}
         {(errorMessage || sessionMessage) && (
-          <div className="public-form-error" role="alert">
+          <FeedbackNotice
+            className="public-form-error"
+            role="alert"
+            resetKey={[errorMessage, sessionMessage, errorMessageVersion]}
+          >
             {errorMessage || sessionMessage}
-          </div>
+          </FeedbackNotice>
         )}
 
         {/* LOGIN ACTION */}

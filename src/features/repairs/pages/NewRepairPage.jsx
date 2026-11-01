@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { UserPlus, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import {
   createRepair,
   getRepairTechnicians,
@@ -79,7 +82,8 @@ function NewRepairPage() {
 
   const [technicians, setTechnicians] = useState([]);
   const [techniciansLoading, setTechniciansLoading] = useState(true);
-  const [technicianError, setTechnicianError] = useState("");
+  const [technicianError, setTechnicianError, technicianErrorVersion] =
+    useFeedbackState("");
   const [technicianReload, setTechnicianReload] = useState(0);
   const [deviceHistory, setDeviceHistory] = useState({
     key: "",
@@ -91,7 +95,8 @@ function NewRepairPage() {
   const [saving, setSaving] = useState(false);
   const [savedRepair, setSavedRepair] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
   const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
   const submitting = useRef(false);
@@ -461,23 +466,33 @@ function NewRepairPage() {
 
       {loadError && (
         <section className="page-content">
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[loadError]}
+            actions={
+              <button
+                className="secondary-repair-button"
+                type="button"
+                onClick={() => void reloadCustomers()}
+                disabled={loading || saving || modalOpen}
+              >
+                Try Again
+              </button>
+            }
+          >
             <p>{loadError}</p>
-            <button
-              className="secondary-repair-button"
-              type="button"
-              onClick={() => void reloadCustomers()}
-              disabled={loading || saving || modalOpen}
-            >
-              Try Again
-            </button>
-          </div>
+          </FeedbackNotice>
         </section>
       )}
 
       {savedRepair && (
         <section className="page-content">
-          <div className="repair-success-message" role="status">
+          <FeedbackNotice
+            className="repair-success-message"
+            role="status"
+            resetKey={savedRepair.id}
+          >
             <strong>Repair created successfully</strong>
             <div>
               Reference: <strong>{savedRepair.repairReference}</strong>
@@ -486,7 +501,7 @@ function NewRepairPage() {
             <div>
               The repair and its initial status history have been saved.
             </div>
-          </div>
+          </FeedbackNotice>
         </section>
       )}
 
@@ -632,9 +647,12 @@ function NewRepairPage() {
                         deviceHistory.key === deviceHistoryKey &&
                         deviceHistory.error && (
                           <>
-                            <p className="customer-field-error" role="alert">
+                            <FeedbackNotice
+                              className="customer-field-error"
+                              resetKey={[deviceHistoryKey, deviceHistory.error]}
+                            >
                               {deviceHistory.error}
-                            </p>
+                            </FeedbackNotice>
 
                             <button
                               className="secondary-repair-button"
@@ -753,17 +771,25 @@ function NewRepairPage() {
                 )}
 
                 {technicianError && (
-                  <div className="customer-form-error" role="alert">
+                  <FeedbackNotice
+                    className="customer-form-error"
+                    role="alert"
+                    resetKey={[technicianError, technicianErrorVersion]}
+                    actions={
+                      <button
+                        className="secondary-repair-button"
+                        type="button"
+                        onClick={() =>
+                          setTechnicianReload((value) => value + 1)
+                        }
+                      >
+                        Retry Technicians
+                      </button>
+                    }
+                  >
                     <p>{technicianError}</p>
                     <p>You can still create the repair using Assign later.</p>
-                    <button
-                      className="secondary-repair-button"
-                      type="button"
-                      onClick={() => setTechnicianReload((value) => value + 1)}
-                    >
-                      Retry Technicians
-                    </button>
-                  </div>
+                  </FeedbackNotice>
                 )}
 
                 {!techniciansLoading &&
@@ -790,14 +816,20 @@ function NewRepairPage() {
         </fieldset>
 
         {errorMessage && (
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[errorMessage, errorMessageVersion]}
+            actions={
+              outcomeUncertain && (
+                <a href="/api/repairs" target="_blank" rel="noreferrer">
+                  Check saved repairs in a new tab
+                </a>
+              )
+            }
+          >
             <p>{errorMessage}</p>
-            {outcomeUncertain && (
-              <a href="/api/repairs" target="_blank" rel="noreferrer">
-                Check saved repairs in a new tab
-              </a>
-            )}
-          </div>
+          </FeedbackNotice>
         )}
 
         <div className="repair-form-actions">

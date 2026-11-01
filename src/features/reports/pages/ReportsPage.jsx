@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { CalendarDays, RotateCcw, Search, TrendingUp } from "lucide-react";
 
 import { getReport } from "../../../api/reportApi.js";
@@ -255,6 +257,10 @@ function ReportsContent({ user }) {
               <input
                 type="date"
                 value={startDate}
+                aria-invalid={hasInvalidDateRange}
+                aria-describedby={
+                  hasInvalidDateRange ? "report-date-error" : undefined
+                }
                 onChange={(event) => setStartDate(event.target.value)}
               />
             </div>
@@ -267,6 +273,10 @@ function ReportsContent({ user }) {
               <input
                 type="date"
                 value={endDate}
+                aria-invalid={hasInvalidDateRange}
+                aria-describedby={
+                  hasInvalidDateRange ? "report-date-error" : undefined
+                }
                 onChange={(event) => setEndDate(event.target.value)}
               />
             </div>
@@ -284,7 +294,7 @@ function ReportsContent({ user }) {
         </div>
 
         {hasInvalidDateRange && (
-          <p className="report-date-error" role="alert">
+          <p id="report-date-error" className="report-date-error" role="alert">
             Start Date cannot be later than End Date.
           </p>
         )}
@@ -294,9 +304,13 @@ function ReportsContent({ user }) {
 
       {!loading && error && (
         <section className="page-content">
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[error]}
+          >
             <p>{error}</p>
-          </div>
+          </FeedbackNotice>
 
           <button
             type="button"

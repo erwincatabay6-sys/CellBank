@@ -1836,3 +1836,40 @@
     max-height: min(320px, 60vh);
   }
 }
+
+.tracking-code-control {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.tracking-code-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tracking-code-row .tracking-code-value {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 6px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tracking-copy-button {
+  flex-shrink: 0;
+}
+
+@container (max-width: 300px) {
+  .tracking-code-row .tracking-code-value {
+    min-height: calc(6em + 14px);
+  }
+}

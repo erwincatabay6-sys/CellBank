@@ -1,8 +1,11 @@
 import { useState } from "react";
 
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { X, Eye, EyeOff } from "lucide-react";
 
 function StaffAccountModal({
+  feedbackVersion,
   initialUser = null,
   errorMessage = "",
   saving = false,
@@ -237,7 +240,12 @@ function StaffAccountModal({
                         FORM ERROR
                     ========================== */}
           {errorMessage && (
-            <div className="administration-error">{errorMessage}</div>
+            <FeedbackNotice
+              className="administration-error"
+              resetKey={[errorMessage, feedbackVersion]}
+            >
+              {errorMessage}
+            </FeedbackNotice>
           )}
 
           {/* =========================

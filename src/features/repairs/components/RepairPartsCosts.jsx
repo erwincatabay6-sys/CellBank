@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { hasAccess } from "../../../config/accessControl.js";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
@@ -44,6 +47,7 @@ function getSubtotalCents(part) {
 }
 
 function RepairPartsCosts({
+  feedbackVersion,
   currentRoles = [],
   repairId,
   currentStatus,
@@ -90,7 +94,7 @@ function RepairPartsCosts({
   const [priceFormOpen, setPriceFormOpen] = useState(false);
   const [priceInput, setPriceInput] = useState("");
 
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -371,19 +375,24 @@ function RepairPartsCosts({
       </div>
 
       {displayedError && (
-        <div
+        <FeedbackNotice
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
+          resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </div>
+        </FeedbackNotice>
       )}
 
       {message && (
-        <div className="repair-success-message" role="status">
+        <FeedbackNotice
+          className="repair-success-message"
+          role="status"
+          resetKey={[message, feedbackVersion]}
+        >
           {message}
-        </div>
+        </FeedbackNotice>
       )}
 
       <div className="price-agreement-section">

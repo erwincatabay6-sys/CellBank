@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import { trackRepair } from "../../../api/trackingApi.js";
 
@@ -30,6 +33,8 @@ function TrackingPage() {
   const [trackingCode, setTrackingCode] = useState("");
   const [trackingResult, setTrackingResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [requestError, setRequestError, requestErrorVersion] =
+    useFeedbackState("");
   const [submitting, setSubmitting] = useState(false);
 
   const requestRef = useRef(null);
@@ -51,6 +56,7 @@ function TrackingPage() {
     const code = trackingCode.trim();
 
     setErrorMessage("");
+    setRequestError("");
 
     if (!code) {
       setErrorMessage("Enter your tracking code.");
@@ -91,12 +97,14 @@ function TrackingPage() {
       }
     } catch (error) {
       if (!controller.signal.aborted) {
-        setErrorMessage(
-          error?.status === 404
-            ? NOT_FOUND_MESSAGE
-            : error?.message ||
-                "Repair tracking is temporarily unavailable. Please try again.",
-        );
+        if (error?.status === 404) {
+          setErrorMessage(NOT_FOUND_MESSAGE);
+        } else {
+          setRequestError(
+            error?.message ||
+              "Repair tracking is temporarily unavailable. Please try again.",
+          );
+        }
       }
     } finally {
       if (requestRef.current === controller) {
@@ -113,6 +121,7 @@ function TrackingPage() {
     setTrackingCode("");
     setTrackingResult(null);
     setErrorMessage("");
+    setRequestError("");
 
     window.requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -170,6 +179,15 @@ function TrackingPage() {
               >
                 {errorMessage}
               </div>
+            )}
+
+            {requestError && (
+              <FeedbackNotice
+                className="public-form-error"
+                resetKey={requestErrorVersion}
+              >
+                {requestError}
+              </FeedbackNotice>
             )}
 
             <button

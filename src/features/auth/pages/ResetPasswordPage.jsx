@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { resetPassword } from "../../../api/authApi.js";
 
 import { Eye, EyeOff, KeyRound } from "lucide-react";
@@ -29,9 +32,11 @@ function ResetPasswordPage() {
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage, errorMessageVersion] =
+    useFeedbackState("");
 
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage, successMessageVersion] =
+    useFeedbackState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -187,16 +192,24 @@ function ResetPasswordPage() {
 
         {/* ERROR */}
         {errorMessage && (
-          <div className="public-form-error" role="alert">
+          <FeedbackNotice
+            className="public-form-error"
+            role="alert"
+            resetKey={[errorMessage, errorMessageVersion]}
+          >
             {errorMessage}
-          </div>
+          </FeedbackNotice>
         )}
 
         {/* SUCCESS */}
         {successMessage && (
-          <div className="public-form-success" role="status">
+          <FeedbackNotice
+            className="public-form-success"
+            role="status"
+            resetKey={[successMessage, successMessageVersion]}
+          >
             {successMessage}
-          </div>
+          </FeedbackNotice>
         )}
 
         {/* ACTION */}

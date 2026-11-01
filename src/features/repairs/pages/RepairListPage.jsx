@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import {
   getRepairs,
   getRepairTechnicians,
@@ -40,7 +43,7 @@ function RepairListPage() {
 
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
   const [reloadVersion, setReloadVersion] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -247,7 +250,21 @@ function RepairListPage() {
 
       <section className="page-content" aria-busy={loading}>
         {loadError && (
-          <div className="customer-form-error" role="alert">
+          <FeedbackNotice
+            className="customer-form-error"
+            role="alert"
+            resetKey={[loadError, loadErrorVersion]}
+            actions={
+              <button
+                className="secondary-repair-button"
+                type="button"
+                onClick={() => setReloadVersion((value) => value + 1)}
+                disabled={loading}
+              >
+                Try Again
+              </button>
+            }
+          >
             <p>{loadError}</p>
 
             {loaded && (
@@ -255,16 +272,7 @@ function RepairListPage() {
                 Previously loaded records are shown and may be out of date.
               </p>
             )}
-
-            <button
-              className="secondary-repair-button"
-              type="button"
-              onClick={() => setReloadVersion((value) => value + 1)}
-              disabled={loading}
-            >
-              Try Again
-            </button>
-          </div>
+          </FeedbackNotice>
         )}
 
         {!loaded && loading && (

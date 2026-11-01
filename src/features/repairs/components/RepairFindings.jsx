@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 function formatTimestamp(value) {
   if (!value) return "—";
 
@@ -11,6 +14,7 @@ function formatTimestamp(value) {
 }
 
 function RepairFindings({
+  feedbackVersion,
   repairId,
   findings = [],
   currentStatus,
@@ -28,7 +32,7 @@ function RepairFindings({
   const [diagnosis, setDiagnosis] = useState("");
   const [actionTaken, setActionTaken] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -222,25 +226,30 @@ function RepairFindings({
       </div>
 
       {displayedError && (
-        <div
+        <FeedbackNotice
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
+          resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </div>
+        </FeedbackNotice>
       )}
 
       {message && (
-        <div className="repair-success-message" role="status">
+        <FeedbackNotice
+          className="repair-success-message"
+          role="status"
+          resetKey={[message, feedbackVersion]}
+        >
           {message}
-        </div>
+        </FeedbackNotice>
       )}
 
       {localBlocked && error && (
-        <p role="alert">
+        <FeedbackNotice role="alert" resetKey={[feedbackVersion]}>
           Reload the page and check the findings before trying again.
-        </p>
+        </FeedbackNotice>
       )}
 
       {formOpen && canRecord && (

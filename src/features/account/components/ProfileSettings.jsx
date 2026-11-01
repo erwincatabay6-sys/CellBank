@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import { Camera, UserCircle } from "lucide-react";
@@ -15,13 +18,14 @@ function ProfileSettings({ user }) {
 
   const profileImage = user.profileImageUrl;
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageMessage, setImageMessage] = useState("");
-  const [imageError, setImageError] = useState("");
+  const [imageMessage, setImageMessage, imageMessageVersion] =
+    useFeedbackState("");
+  const [imageError, setImageError, imageErrorVersion] = useFeedbackState("");
   const { updateProfile, uploadProfileImage } = useAuth();
 
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage, messageVersion] = useFeedbackState("");
+  const [error, setError, errorVersion] = useFeedbackState("");
   // -----------------------------
   // PROFILE IMAGE
   // -----------------------------
@@ -165,15 +169,23 @@ function ProfileSettings({ user }) {
         {uploadingImage && <p role="status">Uploading picture...</p>}
 
         {imageMessage && (
-          <p className="account-form-message" role="status">
+          <FeedbackNotice
+            className="account-form-message"
+            role="status"
+            resetKey={[imageMessage, imageMessageVersion]}
+          >
             {imageMessage}
-          </p>
+          </FeedbackNotice>
         )}
 
         {imageError && (
-          <p className="account-form-message" role="alert">
+          <FeedbackNotice
+            className="account-form-message"
+            role="alert"
+            resetKey={[imageError, imageErrorVersion]}
+          >
             {imageError}
-          </p>
+          </FeedbackNotice>
         )}
 
         {/* =========================
@@ -197,15 +209,23 @@ function ProfileSettings({ user }) {
                     SAVE ACTION
                 ========================== */}
         {message && (
-          <p className="account-form-message" role="status">
+          <FeedbackNotice
+            className="account-form-message"
+            role="status"
+            resetKey={[message, messageVersion]}
+          >
             {message}
-          </p>
+          </FeedbackNotice>
         )}
 
         {error && (
-          <p className="account-form-message" role="alert">
+          <FeedbackNotice
+            className="account-form-message"
+            role="alert"
+            resetKey={[error, errorVersion]}
+          >
             {error}
-          </p>
+          </FeedbackNotice>
         )}
 
         <div className="finding-form-actions">

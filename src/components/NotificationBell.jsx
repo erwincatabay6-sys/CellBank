@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import useFeedbackState from "../hooks/useFeedbackState.js";
+import FeedbackNotice from "./FeedbackNotice.jsx";
+
 import {
   getNotifications,
   markNotificationAsRead,
@@ -32,7 +35,7 @@ export default function NotificationBell() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError, errorVersion] = useFeedbackState("");
 
   const wrapperRef = useRef(null);
   const bellRef = useRef(null);
@@ -239,16 +242,22 @@ export default function NotificationBell() {
           </div>
 
           {error && (
-            <div className="notification-feedback" role="alert">
+            <FeedbackNotice
+              className="notification-feedback"
+              role="alert"
+              resetKey={[error, errorVersion]}
+              actions={
+                <button
+                  type="button"
+                  onClick={loadNotifications}
+                  disabled={busy || loading}
+                >
+                  Retry
+                </button>
+              }
+            >
               <span>{error}</span>
-              <button
-                type="button"
-                onClick={loadNotifications}
-                disabled={busy || loading}
-              >
-                Retry
-              </button>
-            </div>
+            </FeedbackNotice>
           )}
 
           {(loading || busy) && (

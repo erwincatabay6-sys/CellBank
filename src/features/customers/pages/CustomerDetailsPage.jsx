@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useCustomers } from "../context/CustomersContext.jsx";
@@ -22,7 +25,8 @@ function CustomerDetailsPage() {
 
   const [customerEditOpen, setCustomerEditOpen] = useState(false);
   const [deviceModalOpen, setDeviceModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage, successMessageVersion] =
+    useFeedbackState("");
 
   const customer = customers.find((item) => String(item.id) === customerId);
 
@@ -63,7 +67,12 @@ function CustomerDetailsPage() {
         <>
           {successMessage && (
             <section className="page-content">
-              <p role="status">{successMessage}</p>
+              <FeedbackNotice
+                role="status"
+                resetKey={[successMessage, successMessageVersion]}
+              >
+                {successMessage}
+              </FeedbackNotice>
             </section>
           )}
 

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+import useFeedbackState from "../../../hooks/useFeedbackState.js";
+import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+
 import {
   Send,
   Bot,
@@ -73,8 +76,8 @@ function RepairAiConversation({
 
   const [loading, setLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
-  const [loadError, setLoadError] = useState("");
-  const [sendError, setSendError] = useState("");
+  const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
+  const [sendError, setSendError, sendErrorVersion] = useFeedbackState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [reloadRequired, setReloadRequired] = useState(false);
   const [reloadCount, setReloadCount] = useState(0);
@@ -365,18 +368,23 @@ function RepairAiConversation({
       )}
 
       {loadError && (
-        <div className="customer-form-error" role="alert">
+        <FeedbackNotice
+          className="customer-form-error"
+          role="alert"
+          resetKey={[loadError, loadErrorVersion]}
+          actions={
+            <button
+              type="button"
+              className="ai-status-button"
+              disabled={loading || isResponding}
+              onClick={() => setReloadCount((current) => current + 1)}
+            >
+              Try Again
+            </button>
+          }
+        >
           <p>{loadError}</p>
-
-          <button
-            type="button"
-            className="ai-status-button"
-            disabled={loading || isResponding}
-            onClick={() => setReloadCount((current) => current + 1)}
-          >
-            Try Again
-          </button>
-        </div>
+        </FeedbackNotice>
       )}
 
       {!loading &&
@@ -581,19 +589,24 @@ function RepairAiConversation({
       </div>
 
       {sendError && (
-        <div className="customer-form-error" role="alert">
+        <FeedbackNotice
+          className="customer-form-error"
+          role="alert"
+          resetKey={[sendError, sendErrorVersion]}
+          actions={
+            reloadRequired && (
+              <button
+                type="button"
+                className="ai-status-button"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </button>
+            )
+          }
+        >
           <p>{sendError}</p>
-
-          {reloadRequired && (
-            <button
-              type="button"
-              className="ai-status-button"
-              onClick={() => window.location.reload()}
-            >
-              Reload Page
-            </button>
-          )}
-        </div>
+        </FeedbackNotice>
       )}
 
       {isClosed && (
@@ -626,7 +639,7 @@ function RepairAiConversation({
         )}
 
         {attachmentError && (
-          <p className="ai-attachment-error" role="alert">
+          <p id="ai-attachment-error" className="ai-attachment-error" role="alert">
             {attachmentError}
           </p>
         )}
@@ -634,6 +647,9 @@ function RepairAiConversation({
         <div className="ai-message-composer-row">
           <button
             className="ai-attachment-button"
+            aria-describedby={
+              attachmentError ? "ai-attachment-error" : undefined
+            }
             type="button"
             disabled={
               interactionDisabled || attachments.length >= MAX_ATTACHMENTS
@@ -646,6 +662,10 @@ function RepairAiConversation({
 
           <input
             ref={fileInputRef}
+            aria-invalid={Boolean(attachmentError)}
+            aria-describedby={
+              attachmentError ? "ai-attachment-error" : undefined
+            }
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
