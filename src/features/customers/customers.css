@@ -559,3 +559,19 @@
   display: block;
   flex-shrink: 0;
 }
+
+.customer-repair-history:has(> .customer-repair-item:nth-child(6)) {
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.customer-repair-history > .customer-repair-item {
+  flex-shrink: 0;
+}
+
+@media (max-width: 650px) {
+  .customer-repair-history:has(> .customer-repair-item:nth-child(6)) {
+    max-height: 60vh;
+  }
+}

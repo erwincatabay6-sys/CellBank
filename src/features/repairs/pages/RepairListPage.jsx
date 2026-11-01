@@ -120,11 +120,14 @@ function RepairListPage() {
     ]),
   );
 
-  for (const repair of data.repairs) {
+    for (const repair of data.repairs) {
     const technicianId = repair.assignedTechnicianId;
 
     if (technicianId != null && !technicianNames.has(technicianId)) {
-      technicianNames.set(technicianId, `Staff #${technicianId}`);
+      technicianNames.set(
+        technicianId,
+        repair.assignedTechnicianName?.trim() || `Staff #${technicianId}`,
+      );
     }
   }
 
