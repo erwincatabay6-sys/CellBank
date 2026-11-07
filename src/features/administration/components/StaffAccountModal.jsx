@@ -241,6 +241,7 @@ function StaffAccountModal({
                     ========================== */}
           {errorMessage && (
             <FeedbackNotice
+              title="Check staff account details"
               className="administration-error"
               resetKey={[errorMessage, feedbackVersion]}
             >

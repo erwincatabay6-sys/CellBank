@@ -29,6 +29,7 @@ function CustomerRecordLayout({
         <section className="page-content" aria-busy={loading}>
           {loadError && (
             <FeedbackNotice
+              title="Unable to load customer information"
               className="customer-form-error"
               role="alert"
               resetKey={[loadError]}

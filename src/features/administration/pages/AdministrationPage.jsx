@@ -59,7 +59,8 @@ function AdministrationPage() {
 
   const [staffModalOpen, setStaffModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [formError, setFormError, formErrorVersion] = useFeedbackState("");
+  const [formError, setFormError, formErrorVersion, formErrorInline] =
+    useFeedbackState("");
 
   const [saving, setSaving] = useState(false);
   const mutationInProgress = useRef(false);
@@ -214,7 +215,12 @@ function AdministrationPage() {
         await refreshSession();
       }
     } catch (error) {
-      setFormError(getErrorMessage(error));
+      setFormError(getErrorMessage(error), {
+        toast:
+          error.outcomeUncertain || Object.keys(error.errors || {}).length
+            ? false
+            : { variant: "error", title: "Unable to save staff account" },
+      });
 
       if (error.status === 401) {
         await refreshSession();
@@ -257,7 +263,12 @@ function AdministrationPage() {
         ),
       );
     } catch (error) {
-      setFormError(getErrorMessage(error));
+      setFormError(getErrorMessage(error), {
+        toast:
+          error.outcomeUncertain || Object.keys(error.errors || {}).length
+            ? false
+            : { variant: "error", title: "Unable to save staff account" },
+      });
 
       if (error.status === 401) {
         await refreshSession();
@@ -328,8 +339,9 @@ function AdministrationPage() {
           </select>
         </div>
 
-        {!staffModalOpen && formError && (
+        {!staffModalOpen && formError && formErrorInline && (
           <FeedbackNotice
+            title="Unable to update staff account"
             className="administration-error"
             role="alert"
             resetKey={[formError, formErrorVersion]}
@@ -344,6 +356,7 @@ function AdministrationPage() {
           <StaffTableSkeleton />
         ) : loadError ? (
           <FeedbackNotice
+            title="Unable to load staff accounts"
             className="administration-error"
             role="alert"
             resetKey={[loadError, loadErrorVersion]}
@@ -383,7 +396,7 @@ function AdministrationPage() {
         <StaffAccountModal
           feedbackVersion={formErrorVersion}
           initialUser={selectedUser}
-          errorMessage={formError}
+          errorMessage={formErrorInline ? formError : ""}
           saving={saving}
           onClose={handleModalClose}
           onSave={handleStaffSave}

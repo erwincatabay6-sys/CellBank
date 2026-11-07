@@ -33,8 +33,14 @@ function TrackingPage() {
   const [trackingCode, setTrackingCode] = useState("");
   const [trackingResult, setTrackingResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [requestError, setRequestError, requestErrorVersion] =
-    useFeedbackState("");
+  const [
+    requestError,
+    setRequestError,
+    requestErrorVersion,
+    requestErrorInline,
+  ] = useFeedbackState("", {
+    toast: { variant: "error", title: "Unable to track repair" },
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const requestRef = useRef(null);
@@ -181,8 +187,9 @@ function TrackingPage() {
               </div>
             )}
 
-            {requestError && (
+            {requestError && requestErrorInline && (
               <FeedbackNotice
+                title="Unable to track repair"
                 className="public-form-error"
                 resetKey={requestErrorVersion}
               >

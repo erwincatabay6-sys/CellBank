@@ -1,73 +1,144 @@
-.feedback-container {
-  min-width: 0;
-  max-width: 100%;
-}
-
 .feedback-notice.feedback-notice {
+  --feedback-accent: var(--status-danger-text);
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
+  box-sizing: border-box;
   width: fit-content;
+  min-width: 0;
   max-width: 100%;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--feedback-accent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--feedback-shadow);
+  font-size: 0.875rem;
+  line-height: 1.5;
   text-align: left;
 }
 
+.feedback-notice.feedback-success {
+  --feedback-accent: var(--status-success-text);
+}
+.feedback-notice.feedback-warning {
+  --feedback-accent: var(--status-warning-text);
+}
+.feedback-notice.feedback-info {
+  --feedback-accent: var(--status-info-text);
+}
+
+.feedback-status-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--feedback-accent);
+}
+.feedback-details {
+  flex: 1;
+  min-width: 0;
+}
+.feedback-notice .feedback-title {
+  margin: 0 0 3px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
 .feedback-notice-content {
   min-width: 0;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.feedback-notice-content > p {
+  margin: 0;
+}
+.feedback-notice-content > p + p {
+  margin-top: 6px;
 }
 
 .feedback-notice .feedback-dismiss {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  margin: 0;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  margin: -4px -4px 0 0;
   padding: 0;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  color: inherit;
+  color: var(--text-secondary);
   cursor: pointer;
 }
-
 .feedback-notice .feedback-dismiss:hover {
   background: var(--surface-muted);
   color: var(--text-primary);
-  border-color: var(--control-border);
 }
-
-.feedback-notice .feedback-dismiss:focus-visible,
+.feedback-notice button:focus-visible,
 .tracking-copy-button:focus-visible,
 .tracking-code-value:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
-
-.feedback-actions {
+.feedback-notice .feedback-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-block: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.feedback-actions button {
+  max-width: 100%;
+  white-space: normal;
 }
 
-.notification-panel .feedback-actions {
-  padding-inline: 16px;
+.feedback-toasts {
+  position: fixed;
+  z-index: 3000;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: min(390px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  gap: 10px;
+  pointer-events: none;
+}
+.feedback-toasts .feedback-toast {
+  width: 100%;
+  max-height: min(240px, calc((60dvh - 32px) / 3));
+  overflow: auto;
+  pointer-events: auto;
+}
+@media (max-width: 600px) {
+  .feedback-toasts .feedback-toast {
+    max-height: calc((50dvh - 32px) / 3);
+  }
+  .feedback-toasts {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: calc(
+      100vw - 24px - env(safe-area-inset-right) - env(safe-area-inset-left)
+    );
+  }
+}
+/* No entrance/exit animation: also respects reduced-motion preferences. */
+
+.feedback-field-error {
+  margin: 5px 0 0;
+  color: var(--error-color);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
-.notification-panel .feedback-actions button {
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--primary-dark);
-  cursor: pointer;
+.feedback-input-group {
+  flex: 1;
+  min-width: 0;
 }
-
-.notification-panel .feedback-actions button:disabled {
-  cursor: wait;
-  opacity: 0.65;
+.feedback-input-group textarea {
+  width: 100%;
 }

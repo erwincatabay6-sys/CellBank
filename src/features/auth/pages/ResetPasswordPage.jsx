@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -32,11 +33,17 @@ function ResetPasswordPage() {
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+    errorMessageField,
+  ] = useFeedbackState("");
 
-  const [successMessage, setSuccessMessage, successMessageVersion] =
-    useFeedbackState("");
+  const [successMessage, setSuccessMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Password reset" },
+  });
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,22 +69,28 @@ function ResetPasswordPage() {
     }
 
     if (!newPassword.trim()) {
-      setErrorMessage("Enter a new password.");
+      setErrorMessage("Enter a new password.", { field: "reset-new-password" });
       return;
     }
 
     if (newPassword.length < 8 || newPassword.length > 72) {
-      setErrorMessage("Password must contain between 8 and 72 characters.");
+      setErrorMessage("Password must contain between 8 and 72 characters.", {
+        field: "reset-new-password",
+      });
       return;
     }
 
     if (new TextEncoder().encode(newPassword).length > 72) {
-      setErrorMessage("Password must not exceed 72 UTF-8 bytes.");
+      setErrorMessage("Password must not exceed 72 UTF-8 bytes.", {
+        field: "reset-new-password",
+      });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+      setErrorMessage("Passwords do not match.", {
+        field: "reset-confirm-password",
+      });
       return;
     }
 
@@ -97,6 +110,7 @@ function ResetPasswordPage() {
     } catch (error) {
       setErrorMessage(
         error.message || "Unable to reset your password. Please try again.",
+        { toast: { variant: "error", title: "Unable to reset password" } },
       );
     } finally {
       setSubmitting(false);
@@ -134,6 +148,12 @@ function ResetPasswordPage() {
 
           <div className="login-password-input">
             <input
+              aria-invalid={errorMessageField === "reset-new-password"}
+              aria-describedby={
+                errorMessageField === "reset-new-password"
+                  ? "reset-new-password-feedback"
+                  : undefined
+              }
               id="reset-new-password"
               type={showNewPassword ? "text" : "password"}
               value={newPassword}
@@ -155,6 +175,11 @@ function ResetPasswordPage() {
               {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="reset-new-password"
+            field={errorMessageField}
+            message={errorMessage}
+          />
 
           <small className="auth-field-hint">Minimum of 8 characters.</small>
         </div>
@@ -165,6 +190,12 @@ function ResetPasswordPage() {
 
           <div className="login-password-input">
             <input
+              aria-invalid={errorMessageField === "reset-confirm-password"}
+              aria-describedby={
+                errorMessageField === "reset-confirm-password"
+                  ? "reset-confirm-password-feedback"
+                  : undefined
+              }
               id="reset-confirm-password"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
@@ -188,11 +219,17 @@ function ResetPasswordPage() {
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="reset-confirm-password"
+            field={errorMessageField}
+            message={errorMessage}
+          />
         </div>
 
         {/* ERROR */}
-        {errorMessage && (
+        {errorMessage && errorMessageInline && !errorMessageField && (
           <FeedbackNotice
+            title="Unable to reset password"
             className="public-form-error"
             role="alert"
             resetKey={[errorMessage, errorMessageVersion]}
@@ -202,15 +239,6 @@ function ResetPasswordPage() {
         )}
 
         {/* SUCCESS */}
-        {successMessage && (
-          <FeedbackNotice
-            className="public-form-success"
-            role="status"
-            resetKey={[successMessage, successMessageVersion]}
-          >
-            {successMessage}
-          </FeedbackNotice>
-        )}
 
         {/* ACTION */}
         {!successMessage && (

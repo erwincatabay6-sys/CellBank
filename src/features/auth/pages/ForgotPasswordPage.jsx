@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -34,7 +35,8 @@ function ForgotPasswordPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const [message, setMessage, messageVersion] = useFeedbackState("");
+  const [message, setMessage, messageVersion, messageInline, messageField] =
+    useFeedbackState("");
 
   const [resendAvailableAt, setResendAvailableAt] =
     useState(readRecoveryDeadline);
@@ -85,12 +87,16 @@ function ForgotPasswordPage() {
     const value = identifier.trim();
 
     if (!value) {
-      setMessage("Enter your username or registered email address.");
+      setMessage("Enter your username or registered email address.", {
+        field: "recovery-identifier",
+      });
       return;
     }
 
     if (value.length > 254) {
-      setMessage("Username or email is too long.");
+      setMessage("Username or email is too long.", {
+        field: "recovery-identifier",
+      });
       return;
     }
 
@@ -113,11 +119,13 @@ function ForgotPasswordPage() {
         "If an eligible account matches, recovery instructions will be sent " +
           "to its verified email address. Check your inbox and spam folder. " +
           "Please wait at least 60 seconds before requesting another email.",
+        { toast: { variant: "success", title: "Recovery requested" } },
       );
     } catch (error) {
       setMessage(
         error.message ||
           "Unable to request recovery instructions. Please try again later.",
+        { toast: { variant: "error", title: "Unable to request recovery" } },
       );
     } finally {
       setSubmitting(false);
@@ -148,6 +156,12 @@ function ForgotPasswordPage() {
           <label htmlFor="recovery-identifier">Username or Email</label>
 
           <input
+            aria-invalid={messageField === "recovery-identifier"}
+            aria-describedby={
+              messageField === "recovery-identifier"
+                ? "recovery-identifier-feedback"
+                : undefined
+            }
             id="recovery-identifier"
             type="text"
             name="identifier"
@@ -157,13 +171,19 @@ function ForgotPasswordPage() {
             autoComplete="username"
             disabled={submitting}
           />
+          <FieldFeedback
+            id="recovery-identifier"
+            field={messageField}
+            message={message}
+          />
         </div>
 
         {/* =========================
                     RESPONSE MESSAGE
                 ========================== */}
-        {message && (
+        {message && messageInline && !messageField && (
           <FeedbackNotice
+            title="Check your recovery details"
             className="public-form-message"
             role="status"
             resetKey={[message, messageVersion]}

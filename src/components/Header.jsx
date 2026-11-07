@@ -16,9 +16,8 @@ function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutError, setLogoutError, logoutErrorVersion] =
+  const [logoutError, setLogoutError, logoutErrorVersion, logoutErrorInline] =
     useFeedbackState("");
 
   async function handleLogout() {
@@ -40,6 +39,11 @@ function Header() {
               "Refresh the page to check your session."
             : error.message
           : error.message || "Could not sign out. Please try again.",
+        {
+          toast: error.outcomeUncertain
+            ? false
+            : { variant: "error", title: "Unable to sign out" },
+        },
       );
     } finally {
       setLoggingOut(false);
@@ -49,14 +53,14 @@ function Header() {
   return (
     <header className="app-header">
       <Brand />
-      
 
       <div className="header-actions">
         {user?.id != null && <NotificationBell key={user.id} />}
         <ThemeToggle />
 
-        {logoutError && (
+        {logoutError && logoutErrorInline && (
           <FeedbackNotice
+            title="Check your session"
             role="alert"
             resetKey={[logoutError, logoutErrorVersion]}
           >

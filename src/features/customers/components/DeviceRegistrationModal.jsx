@@ -40,8 +40,12 @@ function DeviceRegistrationModal({
 
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+  ] = useFeedbackState("");
   const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
   const submitting = useRef(false);
@@ -140,6 +144,11 @@ function DeviceRegistrationModal({
       } else {
         setErrorMessage(
           error.message || "Unable to save the device. Please try again.",
+          {
+            toast: Object.keys(error.errors || {}).length
+              ? false
+              : { variant: "error", title: "Unable to save device" },
+          },
         );
       }
     } finally {
@@ -269,8 +278,10 @@ function DeviceRegistrationModal({
             {renderFieldError("notes")}
           </div>
 
-          {errorMessage && (
+          {errorMessage && errorMessageInline && (
             <FeedbackNotice
+              variant={outcomeUncertain ? "warning" : "error"}
+              title="Unable to save device"
               className="customer-form-error"
               role="alert"
               resetKey={[errorMessage, errorMessageVersion]}

@@ -251,6 +251,7 @@ function RepairListPage() {
       <section className="page-content" aria-busy={loading}>
         {loadError && (
           <FeedbackNotice
+            title="Unable to load repairs"
             className="customer-form-error"
             role="alert"
             resetKey={[loadError, loadErrorVersion]}

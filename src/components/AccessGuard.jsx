@@ -14,6 +14,7 @@ export default function AccessGuard({ permission, children }) {
   if (authError) {
     return (
       <FeedbackNotice
+        title="Unable to check your session"
         role="alert"
         resetKey={[authError]}
         actions={

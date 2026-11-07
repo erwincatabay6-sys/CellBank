@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
-import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -25,8 +24,9 @@ function CustomerDetailsPage() {
 
   const [customerEditOpen, setCustomerEditOpen] = useState(false);
   const [deviceModalOpen, setDeviceModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage, successMessageVersion] =
-    useFeedbackState("");
+  const [, setSuccessMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Record saved" },
+  });
 
   const customer = customers.find((item) => String(item.id) === customerId);
 
@@ -65,16 +65,6 @@ function CustomerDetailsPage() {
     >
       {customer && (
         <>
-          {successMessage && (
-            <section className="page-content">
-              <FeedbackNotice
-                role="status"
-                resetKey={[successMessage, successMessageVersion]}
-              >
-                {successMessage}
-              </FeedbackNotice>
-            </section>
-          )}
 
           <section className="page-content">
             <div className="workspace-section-header">

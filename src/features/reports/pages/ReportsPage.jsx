@@ -305,20 +305,22 @@ function ReportsContent({ user }) {
       {!loading && error && (
         <section className="page-content">
           <FeedbackNotice
+            title="Unable to load report"
             className="customer-form-error"
             role="alert"
             resetKey={[error]}
+            actions={
+              <button
+                type="button"
+                className="create-repair-button"
+                onClick={() => setReloadCount((current) => current + 1)}
+              >
+                Try Again
+              </button>
+            }
           >
             <p>{error}</p>
           </FeedbackNotice>
-
-          <button
-            type="button"
-            className="create-repair-button"
-            onClick={() => setReloadCount((current) => current + 1)}
-          >
-            Try Again
-          </button>
         </section>
       )}
 

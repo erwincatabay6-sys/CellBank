@@ -1,47 +1,88 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { CircleCheck, CircleAlert, TriangleAlert, Info, X } from "lucide-react";
 
 import "./FeedbackNotice.css";
 
-function Notice({
+const variants = {
+  success: { Icon: CircleCheck, title: "Changes saved", role: "status" },
+  error: {
+    Icon: CircleAlert,
+    title: "Unable to complete action",
+    role: "alert",
+  },
+  warning: {
+    Icon: TriangleAlert,
+    title: "Please check before continuing",
+    role: "alert",
+  },
+  info: { Icon: Info, title: "Information", role: "status" },
+};
+
+export function FeedbackCard({
   children,
   actions,
+  variant = "error",
+  title,
   className = "",
-  role = "alert",
+  role,
+  onDismiss,
   ...props
 }) {
-  const [dismissed, setDismissed] = useState(false);
+  const status = variants[variant] || variants.error;
+  const { Icon } = status;
+  const heading = title || status.title;
 
   return (
-    <div className="feedback-container">
-      {!dismissed && (
-        <div
-          {...props}
-          className={`feedback-notice ${className}`}
-          role={role}
-          aria-atomic="true"
+    <div
+      {...props}
+      className={`feedback-notice feedback-${variant} ${className}`}
+      role={role || status.role}
+      aria-atomic="true"
+    >
+      <Icon className="feedback-status-icon" size={21} aria-hidden="true" />
+      <div className="feedback-details">
+        <p className="feedback-title">{heading}</p>
+        <div className="feedback-notice-content">{children}</div>
+        {actions && <div className="feedback-actions">{actions}</div>}
+      </div>
+      {onDismiss && (
+        <button
+          className="feedback-dismiss"
+          type="button"
+          aria-label={`Dismiss ${heading}`}
+          onClick={onDismiss}
         >
-          <div className="feedback-notice-content">{children}</div>
-          <button
-            className="feedback-dismiss"
-            type="button"
-            aria-label={
-              role === "alert"
-                ? "Dismiss error message"
-                : "Dismiss feedback message"
-            }
-            onClick={() => setDismissed(true)}
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
+          <X size={18} aria-hidden="true" />
+        </button>
       )}
-      {actions && <div className="feedback-actions">{actions}</div>}
     </div>
   );
 }
 
-export default function FeedbackNotice({ resetKey = null, ...props }) {
-  // Only remount the notice, never its owning form or the operation state.
-  return <Notice key={JSON.stringify(resetKey)} {...props} />;
+function Notice({ dismissible = false, ...props }) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  return (
+    <FeedbackCard
+      {...props}
+      onDismiss={dismissible ? () => setDismissed(true) : undefined}
+    />
+  );
+}
+
+// Inline recovery and blocking explanations remain visible by default.
+export default function FeedbackNotice({
+  resetKey = null,
+  role,
+  variant,
+  ...props
+}) {
+  return (
+    <Notice
+      key={JSON.stringify(resetKey)}
+      variant={variant || (role === "status" ? "info" : "error")}
+      role={role}
+      {...props}
+    />
+  );
 }
