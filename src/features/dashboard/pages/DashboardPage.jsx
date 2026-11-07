@@ -140,7 +140,7 @@ function DashboardContent({ user }) {
               : "Here is the latest on your repair operations."}
           </p>
         </div>
-        
+
       </section>
 
       {loading && (
@@ -157,20 +157,22 @@ function DashboardContent({ user }) {
       {!loading && error && (
         <section className="page-content">
           <FeedbackNotice
+            title="Unable to load dashboard"
             className="customer-form-error"
             role="alert"
             resetKey={[error, errorVersion]}
+            actions={
+              <button
+                type="button"
+                className="create-repair-button"
+                onClick={() => setReloadCount((current) => current + 1)}
+              >
+                Try Again
+              </button>
+            }
           >
             <p>{error}</p>
           </FeedbackNotice>
-
-          <button
-            type="button"
-            className="create-repair-button"
-            onClick={() => setReloadCount((current) => current + 1)}
-          >
-            Try Again
-          </button>
         </section>
       )}
 

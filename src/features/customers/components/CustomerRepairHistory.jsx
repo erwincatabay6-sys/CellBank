@@ -73,6 +73,7 @@ function CustomerRepairHistory({
 
       {error && (
         <FeedbackNotice
+          title="Unable to load repair history"
           className="customer-form-error"
           role="alert"
           resetKey={[error]}

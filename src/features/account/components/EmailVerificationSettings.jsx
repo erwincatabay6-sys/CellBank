@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import { RequestError } from "../../../api/http.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { MailCheck, MailWarning, Send } from "lucide-react";
@@ -12,6 +13,7 @@ import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 function EmailVerificationSettings({ user }) {
+  const { publish } = useFeedback();
   const { refreshUser } = useAuth();
 
   const emailVerified = user.emailVerified === true;
@@ -20,8 +22,9 @@ function EmailVerificationSettings({ user }) {
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [sending, setSending] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [, setErrorMessage] = useFeedbackState("", {
+    toast: { variant: "error", title: "Unable to send verification" },
+  });
   const [statusError, setStatusError, statusErrorVersion] =
     useFeedbackState("");
   const [statusReload, setStatusReload] = useState(0);
@@ -162,6 +165,12 @@ function EmailVerificationSettings({ user }) {
     try {
       await sendEmailVerification();
       setVerificationRequested(true);
+      publish({
+        variant: "success",
+        title: "Verification email sent",
+        message:
+          "Verification instructions have been sent to your registered email address.",
+      });
     } catch (error) {
       setErrorMessage(
         error.message ||
@@ -240,46 +249,27 @@ function EmailVerificationSettings({ user }) {
         )}
       </div>
 
-      {verificationRequested && !emailVerified && (
-        <FeedbackNotice className="account-form-message" role="status">
-          Verification instructions have been sent to your registered email
-          address.
-        </FeedbackNotice>
-      )}
-
-      {errorMessage && !emailVerified && (
-        <FeedbackNotice
-          className="account-form-message"
-          role="alert"
-          resetKey={[errorMessage, errorMessageVersion]}
-        >
-          {errorMessage}
-        </FeedbackNotice>
-      )}
-
       {statusError && !emailVerified && (
-        <div>
-          <FeedbackNotice
-            className="account-form-message"
-            role="alert"
-            resetKey={[statusError, statusErrorVersion]}
-          >
-            {statusError}
-          </FeedbackNotice>
-
-          <button
-            className="secondary-repair-button"
-            type="button"
-            disabled={checkingStatus || sending}
-            onClick={() => {
-              setCheckingStatus(true);
-              setStatusError("");
-              setStatusReload((current) => current + 1);
-            }}
-          >
-            Retry Status Check
-          </button>
-        </div>
+        <FeedbackNotice
+          title="Unable to check verification"
+          resetKey={[statusError, statusErrorVersion]}
+          actions={
+            <button
+              className="secondary-repair-button"
+              type="button"
+              disabled={checkingStatus || sending}
+              onClick={() => {
+                setCheckingStatus(true);
+                setStatusError("");
+                setStatusReload((current) => current + 1);
+              }}
+            >
+              Retry Status Check
+            </button>
+          }
+        >
+          {statusError}
+        </FeedbackNotice>
       )}
     </section>
   );

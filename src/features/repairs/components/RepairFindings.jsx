@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
@@ -32,7 +33,8 @@ function RepairFindings({
   const [diagnosis, setDiagnosis] = useState("");
   const [actionTaken, setActionTaken] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
+  const [localError, setLocalError, localErrorVersion, , localErrorField] =
+    useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -146,7 +148,7 @@ function RepairFindings({
     const trimmedAction = actionTaken.trim();
 
     if (!finding) {
-      setLocalError("Enter a finding.");
+      setLocalError("Enter a finding.", { field: "finding" });
       return;
     }
 
@@ -155,7 +157,14 @@ function RepairFindings({
         (value) => value.length > 5000,
       )
     ) {
-      setLocalError("Each field must not exceed 5000 characters.");
+      setLocalError("Each field must not exceed 5000 characters.", {
+        field:
+          finding.length > 5000
+            ? "finding"
+            : trimmedDiagnosis.length > 5000
+              ? "diagnosis"
+              : "action-taken",
+      });
       return;
     }
 
@@ -187,7 +196,7 @@ function RepairFindings({
     }
   }
 
-  const displayedError = error || localError;
+  const displayedError = error || (!localErrorField && localError);
 
   const newestFirst = [...findings].sort(
     (a, b) =>
@@ -227,6 +236,8 @@ function RepairFindings({
 
       {displayedError && (
         <FeedbackNotice
+          variant={blocked || localBlocked ? "warning" : "error"}
+          title="Unable to save finding"
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
@@ -236,18 +247,13 @@ function RepairFindings({
         </FeedbackNotice>
       )}
 
-      {message && (
-        <FeedbackNotice
-          className="repair-success-message"
-          role="status"
-          resetKey={[message, feedbackVersion]}
-        >
-          {message}
-        </FeedbackNotice>
-      )}
-
       {localBlocked && error && (
-        <FeedbackNotice role="alert" resetKey={[feedbackVersion]}>
+        <FeedbackNotice
+          variant={blocked || localBlocked ? "warning" : "error"}
+          title="Check the saved findings"
+          role="alert"
+          resetKey={[feedbackVersion]}
+        >
           Reload the page and check the findings before trying again.
         </FeedbackNotice>
       )}
@@ -262,6 +268,10 @@ function RepairFindings({
             <label htmlFor="finding">Finding</label>
 
             <textarea
+              aria-invalid={localErrorField === "finding"}
+              aria-describedby={
+                localErrorField === "finding" ? "finding-feedback" : undefined
+              }
               id="finding"
               value={findingText}
               onChange={(event) => setFindingText(event.target.value)}
@@ -271,12 +281,23 @@ function RepairFindings({
               disabled={controlsDisabled}
               required
             />
+            <FieldFeedback
+              id="finding"
+              field={localErrorField}
+              message={localError}
+            />
           </div>
 
           <div className="repair-form-group">
             <label htmlFor="diagnosis">Diagnosis</label>
 
             <textarea
+              aria-invalid={localErrorField === "diagnosis"}
+              aria-describedby={
+                localErrorField === "diagnosis"
+                  ? "diagnosis-feedback"
+                  : undefined
+              }
               id="diagnosis"
               value={diagnosis}
               onChange={(event) => setDiagnosis(event.target.value)}
@@ -285,12 +306,23 @@ function RepairFindings({
               placeholder="Optional diagnosis"
               disabled={controlsDisabled}
             />
+            <FieldFeedback
+              id="diagnosis"
+              field={localErrorField}
+              message={localError}
+            />
           </div>
 
           <div className="repair-form-group">
             <label htmlFor="action-taken">Action Taken</label>
 
             <textarea
+              aria-invalid={localErrorField === "action-taken"}
+              aria-describedby={
+                localErrorField === "action-taken"
+                  ? "action-taken-feedback"
+                  : undefined
+              }
               id="action-taken"
               value={actionTaken}
               onChange={(event) => setActionTaken(event.target.value)}
@@ -298,6 +330,11 @@ function RepairFindings({
               maxLength={5000}
               placeholder="Optional inspection, test, or repair action performed"
               disabled={controlsDisabled}
+            />
+            <FieldFeedback
+              id="action-taken"
+              field={localErrorField}
+              message={localError}
             />
           </div>
 

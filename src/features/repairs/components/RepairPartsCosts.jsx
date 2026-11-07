@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -94,7 +95,8 @@ function RepairPartsCosts({
   const [priceFormOpen, setPriceFormOpen] = useState(false);
   const [priceInput, setPriceInput] = useState("");
 
-  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
+  const [localError, setLocalError, localErrorVersion, , localErrorField] =
+    useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -274,7 +276,9 @@ function RepairPartsCosts({
     const costText = unitCost.trim();
 
     if (!trimmedName || trimmedName.length > 150) {
-      setLocalError("Enter a part name of 1 to 150 characters.");
+      setLocalError("Enter a part name of 1 to 150 characters.", {
+        field: "part-name",
+      });
       return;
     }
 
@@ -284,13 +288,16 @@ function RepairPartsCosts({
       parsedQuantity < 1 ||
       parsedQuantity > 2147483647
     ) {
-      setLocalError("Quantity must be a whole number from 1 to 2147483647.");
+      setLocalError("Quantity must be a whole number from 1 to 2147483647.", {
+        field: "part-quantity",
+      });
       return;
     }
 
     if (!MONEY_PATTERN.test(costText)) {
       setLocalError(
         "Enter a non-negative unit cost with at most 10 whole-number digits and 2 decimal places.",
+        { field: "part-unit-cost" },
       );
       return;
     }
@@ -320,6 +327,7 @@ function RepairPartsCosts({
     if (!MONEY_PATTERN.test(amount)) {
       setLocalError(
         "Enter a non-negative estimate with at most 10 whole-number digits and 2 decimal places.",
+        { field: "estimated-cost-workspace" },
       );
       return;
     }
@@ -345,6 +353,7 @@ function RepairPartsCosts({
     if (!MONEY_PATTERN.test(amount)) {
       setLocalError(
         "Enter a non-negative agreed price with at most 10 whole-number digits and 2 decimal places.",
+        { field: "agreed-price" },
       );
       return;
     }
@@ -358,7 +367,7 @@ function RepairPartsCosts({
     }
   }
 
-  const displayedError = error || localError;
+  const displayedError = error || (!localErrorField && localError);
   const cancelLabel = blocked || localBlocked ? "Close" : "Cancel";
 
   return (
@@ -376,22 +385,14 @@ function RepairPartsCosts({
 
       {displayedError && (
         <FeedbackNotice
+          variant={blocked || localBlocked ? "warning" : "error"}
+          title="Unable to update costs"
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
           resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </FeedbackNotice>
-      )}
-
-      {message && (
-        <FeedbackNotice
-          className="repair-success-message"
-          role="status"
-          resetKey={[message, feedbackVersion]}
-        >
-          {message}
         </FeedbackNotice>
       )}
 
@@ -468,6 +469,12 @@ function RepairPartsCosts({
               </label>
 
               <input
+                aria-invalid={localErrorField === "estimated-cost-workspace"}
+                aria-describedby={
+                  localErrorField === "estimated-cost-workspace"
+                    ? "estimated-cost-workspace-feedback"
+                    : undefined
+                }
                 id="estimated-cost-workspace"
                 type="number"
                 min="0"
@@ -478,6 +485,11 @@ function RepairPartsCosts({
                 placeholder="0.00"
                 disabled={controlsDisabled}
                 required
+              />
+              <FieldFeedback
+                id="estimated-cost-workspace"
+                field={localErrorField}
+                message={localError}
               />
             </div>
 
@@ -517,6 +529,12 @@ function RepairPartsCosts({
               <label htmlFor="agreed-price">Agreed Repair Price</label>
 
               <input
+                aria-invalid={localErrorField === "agreed-price"}
+                aria-describedby={
+                  localErrorField === "agreed-price"
+                    ? "agreed-price-feedback"
+                    : undefined
+                }
                 id="agreed-price"
                 type="number"
                 min="0"
@@ -527,6 +545,11 @@ function RepairPartsCosts({
                 placeholder="0.00"
                 disabled={controlsDisabled}
                 required
+              />
+              <FieldFeedback
+                id="agreed-price"
+                field={localErrorField}
+                message={localError}
               />
             </div>
 
@@ -588,6 +611,12 @@ function RepairPartsCosts({
               <label htmlFor="part-name">Part Name</label>
 
               <input
+                aria-invalid={localErrorField === "part-name"}
+                aria-describedby={
+                  localErrorField === "part-name"
+                    ? "part-name-feedback"
+                    : undefined
+                }
                 id="part-name"
                 type="text"
                 value={partName}
@@ -597,12 +626,23 @@ function RepairPartsCosts({
                 disabled={controlsDisabled}
                 required
               />
+              <FieldFeedback
+                id="part-name"
+                field={localErrorField}
+                message={localError}
+              />
             </div>
 
             <div className="repair-form-group">
               <label htmlFor="part-quantity">Quantity</label>
 
               <input
+                aria-invalid={localErrorField === "part-quantity"}
+                aria-describedby={
+                  localErrorField === "part-quantity"
+                    ? "part-quantity-feedback"
+                    : undefined
+                }
                 id="part-quantity"
                 type="number"
                 min="1"
@@ -613,12 +653,23 @@ function RepairPartsCosts({
                 disabled={controlsDisabled}
                 required
               />
+              <FieldFeedback
+                id="part-quantity"
+                field={localErrorField}
+                message={localError}
+              />
             </div>
 
             <div className="repair-form-group">
               <label htmlFor="part-unit-cost">Unit Cost</label>
 
               <input
+                aria-invalid={localErrorField === "part-unit-cost"}
+                aria-describedby={
+                  localErrorField === "part-unit-cost"
+                    ? "part-unit-cost-feedback"
+                    : undefined
+                }
                 id="part-unit-cost"
                 type="number"
                 min="0"
@@ -629,6 +680,11 @@ function RepairPartsCosts({
                 placeholder="0.00"
                 disabled={controlsDisabled}
                 required
+              />
+              <FieldFeedback
+                id="part-unit-cost"
+                field={localErrorField}
+                message={localError}
               />
             </div>
           </div>

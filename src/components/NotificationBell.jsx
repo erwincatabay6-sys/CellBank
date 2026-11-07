@@ -243,6 +243,7 @@ export default function NotificationBell() {
 
           {error && (
             <FeedbackNotice
+              title="Unable to load notifications"
               className="notification-feedback"
               role="alert"
               resetKey={[error, errorVersion]}

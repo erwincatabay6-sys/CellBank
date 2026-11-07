@@ -6,7 +6,16 @@ import useFeedbackState from "../../../hooks/useFeedbackState.js";
 
 export default function RepairTrackingCode({ code }) {
   const [copying, setCopying] = useState(false);
-  const [result, setResult, resultVersion] = useFeedbackState(null);
+  const [result, setResult, resultVersion] = useFeedbackState(null, {
+    toast: (value) =>
+      value.success
+        ? {
+            variant: "success",
+            title: "Tracking code copied",
+            message: value.text,
+          }
+        : null,
+  });
   const inProgress = useRef(false);
   const active = useRef(true);
 
@@ -70,12 +79,11 @@ export default function RepairTrackingCode({ code }) {
           <Copy size={16} aria-hidden="true" />
         </button>
       </div>
-      {result && (
+      {result && !result.success && (
         <FeedbackNotice
-          role={result.success ? "status" : "alert"}
-          className={
-            result.success ? "repair-success-message" : "customer-form-error"
-          }
+          title="Unable to copy tracking code"
+          role="alert"
+          className="customer-form-error"
           resetKey={resultVersion}
         >
           {result.text}

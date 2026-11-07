@@ -86,58 +86,86 @@ function RepairWorkspace({ repairId, user }) {
     useState(false);
   const [technicianSelection, setTechnicianSelection] = useState("");
   const [assignmentSaving, setAssignmentSaving] = useState(false);
-  const [assignmentError, setAssignmentError, assignmentErrorVersion] =
-    useFeedbackState("");
+  const [
+    assignmentError,
+    setAssignmentError,
+    assignmentErrorVersion,
+    assignmentErrorInline,
+  ] = useFeedbackState("");
   const [assignmentBlocked, setAssignmentBlocked] = useState(false);
-  const [assignmentMessage, setAssignmentMessage, assignmentMessageVersion] =
-    useFeedbackState("");
+  const [, setAssignmentMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Technician assigned" },
+  });
 
   const assignmentSubmitting = useRef(false);
 
   const [statusSaving, setStatusSaving] = useState(false);
-  const [statusError, setStatusError, statusErrorVersion] =
+  const [statusError, setStatusError, statusErrorVersion, statusErrorInline] =
     useFeedbackState("");
   const [statusBlocked, setStatusBlocked] = useState(false);
   const [statusMessage, setStatusMessage, statusMessageVersion] =
-    useFeedbackState("");
+    useFeedbackState("", {
+      toast: { variant: "success", title: "Repair status updated" },
+    });
   const [aiStatusDraft, setAiStatusDraft] = useState("");
 
   const statusSubmittingRef = useRef(false);
 
   const [findingSaving, setFindingSaving] = useState(false);
-  const [findingError, setFindingError, findingErrorVersion] =
-    useFeedbackState("");
+  const [
+    findingError,
+    setFindingError,
+    findingErrorVersion,
+    findingErrorInline,
+  ] = useFeedbackState("");
   const [findingBlocked, setFindingBlocked] = useState(false);
   const [findingMessage, setFindingMessage, findingMessageVersion] =
-    useFeedbackState("");
+    useFeedbackState("", {
+      toast: { variant: "success", title: "Finding saved" },
+    });
   const [aiFindingDraft, setAiFindingDraft] = useState("");
 
   const findingSubmittingRef = useRef(false);
 
   const [costsSaving, setCostsSaving] = useState(false);
-  const [costsError, setCostsError, costsErrorVersion] = useFeedbackState("");
-  const [costsBlocked, setCostsBlocked] = useState(false);
-  const [costsMessage, setCostsMessage, costsMessageVersion] =
+  const [costsError, setCostsError, costsErrorVersion, costsErrorInline] =
     useFeedbackState("");
+  const [costsBlocked, setCostsBlocked] = useState(false);
+  const [costsMessage, setCostsMessage, costsMessageVersion] = useFeedbackState(
+    "",
+    { toast: { variant: "success", title: "Costs updated" } },
+  );
   const [aiPartDraft, setAiPartDraft] = useState("");
 
   const costsSubmittingRef = useRef(false);
 
   const [paymentSaving, setPaymentSaving] = useState(false);
-  const [paymentError, setPaymentError, paymentErrorVersion] =
-    useFeedbackState("");
+  const [
+    paymentError,
+    setPaymentError,
+    paymentErrorVersion,
+    paymentErrorInline,
+  ] = useFeedbackState("");
   const [paymentBlocked, setPaymentBlocked] = useState(false);
   const [paymentMessage, setPaymentMessage, paymentMessageVersion] =
-    useFeedbackState("");
+    useFeedbackState("", {
+      toast: { variant: "success", title: "Payment recorded" },
+    });
 
   const paymentSubmittingRef = useRef(false);
 
   const [categorySaving, setCategorySaving] = useState(false);
-  const [categoryError, setCategoryError, categoryErrorVersion] =
-    useFeedbackState("");
+  const [
+    categoryError,
+    setCategoryError,
+    categoryErrorVersion,
+    categoryErrorInline,
+  ] = useFeedbackState("");
   const [categoryBlocked, setCategoryBlocked] = useState(false);
   const [categoryMessage, setCategoryMessage, categoryMessageVersion] =
-    useFeedbackState("");
+    useFeedbackState("", {
+      toast: { variant: "success", title: "Problem category updated" },
+    });
 
   const categorySubmittingRef = useRef(false);
 
@@ -427,6 +455,13 @@ function RepairWorkspace({ repairId, user }) {
             ? "This repair changed since you opened it. Reload the page before changing its assignment."
             : error.message ||
                 "The assignment cannot be changed. Reload the page before trying again.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to assign technician" },
+          },
         );
       } else {
         setAssignmentError(
@@ -434,6 +469,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to save the assignment.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to assign technician" },
+          },
         );
       }
     } finally {
@@ -506,6 +548,13 @@ function RepairWorkspace({ repairId, user }) {
             ? "This repair changed or the transition is no longer allowed. Reload the page before trying again."
             : error.message ||
                 "The status cannot be changed. Reload the page before trying again.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to update status" },
+          },
         );
       } else {
         setStatusError(
@@ -514,6 +563,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to update the repair status.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to update status" },
+          },
         );
       }
 
@@ -599,6 +655,13 @@ function RepairWorkspace({ repairId, user }) {
             ? "This repair changed or is already closed. Reload the page before recording a finding."
             : error.message ||
                 "The finding cannot be recorded. Reload the page before trying again.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to save finding" },
+          },
         );
       } else {
         setFindingError(
@@ -608,6 +671,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to record the finding.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to save finding" },
+          },
         );
       }
 
@@ -744,6 +814,13 @@ function RepairWorkspace({ repairId, user }) {
             ? "This repair changed or is already closed. Reload the page before updating Parts & Costs."
             : error.message ||
                 "This change is not permitted. Reload the page before trying again.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to update costs" },
+          },
         );
       } else {
         setCostsError(
@@ -755,6 +832,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to save the change.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to update costs" },
+          },
         );
       }
 
@@ -895,6 +979,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to record the payment.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to record payment" },
+          },
         );
       }
 
@@ -974,6 +1065,13 @@ function RepairWorkspace({ repairId, user }) {
             error.errors?.expectedUpdatedAt ||
             error.message ||
             "Unable to update the problem category.",
+          {
+            toast:
+              [401, 403, 404, 409].includes(error.status) ||
+              Object.keys(error.errors || {}).length
+                ? false
+                : { variant: "error", title: "Unable to update category" },
+          },
         );
       }
 
@@ -1022,6 +1120,7 @@ function RepairWorkspace({ repairId, user }) {
         <section className="page-content">
           {loadError && (
             <FeedbackNotice
+              title="Unable to load repair workspace"
               className="customer-form-error"
               role="alert"
               resetKey={[loadError, loadErrorVersion]}
@@ -1112,18 +1211,9 @@ function RepairWorkspace({ repairId, user }) {
             </div>
           </section>
 
-          {assignmentMessage && (
+          {assignmentBlocked && assignmentErrorInline && !technicianAssignmentOpen && (
             <FeedbackNotice
-              className="repair-success-message"
-              role="status"
-              resetKey={[assignmentMessage, assignmentMessageVersion]}
-            >
-              {assignmentMessage}
-            </FeedbackNotice>
-          )}
-
-          {assignmentBlocked && !technicianAssignmentOpen && (
-            <FeedbackNotice
+              title="Check technician assignment"
               className="customer-form-error"
               role="alert"
               resetKey={[assignmentError, assignmentErrorVersion]}
@@ -1148,8 +1238,9 @@ function RepairWorkspace({ repairId, user }) {
                 </div>
               </div>
 
-              {assignmentError && (
+              {assignmentError && assignmentErrorInline && (
                 <FeedbackNotice
+                  title="Unable to assign technician"
                   className="customer-form-error"
                   role="alert"
                   style={{ marginBottom: "16px" }}
@@ -1259,7 +1350,7 @@ function RepairWorkspace({ repairId, user }) {
               categorySaving={categorySaving}
               disabled={controlsDisabled}
               categoryBlocked={categoryBlocked}
-              categoryError={categoryError}
+              categoryError={categoryErrorInline ? categoryError : ""}
               categoryMessage={categoryMessage}
             />
           </div>
@@ -1276,7 +1367,7 @@ function RepairWorkspace({ repairId, user }) {
                 saving={findingSaving}
                 disabled={controlsDisabled}
                 blocked={findingBlocked}
-                error={findingError}
+                error={findingErrorInline ? findingError : ""}
                 message={findingMessage}
                 aiDraft={aiFindingDraft}
                 onDraftUsed={() => setAiFindingDraft("")}
@@ -1296,7 +1387,7 @@ function RepairWorkspace({ repairId, user }) {
               saving={statusSaving}
               disabled={controlsDisabled}
               blocked={statusBlocked}
-              error={statusError}
+              error={statusErrorInline ? statusError : ""}
               message={statusMessage}
               suggestedStatus={aiStatusDraft}
               onSuggestionHandled={() => setAiStatusDraft("")}
@@ -1318,7 +1409,7 @@ function RepairWorkspace({ repairId, user }) {
               saving={costsSaving}
               disabled={controlsDisabled}
               blocked={costsBlocked}
-              error={costsError}
+              error={costsErrorInline ? costsError : ""}
               message={costsMessage}
               suggestedPart={aiPartDraft}
               onSuggestionHandled={() => setAiPartDraft("")}
@@ -1337,7 +1428,7 @@ function RepairWorkspace({ repairId, user }) {
               saving={paymentSaving}
               disabled={controlsDisabled}
               blocked={paymentBlocked}
-              error={paymentError}
+              error={paymentErrorInline ? paymentError : ""}
               message={paymentMessage}
             />
           </div>

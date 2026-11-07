@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MailCheck } from "lucide-react";
+import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import { verifyEmail } from "../../../api/authApi.js";
@@ -11,6 +12,7 @@ import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 import "../auth.css";
 
 function VerifyEmailPage() {
+  const { publish } = useFeedback();
   const location = useLocation();
   const { user, refreshSession } = useAuth();
 
@@ -21,8 +23,14 @@ function VerifyEmailPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+  ] = useFeedbackState("", {
+    toast: { variant: "error", title: "Unable to verify email" },
+  });
 
   async function handleVerify() {
     if (!validTokenFormat || verified || requestInProgress.current) {
@@ -36,6 +44,11 @@ function VerifyEmailPage() {
     try {
       await verifyEmail(token);
       setVerified(true);
+      publish({
+        variant: "success",
+        title: "Email verified",
+        message: "Email verified successfully. You can return to Cellbank.",
+      });
 
       if (user) {
         await refreshSession();
@@ -67,6 +80,7 @@ function VerifyEmailPage() {
       <div className="public-form">
         {!validTokenFormat && (
           <FeedbackNotice
+            title="Invalid verification link"
             className="public-form-error"
             role="alert"
             resetKey={token}
@@ -76,23 +90,14 @@ function VerifyEmailPage() {
           </FeedbackNotice>
         )}
 
-        {errorMessage && (
+        {errorMessage && errorMessageInline && (
           <FeedbackNotice
+            title="Unable to verify email"
             className="public-form-error"
             role="alert"
             resetKey={[errorMessage, errorMessageVersion]}
           >
             {errorMessage}
-          </FeedbackNotice>
-        )}
-
-        {verified && (
-          <FeedbackNotice
-            className="public-form-success"
-            role="status"
-            resetKey={token}
-          >
-            Email verified successfully. You can return to Cellbank.
           </FeedbackNotice>
         )}
 
