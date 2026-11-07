@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
+import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -10,6 +12,7 @@ import { useAuth } from "../../auth/context/AuthContext.jsx";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 function PasswordSettings() {
+  const { publish } = useFeedback();
   // -----------------------------
   // PASSWORD STATE
   // -----------------------------
@@ -30,7 +33,8 @@ function PasswordSettings() {
 
   const [saving, setSaving] = useState(false);
 
-  const [message, setMessage, messageVersion] = useFeedbackState("");
+  const [message, setMessage, messageVersion, messageInline, messageField] =
+    useFeedbackState("");
 
   // -----------------------------
   // FORM RESET
@@ -58,27 +62,35 @@ function PasswordSettings() {
     setMessage("");
 
     if (!currentPassword.trim() || !newPassword.trim()) {
-      setMessage("Current and new passwords are required.");
+      setMessage("Current and new passwords are required.", {
+        field: !currentPassword.trim() ? "current-password" : "new-password",
+      });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage("New passwords do not match.");
+      setMessage("New passwords do not match.", { field: "confirm-password" });
       return;
     }
 
     if (newPassword.length < 8) {
-      setMessage("New password must contain at least 8 characters.");
+      setMessage("New password must contain at least 8 characters.", {
+        field: "new-password",
+      });
       return;
     }
 
     if (new TextEncoder().encode(newPassword).length > 72) {
-      setMessage("New password must not exceed 72 UTF-8 bytes.");
+      setMessage("New password must not exceed 72 UTF-8 bytes.", {
+        field: "new-password",
+      });
       return;
     }
 
     if (newPassword === currentPassword) {
-      setMessage("New password must differ from your current password.");
+      setMessage("New password must differ from your current password.", {
+        field: "new-password",
+      });
       return;
     }
 
@@ -86,12 +98,28 @@ function PasswordSettings() {
 
     try {
       await changePassword(currentPassword, newPassword);
+      publish({
+        variant: "success",
+        title: "Password changed",
+        message:
+          "Your password was changed successfully. Please sign in again.",
+      });
     } catch (error) {
       setMessage(
         error.errors?.currentPassword ||
           error.errors?.newPassword ||
           error.message ||
           "Unable to change your password. Please try again.",
+        {
+          field: error.errors?.currentPassword
+            ? "current-password"
+            : error.errors?.newPassword
+              ? "new-password"
+              : null,
+          toast: Object.keys(error.errors || {}).length
+            ? false
+            : { variant: "error", title: "Unable to change password" },
+        },
       );
     } finally {
       setSaving(false);
@@ -132,6 +160,12 @@ function PasswordSettings() {
 
           <div className="account-password-input">
             <input
+              aria-invalid={messageField === "current-password"}
+              aria-describedby={
+                messageField === "current-password"
+                  ? "current-password-feedback"
+                  : undefined
+              }
               id="current-password"
               type={showCurrentPassword ? "text" : "password"}
               value={currentPassword}
@@ -153,6 +187,11 @@ function PasswordSettings() {
               {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="current-password"
+            field={messageField}
+            message={message}
+          />
         </div>
 
         {/* =========================
@@ -163,6 +202,12 @@ function PasswordSettings() {
 
           <div className="account-password-input">
             <input
+              aria-invalid={messageField === "new-password"}
+              aria-describedby={
+                messageField === "new-password"
+                  ? "new-password-feedback"
+                  : undefined
+              }
               id="new-password"
               type={showNewPassword ? "text" : "password"}
               value={newPassword}
@@ -183,6 +228,11 @@ function PasswordSettings() {
               {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="new-password"
+            field={messageField}
+            message={message}
+          />
 
           <small className="account-field-hint">Minimum of 8 characters.</small>
         </div>
@@ -195,6 +245,12 @@ function PasswordSettings() {
 
           <div className="account-password-input">
             <input
+              aria-invalid={messageField === "confirm-password"}
+              aria-describedby={
+                messageField === "confirm-password"
+                  ? "confirm-password-feedback"
+                  : undefined
+              }
               id="confirm-password"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
@@ -216,13 +272,19 @@ function PasswordSettings() {
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="confirm-password"
+            field={messageField}
+            message={message}
+          />
         </div>
 
         {/* =========================
                     MESSAGE
                 ========================== */}
-        {message && (
+        {message && messageInline && !messageField && (
           <FeedbackNotice
+            title="Check your password"
             className="account-form-message"
             role="alert"
             resetKey={[message, messageVersion]}

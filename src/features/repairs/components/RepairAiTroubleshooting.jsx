@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -77,7 +78,13 @@ function RepairAiConversation({
   const [loading, setLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
   const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
-  const [sendError, setSendError, sendErrorVersion] = useFeedbackState("");
+  const [
+    sendError,
+    setSendError,
+    sendErrorVersion,
+    sendErrorInline,
+    sendErrorField,
+  ] = useFeedbackState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [reloadRequired, setReloadRequired] = useState(false);
   const [reloadCount, setReloadCount] = useState(0);
@@ -237,7 +244,9 @@ function RepairAiConversation({
     }
 
     if (trimmedMessage.length > 5000) {
-      setSendError("Message must not exceed 5000 characters.");
+      setSendError("Message must not exceed 5000 characters.", {
+        field: "ai-message",
+      });
       return;
     }
 
@@ -298,6 +307,12 @@ function RepairAiConversation({
       setSendError(
         getErrorMessage(error) +
           (mustReload ? " Reload the page before sending again." : ""),
+        {
+          toast:
+            mustReload || Object.keys(error.errors || {}).length
+              ? false
+              : { variant: "error", title: "Unable to send message" },
+        },
       );
     } finally {
       sendingRef.current = false;
@@ -369,6 +384,7 @@ function RepairAiConversation({
 
       {loadError && (
         <FeedbackNotice
+          title="Unable to load troubleshooting"
           className="customer-form-error"
           role="alert"
           resetKey={[loadError, loadErrorVersion]}
@@ -588,8 +604,9 @@ function RepairAiConversation({
         )}
       </div>
 
-      {sendError && (
+      {sendError && sendErrorInline && !sendErrorField && (
         <FeedbackNotice
+          title="Unable to send message"
           className="customer-form-error"
           role="alert"
           resetKey={[sendError, sendErrorVersion]}
@@ -674,18 +691,31 @@ function RepairAiConversation({
             onChange={handleImageChange}
           />
 
-          <textarea
-            value={messageText}
-            onChange={(event) => setMessageText(event.target.value)}
-            rows="3"
-            maxLength={5000}
-            aria-label="Message to AI troubleshooting assistant"
-            placeholder={
-              "Describe your observation, attach an image, " +
-              "or ask a troubleshooting question..."
-            }
-            disabled={interactionDisabled}
-          />
+          <div className="feedback-input-group">
+            <textarea
+              id="ai-message"
+              aria-invalid={sendErrorField === "ai-message"}
+              aria-describedby={
+                sendErrorField ? "ai-message-feedback" : undefined
+              }
+              value={messageText}
+              onChange={(event) => setMessageText(event.target.value)}
+              rows="3"
+              maxLength={5000}
+              aria-label="Message to AI troubleshooting assistant"
+              placeholder={
+                "Describe your observation, attach an image, " +
+                "or ask a troubleshooting question..."
+              }
+              disabled={interactionDisabled}
+            />
+
+            <FieldFeedback
+              id="ai-message"
+              field={sendErrorField}
+              message={sendError}
+            />
+          </div>
 
           <button
             className="create-repair-button"

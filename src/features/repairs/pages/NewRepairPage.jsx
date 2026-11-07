@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { UserPlus, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -49,6 +50,7 @@ function getDeviceLabel(device) {
 }
 
 function NewRepairPage() {
+  const { publish } = useFeedback();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -95,8 +97,12 @@ function NewRepairPage() {
   const [saving, setSaving] = useState(false);
   const [savedRepair, setSavedRepair] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+  ] = useFeedbackState("");
   const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
   const submitting = useRef(false);
@@ -396,6 +402,11 @@ function NewRepairPage() {
       }
 
       setSavedRepair(result);
+      publish({
+        variant: "success",
+        title: "Repair saved",
+        message: `Repair ${result.repairReference} and its initial status history have been saved. Status: Received.`,
+      });
     } catch (error) {
       setFieldErrors(error.errors || {});
 
@@ -413,6 +424,11 @@ function NewRepairPage() {
       } else {
         setErrorMessage(
           error.message || "Unable to create the repair. Please try again.",
+          {
+            toast: Object.keys(error.errors || {}).length
+              ? false
+              : { variant: "error", title: "Unable to save repair" },
+          },
         );
       }
     } finally {
@@ -467,6 +483,7 @@ function NewRepairPage() {
       {loadError && (
         <section className="page-content">
           <FeedbackNotice
+            title="Unable to load customers"
             className="customer-form-error"
             role="alert"
             resetKey={[loadError]}
@@ -482,25 +499,6 @@ function NewRepairPage() {
             }
           >
             <p>{loadError}</p>
-          </FeedbackNotice>
-        </section>
-      )}
-
-      {savedRepair && (
-        <section className="page-content">
-          <FeedbackNotice
-            className="repair-success-message"
-            role="status"
-            resetKey={savedRepair.id}
-          >
-            <strong>Repair created successfully</strong>
-            <div>
-              Reference: <strong>{savedRepair.repairReference}</strong>
-            </div>
-            <div>Status: Received</div>
-            <div>
-              The repair and its initial status history have been saved.
-            </div>
           </FeedbackNotice>
         </section>
       )}
@@ -648,29 +646,34 @@ function NewRepairPage() {
                         deviceHistory.error && (
                           <>
                             <FeedbackNotice
+                              title="Unable to load repair history"
                               className="customer-field-error"
-                              resetKey={[deviceHistoryKey, deviceHistory.error]}
+                              resetKey={[
+                                deviceHistoryKey,
+                                deviceHistory.error,
+                              ]}
+                              actions={
+                                <button
+                                  className="secondary-repair-button"
+                                  type="button"
+                                  disabled={formDisabled}
+                                  onClick={() => {
+                                    setDeviceHistory({
+                                      key: deviceHistoryKey,
+                                      count: null,
+                                      error: false,
+                                    });
+                                    setDeviceHistoryReload(
+                                      (current) => current + 1,
+                                    );
+                                  }}
+                                >
+                                  Retry
+                                </button>
+                              }
                             >
                               {deviceHistory.error}
                             </FeedbackNotice>
-
-                            <button
-                              className="secondary-repair-button"
-                              type="button"
-                              disabled={formDisabled}
-                              onClick={() => {
-                                setDeviceHistory({
-                                  key: deviceHistoryKey,
-                                  count: null,
-                                  error: false,
-                                });
-                                setDeviceHistoryReload(
-                                  (current) => current + 1,
-                                );
-                              }}
-                            >
-                              Retry
-                            </button>
                           </>
                         )}
                     </div>
@@ -772,6 +775,7 @@ function NewRepairPage() {
 
                 {technicianError && (
                   <FeedbackNotice
+                    title="Unable to load technicians"
                     className="customer-form-error"
                     role="alert"
                     resetKey={[technicianError, technicianErrorVersion]}
@@ -815,8 +819,10 @@ function NewRepairPage() {
           </section>
         </fieldset>
 
-        {errorMessage && (
+        {errorMessage && errorMessageInline && (
           <FeedbackNotice
+            title="Unable to save repair"
+            variant={outcomeUncertain ? "warning" : "error"}
             className="customer-form-error"
             role="alert"
             resetKey={[errorMessage, errorMessageVersion]}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -66,7 +67,8 @@ function RepairOverview({
 }) {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
+  const [localError, setLocalError, localErrorVersion, , localErrorField] =
+    useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -131,7 +133,9 @@ function RepairOverview({
     setLocalError("");
 
     if (!isValidProblemCategory(selectedCategory)) {
-      setLocalError("Select a problem category.");
+      setLocalError("Select a problem category.", {
+        field: "overview-problem-category",
+      });
       return;
     }
 
@@ -175,7 +179,7 @@ function RepairOverview({
     ["Tracking Code", repair.trackingCode],
   ];
 
-  const displayedError = localError || categoryError;
+  const displayedError = (!localErrorField && localError) || categoryError;
 
   return (
     <>
@@ -241,21 +245,13 @@ function RepairOverview({
 
         {displayedError && (
           <FeedbackNotice
+            variant={categoryBlocked || localBlocked ? "warning" : "error"}
+            title="Unable to update category"
             className="customer-form-error"
             role="alert"
             resetKey={[displayedError, feedbackVersion, localErrorVersion]}
           >
             {displayedError}
-          </FeedbackNotice>
-        )}
-
-        {categoryMessage && (
-          <FeedbackNotice
-            className="repair-success-message"
-            role="status"
-            resetKey={[categoryMessage, feedbackVersion]}
-          >
-            {categoryMessage}
           </FeedbackNotice>
         )}
 
@@ -275,6 +271,14 @@ function RepairOverview({
             <div className="repair-form-grid">
               <div className="repair-form-group">
                 <select
+                  aria-invalid={
+                    localErrorField === "overview-problem-category"
+                  }
+                  aria-describedby={
+                    localErrorField === "overview-problem-category"
+                      ? "overview-problem-category-feedback"
+                      : undefined
+                  }
                   id="overview-problem-category"
                   aria-label="Problem Category"
                   value={selectedCategory}
@@ -293,6 +297,11 @@ function RepairOverview({
                     </option>
                   ))}
                 </select>
+                <FieldFeedback
+                  id="overview-problem-category"
+                  field={localErrorField}
+                  message={localError}
+                />
               </div>
             </div>
 

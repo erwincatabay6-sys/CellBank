@@ -22,8 +22,12 @@ function CustomerRegistrationModal({
 
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+  ] = useFeedbackState("");
   const [outcomeUncertain, setOutcomeUncertain] = useState(false);
 
   const submitting = useRef(false);
@@ -117,6 +121,11 @@ function CustomerRegistrationModal({
       } else {
         setErrorMessage(
           error.message || "Unable to save the customer. Please try again.",
+          {
+            toast: Object.keys(error.errors || {}).length
+              ? false
+              : { variant: "error", title: "Unable to save customer" },
+          },
         );
       }
     } finally {
@@ -249,8 +258,10 @@ function CustomerRegistrationModal({
             {renderFieldError("address")}
           </div>
 
-          {errorMessage && (
+          {errorMessage && errorMessageInline && (
             <FeedbackNotice
+              variant={outcomeUncertain ? "warning" : "error"}
+              title="Unable to save customer"
               className="customer-form-error"
               role="alert"
               resetKey={[errorMessage, errorMessageVersion]}

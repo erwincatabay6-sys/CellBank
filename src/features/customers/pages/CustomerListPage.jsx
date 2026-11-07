@@ -29,8 +29,9 @@ function CustomerListPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage, successMessageVersion] =
-    useFeedbackState("");
+  const [, setSuccessMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Customer registered" },
+  });
 
   const canManage =
     hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK");
@@ -84,17 +85,9 @@ function CustomerListPage() {
           )}
         </div>
 
-        {successMessage && (
-          <FeedbackNotice
-            role="status"
-            resetKey={[successMessage, successMessageVersion]}
-          >
-            {successMessage}
-          </FeedbackNotice>
-        )}
-
         {loadError && (
           <FeedbackNotice
+            title="Unable to load customers"
             className="customer-form-error"
             role="alert"
             resetKey={[loadError]}

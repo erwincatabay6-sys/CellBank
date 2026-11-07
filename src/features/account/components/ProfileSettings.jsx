@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -18,14 +19,24 @@ function ProfileSettings({ user }) {
 
   const profileImage = user.profileImageUrl;
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageMessage, setImageMessage, imageMessageVersion] =
-    useFeedbackState("");
-  const [imageError, setImageError, imageErrorVersion] = useFeedbackState("");
+  const [, setImageMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Profile picture updated" },
+  });
+  const [
+    imageError,
+    setImageError,
+    imageErrorVersion,
+    imageErrorInline,
+    imageErrorField,
+  ] = useFeedbackState("");
   const { updateProfile, uploadProfileImage } = useAuth();
 
   const [saving, setSaving] = useState(false);
-  const [message, setMessage, messageVersion] = useFeedbackState("");
-  const [error, setError, errorVersion] = useFeedbackState("");
+  const [message, setMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Profile updated" },
+  });
+  const [error, setError, errorVersion, errorInline, errorField] =
+    useFeedbackState("");
   // -----------------------------
   // PROFILE IMAGE
   // -----------------------------
@@ -42,12 +53,16 @@ function ProfileSettings({ user }) {
     setImageError("");
 
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setImageError("Please select a JPG or PNG image.");
+      setImageError("Please select a JPG or PNG image.", {
+        field: "profile-picture",
+      });
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setImageError("Please select an image no larger than 2 MB.");
+      setImageError("Please select an image no larger than 2 MB.", {
+        field: "profile-picture",
+      });
       return;
     }
 
@@ -57,7 +72,9 @@ function ProfileSettings({ user }) {
       await uploadProfileImage(file);
       setImageMessage("Profile picture updated successfully.");
     } catch (error) {
-      setImageError(error.message || "Unable to upload your profile picture.");
+      setImageError(error.message || "Unable to upload your profile picture.", {
+        toast: { variant: "error", title: "Unable to upload picture" },
+      });
     } finally {
       setUploadingImage(false);
     }
@@ -80,12 +97,14 @@ function ProfileSettings({ user }) {
     const name = fullName.trim();
 
     if (!name) {
-      setError("Full name is required.");
+      setError("Full name is required.", { field: "account-full-name" });
       return;
     }
 
     if (name.length > 120) {
-      setError("Full name must not exceed 120 characters.");
+      setError("Full name must not exceed 120 characters.", {
+        field: "account-full-name",
+      });
       return;
     }
 
@@ -101,6 +120,12 @@ function ProfileSettings({ user }) {
         error.errors?.name ||
           error.message ||
           "Unable to update your name. Please try again.",
+        {
+          field: error.errors?.name ? "account-full-name" : null,
+          toast: Object.keys(error.errors || {}).length
+            ? false
+            : { variant: "error", title: "Unable to update profile" },
+        },
       );
     } finally {
       setSaving(false);
@@ -157,6 +182,10 @@ function ProfileSettings({ user }) {
 
             <input
               id="profile-picture"
+              aria-invalid={imageErrorField === "profile-picture"}
+              aria-describedby={
+                imageErrorField ? "profile-picture-feedback" : undefined
+              }
               type="file"
               accept="image/jpeg,image/png"
               onChange={handleProfileImageChange}
@@ -168,18 +197,15 @@ function ProfileSettings({ user }) {
 
         {uploadingImage && <p role="status">Uploading picture...</p>}
 
-        {imageMessage && (
-          <FeedbackNotice
-            className="account-form-message"
-            role="status"
-            resetKey={[imageMessage, imageMessageVersion]}
-          >
-            {imageMessage}
-          </FeedbackNotice>
-        )}
+        <FieldFeedback
+          id="profile-picture"
+          field={imageErrorField}
+          message={imageError}
+        />
 
-        {imageError && (
+        {imageError && imageErrorInline && !imageErrorField && (
           <FeedbackNotice
+            title="Check your profile picture"
             className="account-form-message"
             role="alert"
             resetKey={[imageError, imageErrorVersion]}
@@ -195,6 +221,12 @@ function ProfileSettings({ user }) {
           <label htmlFor="account-full-name">Full Name</label>
 
           <input
+            aria-invalid={errorField === "account-full-name"}
+            aria-describedby={
+              errorField === "account-full-name"
+                ? "account-full-name-feedback"
+                : undefined
+            }
             id="account-full-name"
             type="text"
             value={fullName}
@@ -203,23 +235,20 @@ function ProfileSettings({ user }) {
             disabled={saving}
             required
           />
+          <FieldFeedback
+            id="account-full-name"
+            field={errorField}
+            message={error}
+          />
         </div>
 
         {/* =========================
                     SAVE ACTION
                 ========================== */}
-        {message && (
-          <FeedbackNotice
-            className="account-form-message"
-            role="status"
-            resetKey={[message, messageVersion]}
-          >
-            {message}
-          </FeedbackNotice>
-        )}
 
-        {error && (
+        {error && errorInline && !errorField && (
           <FeedbackNotice
+            title="Check your name"
             className="account-form-message"
             role="alert"
             resetKey={[error, errorVersion]}

@@ -205,22 +205,14 @@ function RepairStatusHistory({
 
       {displayedError && (
         <FeedbackNotice
+          variant={blocked ? "warning" : "error"}
+          title="Unable to update repair status"
           className="customer-form-error"
           role="alert"
           style={{ marginBottom: "16px" }}
           resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </FeedbackNotice>
-      )}
-
-      {message && (
-        <FeedbackNotice
-          className="repair-success-message"
-          role="status"
-          resetKey={[message, feedbackVersion]}
-        >
-          {message}
         </FeedbackNotice>
       )}
 

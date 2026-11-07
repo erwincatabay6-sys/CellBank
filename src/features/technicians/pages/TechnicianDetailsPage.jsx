@@ -137,34 +137,32 @@ function TechnicianDetails({ technicianId, user }) {
       {!loading && error && (
         <section className="page-content">
           <FeedbackNotice
-            className="customer-form-error"
-            role="alert"
+            title="Unable to load technician"
             resetKey={[error, errorVersion, notFound]}
+            actions={
+              notFound ? (
+                <button
+                  className="secondary-repair-button"
+                  type="button"
+                  onClick={() => navigate("/technicians")}
+                >
+                  Back to Technicians
+                </button>
+              ) : (
+                <button
+                  className="create-repair-button"
+                  type="button"
+                  onClick={() => setReloadCount((current) => current + 1)}
+                >
+                  Try Again
+                </button>
+              )
+            }
           >
-            <p>
-              {notFound
-                ? "The requested technician record does not exist."
-                : error}
-            </p>
+            {notFound
+              ? "The requested technician record does not exist."
+              : error}
           </FeedbackNotice>
-
-          {notFound ? (
-            <button
-              className="secondary-repair-button"
-              type="button"
-              onClick={() => navigate("/technicians")}
-            >
-              Back to Technicians
-            </button>
-          ) : (
-            <button
-              className="create-repair-button"
-              type="button"
-              onClick={() => setReloadCount((current) => current + 1)}
-            >
-              Try Again
-            </button>
-          )}
         </section>
       )}
 

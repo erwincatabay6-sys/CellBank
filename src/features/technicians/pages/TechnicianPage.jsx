@@ -146,20 +146,22 @@ function TechnicianList({ user }) {
         {!loading && error && (
           <>
             <FeedbackNotice
+              title="Unable to load technicians"
               className="customer-form-error"
               role="alert"
               resetKey={[error, errorVersion]}
+              actions={
+                <button
+                  type="button"
+                  className="create-repair-button"
+                  onClick={() => setReloadCount((current) => current + 1)}
+                >
+                  Try Again
+                </button>
+              }
             >
               <p>{error}</p>
             </FeedbackNotice>
-
-            <button
-              type="button"
-              className="create-repair-button"
-              onClick={() => setReloadCount((current) => current + 1)}
-            >
-              Try Again
-            </button>
           </>
         )}
 

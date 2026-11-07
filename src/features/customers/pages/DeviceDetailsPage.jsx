@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
-import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { hasRole } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
@@ -21,8 +20,9 @@ function DeviceDetailsPage() {
   const { customers, loading, loadError, updateDevice } = useCustomers();
 
   const [deviceEditOpen, setDeviceEditOpen] = useState(false);
-  const [successMessage, setSuccessMessage, successMessageVersion] =
-    useFeedbackState("");
+  const [, setSuccessMessage] = useFeedbackState("", {
+    toast: { variant: "success", title: "Device updated" },
+  });
 
   const customer = customers.find((item) => String(item.id) === customerId);
 
@@ -65,16 +65,6 @@ function DeviceDetailsPage() {
     >
       {customer && device && (
         <>
-          {successMessage && (
-            <section className="page-content">
-              <FeedbackNotice
-                role="status"
-                resetKey={[successMessage, successMessageVersion]}
-              >
-                {successMessage}
-              </FeedbackNotice>
-            </section>
-          )}
 
           <section className="page-content">
             <div className="workspace-section-header">

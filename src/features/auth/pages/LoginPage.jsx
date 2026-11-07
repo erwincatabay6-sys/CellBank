@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import { RequestError } from "../../../api/http.js";
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -19,8 +20,15 @@ function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage, errorMessageVersion] =
-    useFeedbackState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+    errorMessageVersion,
+    errorMessageInline,
+    errorMessageField,
+  ] = useFeedbackState("", {
+    toast: { variant: "error", title: "Unable to sign in" },
+  });
   const [submitting, setSubmitting] = useState(false);
 
   // -----------------------------
@@ -37,7 +45,9 @@ function LoginPage() {
     setErrorMessage("");
 
     if (!identifier.trim() || !password) {
-      setErrorMessage("Please enter your username or email and password.");
+      setErrorMessage("Please enter your username or email and password.", {
+        field: !identifier.trim() ? "login-identifier" : "login-password",
+      });
       return;
     }
 
@@ -102,6 +112,12 @@ function LoginPage() {
 
           <input
             type="text"
+            aria-invalid={errorMessageField === "login-identifier"}
+            aria-describedby={
+              errorMessageField === "login-identifier"
+                ? "login-identifier-feedback"
+                : undefined
+            }
             id="login-identifier"
             name="identifier"
             value={identifier}
@@ -109,6 +125,11 @@ function LoginPage() {
             placeholder="Enter username or email"
             autoComplete="username"
             disabled={submitting}
+          />
+          <FieldFeedback
+            id="login-identifier"
+            field={errorMessageField}
+            message={errorMessage}
           />
         </div>
 
@@ -119,6 +140,12 @@ function LoginPage() {
           <div className="login-password-input">
             <input
               type={showPassword ? "text" : "password"}
+              aria-invalid={errorMessageField === "login-password"}
+              aria-describedby={
+                errorMessageField === "login-password"
+                  ? "login-password-feedback"
+                  : undefined
+              }
               id="login-password"
               name="password"
               value={password}
@@ -138,6 +165,11 @@ function LoginPage() {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldFeedback
+            id="login-password"
+            field={errorMessageField}
+            message={errorMessage}
+          />
         </div>
 
         {/* RECOVERY LINK */}
@@ -146,13 +178,18 @@ function LoginPage() {
         </div>
 
         {/* LOGIN ERROR */}
-        {(errorMessage || sessionMessage) && (
+        {((errorMessage && errorMessageInline && !errorMessageField) || (!errorMessage && sessionMessage)) && (
           <FeedbackNotice
+            title={errorMessage ? "Unable to sign in" : "Sign in again"}
+            variant={errorMessage ? "error" : "info"}
             className="public-form-error"
-            role="alert"
             resetKey={[errorMessage, sessionMessage, errorMessageVersion]}
           >
-            {errorMessage || sessionMessage}
+            {errorMessage ||
+              (sessionMessage ===
+              "Your password was changed successfully. Please sign in again."
+                ? "Please sign in again to continue."
+                : sessionMessage)}
           </FeedbackNotice>
         )}
 

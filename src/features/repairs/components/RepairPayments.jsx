@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -74,7 +75,8 @@ function RepairPayments({
   const [formOpen, setFormOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
+  const [localError, setLocalError, localErrorVersion, , localErrorField] =
+    useFeedbackState("");
   const [localBlocked, setLocalBlocked] = useState(false);
 
   const submittingRef = useRef(false);
@@ -193,6 +195,7 @@ function RepairPayments({
     if (amountCents == null || amountCents <= 0n) {
       setLocalError(
         "Enter an amount greater than zero, with up to 10 whole-number digits and 2 decimal places.",
+        { field: "payment-amount" },
       );
       return;
     }
@@ -200,6 +203,7 @@ function RepairPayments({
     if (amountCents > balanceCents) {
       setLocalError(
         `Payment amount cannot exceed the remaining balance of ${formatCents(balanceCents)}.`,
+        { field: "payment-amount" },
       );
       return;
     }
@@ -207,7 +211,9 @@ function RepairPayments({
     const paymentNote = note.trim();
 
     if (paymentNote.length > 2000) {
-      setLocalError("Payment note must not exceed 2000 characters.");
+      setLocalError("Payment note must not exceed 2000 characters.", {
+        field: "payment-note",
+      });
       return;
     }
 
@@ -234,7 +240,7 @@ function RepairPayments({
   }
 
   const displayedError =
-    localError ||
+    (!localErrorField && localError) ||
     error ||
     (invalidAmounts
       ? "Payment amounts could not be read. Reload the page before continuing."
@@ -266,21 +272,15 @@ function RepairPayments({
 
       {displayedError && (
         <FeedbackNotice
+          variant={
+            blocked || localBlocked || invalidAmounts ? "warning" : "error"
+          }
+          title="Unable to record payment"
           className="customer-form-error"
           role="alert"
           resetKey={[displayedError, feedbackVersion, localErrorVersion]}
         >
           {displayedError}
-        </FeedbackNotice>
-      )}
-
-      {message && (
-        <FeedbackNotice
-          className="repair-success-message"
-          role="status"
-          resetKey={[message, feedbackVersion]}
-        >
-          {message}
         </FeedbackNotice>
       )}
 
@@ -321,6 +321,12 @@ function RepairPayments({
             <label htmlFor="payment-amount">Amount</label>
 
             <input
+              aria-invalid={localErrorField === "payment-amount"}
+              aria-describedby={
+                localErrorField === "payment-amount"
+                  ? "payment-amount-feedback"
+                  : undefined
+              }
               id="payment-amount"
               type="number"
               min="0.01"
@@ -332,12 +338,23 @@ function RepairPayments({
               disabled={controlsDisabled}
               required
             />
+            <FieldFeedback
+              id="payment-amount"
+              field={localErrorField}
+              message={localError}
+            />
           </div>
 
           <div className="repair-form-group">
             <label htmlFor="payment-note">Payment Note</label>
 
             <textarea
+              aria-invalid={localErrorField === "payment-note"}
+              aria-describedby={
+                localErrorField === "payment-note"
+                  ? "payment-note-feedback"
+                  : undefined
+              }
               id="payment-note"
               value={note}
               onChange={(event) => setNote(event.target.value)}
@@ -345,6 +362,11 @@ function RepairPayments({
               maxLength={2000}
               placeholder="Optional note, e.g. deposit for replacement part"
               disabled={controlsDisabled}
+            />
+            <FieldFeedback
+              id="payment-note"
+              field={localErrorField}
+              message={localError}
             />
           </div>
 
