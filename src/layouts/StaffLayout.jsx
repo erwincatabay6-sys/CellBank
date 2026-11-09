@@ -30,6 +30,8 @@ function StaffLayout({ children, currentRoles, currentUserName }) {
         <main
           key={location.pathname}
           className="main-content page-transition"
+          tabIndex={0}
+          aria-label="Workspace content"
         >
           {children}
         </main>
