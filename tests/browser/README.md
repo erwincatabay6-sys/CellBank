@@ -1,4 +1,4 @@
-# Feedback regression checks
+# Browser regression checks
 
 Run the app locally with `npm run dev -- --host 0.0.0.0`, then:
 
@@ -16,3 +16,13 @@ Browser scripts require Python Playwright and an installed Chromium. They do not
 `verify_application.py` opens real routes and intercepts all `/api/` requests with local test responses. It covers login, account/password navigation, customer dialogs and validation, uncertain payments, blocking load errors/Retry, role visibility, and real clipboard success plus simulated rejection/unavailability. It takes repair-workspace screenshots at 375/1440px in both themes. No production credentials or records are used. Set `CELLBANK_TEST_FILTER` to part of an application check name to run only that check.
 
 Fixtures are not imported by the production entry point or included in the production bundle. Actual assistive-technology announcements, Safari/Firefox behavior, and live backend integrations still require manual verification.
+
+## Shared viewport layout
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_viewport_layout.py
+```
+
+This suite reuses isolated application fixtures and requires `pdftotext` for the generated PDF check. It writes screenshots, a report PDF, and `layout-results.json` to `CELLBANK_TEST_OUTPUT` (default `/tmp/cellbank-layout-tests`). `LAYOUT_TEST_FILTER` selects checks by part of their name.
+
+It exercises long Reports and repair forms, stationary header/sidebar/footer, internal navigation scrolling, expanded/collapsed states, desktop and short windows, mobile portrait/landscape, input/validation focus, route and back navigation, dropdowns, dialogs, toasts, public scrolling, and print output. It checks both themes and uses reduced viewport sizes to approximate zoom and keyboard-constrained space. Native browser zoom, real mobile keyboards, and Safari/Firefox still need manual checks. All API responses are intercepted; no production records or credentials are used.
