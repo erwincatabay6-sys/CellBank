@@ -1,29 +1,24 @@
 .landing-layout .public-header {
   min-height: 80px;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 16px max(32px, calc((100% - 1200px) / 2));
 }
 
 .landing-brand {
-  color: var(--text-primary);
-  font-size: 1.875rem;
-  font-weight: 750;
-  letter-spacing: -0.04em;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-}
-
-.landing-brand span {
-  color: var(--primary-dark);
+  flex-shrink: 0;
 }
 
 .landing-header-actions {
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-left: auto;
 }
 
 .landing-header-actions .theme-toggle {
@@ -152,9 +147,6 @@
   .landing-layout .public-header {
     min-height: 72px;
     padding: 12px 20px;
-  }
-  .landing-brand {
-    font-size: 1.5rem;
   }
   .landing-header-actions {
     gap: 12px;

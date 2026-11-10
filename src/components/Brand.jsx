@@ -1,6 +1,6 @@
 import { RadioTower } from "lucide-react";
 
-function Brand() {
+function Brand({ nameAs: Name = "h1" }) {
   return (
     <div className="header-brand">
       <RadioTower
@@ -11,7 +11,7 @@ function Brand() {
       />
 
       <div className="header-brand-text">
-        <h1><span className="brand-name">Cell</span>bank</h1>
+        <Name className="header-brand-name"><span className="brand-name">Cell</span>bank</Name>
         <span className="header-brand-subtitle">
           Repair Management System
         </span>

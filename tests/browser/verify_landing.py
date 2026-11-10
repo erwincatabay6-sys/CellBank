@@ -29,7 +29,9 @@ async def main():
                 await page.set_viewport_size({'width':width, 'height':height})
                 await expect(page.get_by_role('link', name='Track Your Repair', exact=True)).to_have_count(1)
                 await expect(page.get_by_role('link', name='Staff Sign In', exact=True)).to_have_count(1)
-                await expect(page.locator('.header-brand-subtitle')).to_have_count(0)
+                await expect(page.locator('.header-brand-subtitle')).to_have_text('Repair Management System')
+                await expect(page.locator('.header-brand-icon')).to_be_visible()
+                await expect(page.get_by_role('heading', level=1)).to_have_count(1)
                 assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (theme,width)
                 for selector in ['.landing-sign-in', '.landing-steps p', '.landing-hero p']:
                     assert await page.locator(selector).first.evaluate('(e) => parseFloat(getComputedStyle(e).fontSize) >= 16')
@@ -59,6 +61,7 @@ async def main():
                 results.append({'theme':theme,'width':width,'passed':True,'contrast':contrast})
             # Keyboard-only path to theme, sign-in, then primary action.
             await page.goto(BASE)
+            await expect(page.locator('.landing-brand')).to_be_visible()
             for selector in ['.landing-brand','.theme-toggle','.landing-sign-in','.landing-track-link']:
                 await page.keyboard.press('Tab')
                 await expect(page.locator(selector)).to_be_focused()

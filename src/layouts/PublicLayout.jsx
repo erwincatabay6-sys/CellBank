@@ -9,7 +9,7 @@ function PublicLayout({ children, landing = false }) {
         {landing ? (
           <>
             <Link className="landing-brand" to="/" aria-label="Cellbank home">
-              Cell<span>bank</span>
+              <Brand nameAs="div" />
             </Link>
             <nav className="landing-header-actions" aria-label="Public navigation">
               <ThemeToggle />

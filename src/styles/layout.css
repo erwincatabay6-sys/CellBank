@@ -30,9 +30,10 @@
   gap: 2px;
 }
 
-.header-brand h1 {
+.header-brand .header-brand-name {
   margin: 0;
   font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1.2;
   color: var(--primary);
 }
@@ -1118,7 +1119,7 @@
 }
 
 .app-header .icon-button {
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
 }
 
 .page-content > .workspace-section-header {
