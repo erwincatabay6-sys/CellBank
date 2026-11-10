@@ -12,7 +12,7 @@ const steps = [
   {
     icon: Laptop,
     title: "Enter your tracking code",
-    description: "Type your code on the tracking page.",
+    description: "Paste your code on the tracking page.",
   },
   {
     icon: CircleCheck,
