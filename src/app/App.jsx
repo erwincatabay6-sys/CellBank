@@ -88,7 +88,7 @@ function App() {
       <Route
         path="/"
         element={
-          <PublicLayout>
+          <PublicLayout landing>
             <LandingPage />
           </PublicLayout>
         }
