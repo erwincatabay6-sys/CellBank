@@ -355,43 +355,6 @@
   padding: 32px 24px;
 }
 
-.landing-card {
-  width: 100%;
-  max-width: 520px;
-
-  padding: 28px;
-
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
-
-}
-
-.landing-copy {
-  margin-bottom: 24px;
-}
-
-.landing-copy h2 {
-  margin-bottom: 10px;
-
-  font-size: 1.5rem;
-  letter-spacing: -0.025em;
-}
-
-.landing-copy p {
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-.landing-actions {
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-}
-
 .primary-action,
 .secondary-action {
   min-height: 48px;
@@ -1100,8 +1063,7 @@
     padding: 24px 16px;
   }
 
-  .public-card,
-  .landing-card {
+  .public-card {
     padding: 24px;
   }
 

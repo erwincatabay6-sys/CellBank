@@ -1,5 +1,21 @@
 # Browser regression checks
 
+## Public landing page
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_landing.py
+```
+
+With the local frontend running, this checks the landing page at six desktop,
+tablet, phone, and landscape sizes in both themes. It verifies text contrast,
+minimum text/control sizes, overflow, mobile ordering, keyboard focus and links,
+theme persistence, and the unchanged headers on login/tracking. API requests use
+isolated signed-out responses. Screenshots and results default to
+`/tmp/cellbank-landing-tests`; override with `CELLBANK_TEST_OUTPUT`.
+Real-device and screen-reader checks remain manual.
+
+## Feedback and application
+
 Run the app locally with `npm run dev -- --host 0.0.0.0`, then:
 
 ```sh
