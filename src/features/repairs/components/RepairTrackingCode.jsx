@@ -59,14 +59,13 @@ export default function RepairTrackingCode({ code }) {
   return (
     <div className="tracking-code-control">
       <div className="tracking-code-row">
-        <textarea
+        <span
           className="tracking-code-value"
           aria-label="Repair tracking code"
-          value={code}
-          readOnly
-          rows={2}
-          spellCheck={false}
-        />
+          tabIndex={0}
+        >
+          {code}
+        </span>
         <button
           className="secondary-repair-button tracking-copy-button"
           type="button"

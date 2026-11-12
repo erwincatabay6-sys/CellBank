@@ -42,3 +42,7 @@ PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_viewport_layout.py
 This suite reuses isolated application fixtures and requires `pdftotext` for the generated PDF check. It writes screenshots, a report PDF, and `layout-results.json` to `CELLBANK_TEST_OUTPUT` (default `/tmp/cellbank-layout-tests`). `LAYOUT_TEST_FILTER` selects checks by part of their name.
 
 It exercises long Reports and repair forms, stationary header/sidebar/footer, internal navigation scrolling, expanded/collapsed states, desktop and short windows, mobile portrait/landscape, input/validation focus, route and back navigation, dropdowns, dialogs, toasts, public scrolling, and print output. It checks both themes and uses reduced viewport sizes to approximate zoom and keyboard-constrained space. Native browser zoom, real mobile keyboards, and Safari/Firefox still need manual checks. All API responses are intercepted; no production records or credentials are used.
+
+## Staff role preservation
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.
