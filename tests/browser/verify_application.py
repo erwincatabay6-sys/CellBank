@@ -88,13 +88,14 @@ async def main():
         await check('Profile save and password field validation; password confirmation survives real navigation',account)
         async def clipboard():
             for theme,width in [('light',1440),('dark',1440),('light',375),('dark',375)]:
-                c,p,calls=await setup('/repairs/1',width,theme)
-                code=p.get_by_role('textbox',name='Repair tracking code',exact=True)
+                tracking_code = 'SHORT-7' if width == 1440 else 'LongOriginalCode-' * 20
+                c,p,calls=await setup('/repairs/1',width,theme,overrides={('GET','/api/repairs/1'):(200,{**REPAIR,'trackingCode':tracking_code})})
+                code=p.locator('.tracking-code-value')
                 copy=p.get_by_role('button',name='Copy repair tracking code',exact=True)
-                await expect(code).to_have_value(REPAIR['trackingCode'])
+                await expect(code).to_have_text(tracking_code)
                 await copy.focus();await copy.press('Enter')
                 await expect(p.locator('.feedback-toast')).to_contain_text('Copied')
-                assert await p.evaluate('navigator.clipboard.readText()')==REPAIR['trackingCode']
+                assert await p.evaluate('navigator.clipboard.readText()')==tracking_code
                 a,b=await code.bounding_box(),await copy.bounding_box();assert b['x']>=a['x']+a['width']-1
                 assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 await p.screenshot(path=str(OUT/f'workspace-copy-{theme}-{width}.png'),full_page=True)
@@ -104,8 +105,8 @@ async def main():
                 await p.get_by_role('button',name='Copy repair tracking code',exact=True).click()
                 await expect(p.get_by_text('Could not copy automatically. Select the tracking code and copy it manually.',exact=True)).to_be_visible()
                 assert await p.locator('.feedback-toast').count()==0
-                code=p.get_by_role('textbox',name='Repair tracking code');await code.focus();await code.press('Control+a')
-                assert await code.evaluate('(e)=>e.value.slice(e.selectionStart,e.selectionEnd)')==REPAIR['trackingCode']
+                code=p.locator('.tracking-code-value');await code.focus();await code.evaluate('(e)=>{const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)}')
+                assert await p.evaluate('getSelection().toString()')==REPAIR['trackingCode']
                 await c.close()
             c,p,_=await setup('/repairs/1',overrides={('GET','/api/repairs/1'):(200,{**REPAIR,'trackingCode':None})})
             await expect(p.get_by_role('heading',name='Repair Overview')).to_be_visible()

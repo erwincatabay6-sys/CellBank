@@ -1839,7 +1839,6 @@
 
 .tracking-code-control {
   min-width: 0;
-  container-type: inline-size;
 }
 
 .tracking-code-row {
@@ -1853,11 +1852,8 @@
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  padding: 6px;
-  resize: vertical;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
+  white-space: pre-wrap;
+  user-select: text;
   color: var(--text-primary);
   font: inherit;
   line-height: 1.5;
@@ -1866,10 +1862,4 @@
 
 .tracking-copy-button {
   flex-shrink: 0;
-}
-
-@container (max-width: 300px) {
-  .tracking-code-row .tracking-code-value {
-    min-height: calc(6em + 14px);
-  }
 }

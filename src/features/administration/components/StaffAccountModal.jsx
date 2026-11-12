@@ -17,6 +17,7 @@ function StaffAccountModal({
   // -----------------------------
 
   const isEditing = initialUser != null;
+  const isAdmin = initialUser?.roles.includes("ADMIN") ?? false;
 
   // -----------------------------
   // FORM STATE
@@ -72,7 +73,7 @@ function StaffAccountModal({
 
       email: email.trim(),
 
-      roles,
+      roles: isAdmin ? initialUser.roles : roles,
     };
 
     // Password remains temporary form data.
@@ -201,38 +202,33 @@ function StaffAccountModal({
             <label>Roles</label>
 
             <div className="staff-role-options">
-              <label>
-                <input
-                  type="checkbox"
-                  disabled={saving}
-                  checked={roles.includes("TECHNICIAN")}
-                  onChange={() => handleRoleChange("TECHNICIAN")}
-                />
+              {isAdmin ? (
+                <span>Admin (read-only)</span>
+              ) : (
+                <>
+                  <label>
+                    <input
+                      type="checkbox"
+                      disabled={saving}
+                      checked={roles.includes("TECHNICIAN")}
+                      onChange={() => handleRoleChange("TECHNICIAN")}
+                    />
 
-                <span>Technician</span>
-              </label>
+                    <span>Technician</span>
+                  </label>
 
-              <label>
-                <input
-                  type="checkbox"
-                  disabled={saving}
-                  checked={roles.includes("FRONT_DESK")}
-                  onChange={() => handleRoleChange("FRONT_DESK")}
-                />
+                  <label>
+                    <input
+                      type="checkbox"
+                      disabled={saving}
+                      checked={roles.includes("FRONT_DESK")}
+                      onChange={() => handleRoleChange("FRONT_DESK")}
+                    />
 
-                <span>Front Desk</span>
-              </label>
-
-              <label>
-                <input
-                  type="checkbox"
-                  disabled={saving}
-                  checked={roles.includes("ADMIN")}
-                  onChange={() => handleRoleChange("ADMIN")}
-                />
-
-                <span>Admin</span>
-              </label>
+                    <span>Front Desk</span>
+                  </label>
+                </>
+              )}
             </div>
           </div>
 
