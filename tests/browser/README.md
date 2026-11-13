@@ -46,3 +46,24 @@ It exercises long Reports and repair forms, stationary header/sidebar/footer, in
 ## Staff role preservation
 
 Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.
+
+## Revised repair access and dashboard
+
+Run `node --test tests/repair-access.test.js` and, with Vite running,
+`PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_repair_access.py`.
+The browser suite intercepts API requests with contracts reviewed at backend
+`bb1a17a5c5726046ba5e784af510b391bf7cb341`. It checks assignment/role combinations,
+independent findings failures, reassignment, permission navigation, technician
+links, personal/admin dashboard panels, calendar dates, failed/loaded photos,
+and desktop/mobile themes. Screenshots default to `/tmp/cellbank-access-tests`.
+These are mocked checks, not Spring Boot integration tests. Verify actual session
+changes, backend reassignment races, customer/device filtering, employee image
+cookies, and status/payment operations against the revised local backend before merging.
+
+## Repair-list space and combined roles
+
+`PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_dashboard_space.py`
+checks the repair list's viewport bounds and internal scrolling, resize/mobile
+layouts, keyboard reachability, and combined-role identity/counts in both themes.
+It uses mocked API responses and saves screenshots under `/tmp/cellbank-dashboard-space`.
+Recent Active Repairs retains the dashboard API's existing five-record limit.

@@ -57,6 +57,7 @@ function RepairAiTroubleshooting(props) {
 
 function RepairAiConversation({
   repair,
+  onAccessLost,
   controlsDisabled = false,
   allowedStatuses = [],
   onUseAsFinding,
@@ -147,6 +148,10 @@ function RepairAiConversation({
         setContext(savedContext);
       } catch (error) {
         if (mountedRef.current && !controller.signal.aborted) {
+          if ([403, 404].includes(error.status)) {
+            onAccessLost?.();
+            return;
+          }
           setLoadError(getErrorMessage(error));
         }
       } finally {
@@ -296,6 +301,12 @@ function RepairAiConversation({
       clearAttachments();
     } catch (error) {
       if (!mountedRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      if ([403, 404].includes(error.status)) {
+        clearAttachments();
+        onAccessLost?.();
         return;
       }
 

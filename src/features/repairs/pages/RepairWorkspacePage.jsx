@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -24,6 +24,8 @@ import {
 import { getCustomer } from "../../../api/customerApi.js";
 import {
   hasAccess,
+  hasTechnicalRepairAccess,
+  repairAccessRoles,
   canChangeRepairStatus,
   canTransitionRepairStatus,
 } from "../../../config/accessControl.js";
@@ -73,9 +75,25 @@ function RepairWorkspacePage() {
 function RepairWorkspace({ repairId, user }) {
   const canView = hasAccess(user?.roles, "repairs");
   const canAssign = hasAccess(user?.roles, "assignTechnician");
-  const canFindings = hasAccess(user?.roles, "technicalFindings");
 
   const [record, setRecord] = useState(null);
+  const [findingsLoadError, setFindingsLoadError] = useState("");
+  const [technicalDenied, setTechnicalDenied] = useState(false);
+  const [restricted, setRestricted] = useState(false);
+  const effectiveRoles = technicalDenied
+    ? (user?.roles?.some((role) => ["ADMIN", "FRONT_DESK"].includes(role)) ? ["FRONT_DESK"] : [])
+    : repairAccessRoles(user, record?.repair);
+  const canFindings = !technicalDenied && hasTechnicalRepairAccess(user, record?.repair);
+  function loseTechnicalAccess() {
+    setTechnicalDenied(true);
+    setReloadVersion((value) => value + 1);
+    setRecord((current) => current ? { ...current, findings: [] } : current);
+    setActiveTab("overview");
+    setAiFindingDraft("");
+    setAiPartDraft("");
+    setAiStatusDraft("");
+  }
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
   const [notFound, setNotFound] = useState(false);
@@ -185,15 +203,14 @@ function RepairWorkspace({ repairId, user }) {
       setLoading(true);
       setLoadError("");
       setNotFound(false);
-
-      let repairLoaded = false;
+      setRestricted(false);
+      setRecord(null);
+      if (!technicalDenied) setFindingsLoadError("");
 
       try {
         const repair = await getRepair(repairId, {
           signal: controller.signal,
         });
-
-        repairLoaded = true;
 
         if (
           !repair?.id ||
@@ -215,9 +232,19 @@ function RepairWorkspace({ repairId, user }) {
             getRepairTechnicians({
               signal: controller.signal,
             }),
-            canFindings
+            !technicalDenied && hasTechnicalRepairAccess(user, repair)
               ? getRepairFindings(repairId, {
                   signal: controller.signal,
+                }).then((findings) => {
+                  if (!Array.isArray(findings)) throw new Error("Invalid findings response.");
+                  return findings;
+                }).catch((error) => {
+                  if (active && error.code !== "CANCELLED") {
+                    setFindingsLoadError(error.status === 403 || error.status === 404
+                      ? "Access restricted" : "Findings could not be loaded. Reload this section to try again.");
+                    if ([403, 404].includes(error.status)) loseTechnicalAccess();
+                  }
+                  return [];
                 })
               : Promise.resolve([]),
             getRepairParts(repairId, {
@@ -263,15 +290,12 @@ function RepairWorkspace({ repairId, user }) {
         }
       } catch (error) {
         if (active && error.code !== "CANCELLED") {
-          if (!repairLoaded && error.status === 404) {
+          if ([403, 404].includes(error.status)) {
+            setRestricted(true);
             setRecord(null);
             setNotFound(true);
           } else {
-            setLoadError(
-              error.status === 403
-                ? "You do not have permission to view these records."
-                : error.message || "Unable to load the repair workspace.",
-            );
+            setLoadError(error.message || "Unable to load the repair workspace.");
           }
         }
 
@@ -287,10 +311,19 @@ function RepairWorkspace({ repairId, user }) {
       active = false;
       controller.abort();
     };
-  }, [repairId, canView, canFindings, reloadVersion]);
+  }, [repairId, canView, reloadVersion]);
+
+  useEffect(() => {
+    if (!canFindings) {
+      if (["findings", "ai"].includes(activeTab)) setActiveTab("overview");
+      setAiFindingDraft("");
+      setAiPartDraft("");
+      setAiStatusDraft("");
+    }
+  }, [canFindings, activeTab]);
 
   const visibleTabs = workspaceTabs.filter(
-    (tab) => !tab.permission || hasAccess(user?.roles, tab.permission),
+    (tab) => !tab.permission || hasAccess(effectiveRoles, tab.permission),
   );
 
   const anySaving =
@@ -324,7 +357,7 @@ function RepairWorkspace({ repairId, user }) {
     (status) =>
       Boolean(record?.repair?.status) &&
       canTransitionRepairStatus(record.repair.status, status) &&
-      canChangeRepairStatus(user?.roles ?? [], status),
+      canChangeRepairStatus(effectiveRoles, status),
   );
 
   function isSubmitting() {
@@ -442,7 +475,14 @@ function RepairWorkspace({ repairId, user }) {
 
       setTechnicianAssignmentOpen(false);
       setAssignmentMessage("Technician assignment saved.");
+      setTechnicalDenied(false);
+      setRecord(null);
+      setReloadVersion((value) => value + 1);
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setAssignmentBlocked(true);
         setAssignmentError(
@@ -528,7 +568,11 @@ function RepairWorkspace({ repairId, user }) {
         }
 
         setRecord((current) => (current ? { ...current, history } : current));
-      } catch {
+      } catch (error) {
+        if ([403, 404].includes(error.status)) {
+          setRecord(null);
+          setReloadVersion((value) => value + 1);
+        }
         setLoadError(
           "The repair status was saved, but its history could not be loaded. Use Try Again to load the latest records.",
         );
@@ -536,6 +580,10 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setStatusBlocked(true);
         setStatusError(
@@ -635,7 +683,11 @@ function RepairWorkspace({ repairId, user }) {
         }
 
         setRecord((current) => (current ? { ...current, findings } : current));
-      } catch {
+      } catch (error) {
+        if ([403, 404].includes(error.status)) {
+          setRecord(null);
+          setReloadVersion((value) => value + 1);
+        }
         setLoadError(
           "The finding was saved, but the findings list could not be refreshed. Use Try Again to load the latest records.",
         );
@@ -643,6 +695,10 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setFindingBlocked(true);
         setFindingError(
@@ -713,7 +769,7 @@ function RepairWorkspace({ repairId, user }) {
 
     if (
       !selectedAction ||
-      !hasAccess(user?.roles, selectedAction.permission) ||
+      !hasAccess(effectiveRoles, selectedAction.permission) ||
       cannotChangeRepair()
     ) {
       return false;
@@ -802,6 +858,10 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setCostsBlocked(true);
         setCostsError(
@@ -939,7 +999,11 @@ function RepairWorkspace({ repairId, user }) {
               }
             : current,
         );
-      } catch {
+      } catch (error) {
+        if ([403, 404].includes(error.status)) {
+          setRecord(null);
+          setReloadVersion((value) => value + 1);
+        }
         setLoadError(
           "The payment was saved, but the latest repair and payment records could not be loaded. Use Try Again before making another change.",
         );
@@ -947,6 +1011,10 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setPaymentBlocked(true);
         setPaymentError(
@@ -1034,6 +1102,10 @@ function RepairWorkspace({ repairId, user }) {
 
       return true;
     } catch (error) {
+      if ([403, 404].includes(error.status)) {
+        setRecord(null);
+        setReloadVersion((value) => value + 1);
+      }
       if (error.outcomeUncertain || !error.status || error.status >= 500) {
         setCategoryBlocked(true);
         setCategoryError(
@@ -1120,7 +1192,7 @@ function RepairWorkspace({ repairId, user }) {
         <section className="page-content">
           {loadError && (
             <FeedbackNotice
-              title="Unable to load repair workspace"
+              title={restricted ? "Access restricted" : "Unable to load repair workspace"}
               className="customer-form-error"
               role="alert"
               resetKey={[loadError, loadErrorVersion]}
@@ -1164,8 +1236,9 @@ function RepairWorkspace({ repairId, user }) {
 
           {notFound && !loading && (
             <div className="workspace-empty-state">
-              <strong>Repair not found</strong>
-              <p>The requested repair record does not exist.</p>
+              <strong>{restricted ? "Access restricted" : "Repair unavailable"}</strong>
+              <p>This repair is unavailable or you do not have access.</p>
+              <Link to="/repairs">Back to repairs</Link>
             </div>
           )}
         </section>
@@ -1345,7 +1418,7 @@ function RepairWorkspace({ repairId, user }) {
               estimatedCost={repair.estimatedCost}
               agreedPrice={repair.agreedPrice}
               staffName={staffName}
-              currentRoles={user?.roles ?? []}
+              currentRoles={effectiveRoles}
               onUpdateProblemCategory={handleProblemCategorySubmit}
               categorySaving={categorySaving}
               disabled={controlsDisabled}
@@ -1355,6 +1428,12 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
+          {findingsLoadError && (
+            <FeedbackNotice title={technicalDenied ? "Access restricted" : "Unable to load findings"}
+              actions={!technicalDenied ? <button type="button" className="secondary-repair-button" onClick={() => setReloadVersion((value) => value + 1)}>Retry findings</button> : undefined}>
+              {findingsLoadError}
+            </FeedbackNotice>
+          )}
           {canFindings && (
             <div hidden={activeTab !== "findings"}>
               <RepairFindings
@@ -1381,7 +1460,7 @@ function RepairWorkspace({ repairId, user }) {
               repairId={repairId}
               history={record.history}
               staffName={staffName}
-              currentRoles={user?.roles ?? []}
+              currentRoles={effectiveRoles}
               currentStatus={repair.status}
               onSubmitStatus={handleStatusSubmit}
               saving={statusSaving}
@@ -1398,7 +1477,7 @@ function RepairWorkspace({ repairId, user }) {
             <RepairPartsCosts
               feedbackVersion={[costsErrorVersion, costsMessageVersion]}
               repairId={repairId}
-              currentRoles={user?.roles ?? []}
+              currentRoles={effectiveRoles}
               currentStatus={repair.status}
               parts={record.parts}
               estimatedCost={repair.estimatedCost}
@@ -1420,7 +1499,7 @@ function RepairWorkspace({ repairId, user }) {
             <RepairPayments
               feedbackVersion={[paymentErrorVersion, paymentMessageVersion]}
               repairId={repairId}
-              currentRoles={user?.roles ?? []}
+              currentRoles={effectiveRoles}
               currentStatus={repair.status}
               repairTotal={repair.agreedPrice}
               payments={record.payments}
@@ -1433,9 +1512,10 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
-          {hasAccess(user?.roles, "aiTroubleshooting") && (
+          {canFindings && (
             <div hidden={activeTab !== "ai"}>
               <RepairAiTroubleshooting
+                onAccessLost={loseTechnicalAccess}
                 repair={repair}
                 controlsDisabled={controlsDisabled}
                 allowedStatuses={aiAllowedStatuses}
@@ -1457,7 +1537,7 @@ function RepairWorkspace({ repairId, user }) {
                 }}
                 onSuggestPart={(partName) => {
                   if (
-                    !hasAccess(user?.roles, "editPartsCosts") ||
+                    !hasAccess(effectiveRoles, "editPartsCosts") ||
                     controlsDisabled ||
                     cannotChangeRepair() ||
                     typeof partName !== "string" ||

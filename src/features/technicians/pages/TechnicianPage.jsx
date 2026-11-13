@@ -6,7 +6,7 @@ import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { getTechnicians } from "../../../api/technicianApi.js";
-import { hasAccess } from "../../../config/accessControl.js";
+import { hasAccess, canOpenTechnician } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import TechnicianTable from "../components/TechnicianTable.jsx";
@@ -30,6 +30,7 @@ function TechnicianList({ user }) {
 
   const [technicians, setTechnicians] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [restricted, setRestricted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError, errorVersion] = useFeedbackState("");
   const [reloadCount, setReloadCount] = useState(0);
@@ -45,6 +46,7 @@ function TechnicianList({ user }) {
 
     setLoading(true);
     setError("");
+    setRestricted(false);
     setTechnicians([]);
 
     async function loadTechnicians() {
@@ -73,6 +75,7 @@ function TechnicianList({ user }) {
           setTechnicians(result);
         }
       } catch (requestError) {
+        if (!controller.signal.aborted) setRestricted([403, 404].includes(requestError?.status));
         if (!controller.signal.aborted) {
           setError(requestError?.message || "Technicians could not be loaded.");
         }
@@ -104,7 +107,7 @@ function TechnicianList({ user }) {
   });
 
   function handleTechnicianClick(technicianId) {
-    if (canView) {
+    if (canView && canOpenTechnician(user, technicianId)) {
       navigate(`/technicians/${technicianId}`);
     }
   }
@@ -146,11 +149,11 @@ function TechnicianList({ user }) {
         {!loading && error && (
           <>
             <FeedbackNotice
-              title="Unable to load technicians"
+              title={restricted ? "Access restricted" : "Unable to load technicians"}
               className="customer-form-error"
               role="alert"
               resetKey={[error, errorVersion]}
-              actions={
+              actions={restricted ? <button type="button" onClick={() => navigate("/account")}>Go to account</button> :
                 <button
                   type="button"
                   className="create-repair-button"
@@ -160,7 +163,7 @@ function TechnicianList({ user }) {
                 </button>
               }
             >
-              <p>{error}</p>
+              <p>{restricted ? "This information is unavailable or you do not have access." : error}</p>
             </FeedbackNotice>
           </>
         )}
@@ -170,6 +173,7 @@ function TechnicianList({ user }) {
           (filteredTechnicians.length > 0 ? (
             <TechnicianTable
               technicians={filteredTechnicians}
+              canOpen={(id) => canOpenTechnician(user, id)}
               onTechnicianClick={handleTechnicianClick}
             />
           ) : (

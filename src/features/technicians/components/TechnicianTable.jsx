@@ -1,4 +1,4 @@
-function TechnicianTable({ technicians, onTechnicianClick }) {
+function TechnicianTable({ technicians, onTechnicianClick, canOpen = () => true }) {
   return (
     <div className="technician-table-wrapper" role="region" aria-label="Technician records" tabIndex={0}>
       <table className="technician-table">
@@ -15,11 +15,11 @@ function TechnicianTable({ technicians, onTechnicianClick }) {
           {technicians.map((technician) => (
             <tr
               key={technician.id}
-              className="technician-row"
-              onClick={() => onTechnicianClick(technician.id)}
+              className={canOpen(technician.id) ? "technician-row" : undefined}
+              onClick={canOpen(technician.id) ? () => onTechnicianClick(technician.id) : undefined}
             >
               <td>
-                <button
+                {canOpen(technician.id) ? <button
                   type="button"
                   className="record-link"
                   aria-label={`Open technician ${technician.name}`}
@@ -29,7 +29,7 @@ function TechnicianTable({ technicians, onTechnicianClick }) {
                   }}
                 >
                   {technician.name}
-                </button>
+                </button> : <span>{technician.name}</span>}
               </td>
 
               <td>

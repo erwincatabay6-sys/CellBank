@@ -1,3 +1,4 @@
+import DashboardFrontDeskActivity from "../components/DashboardFrontDeskActivity.jsx";
 import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,7 @@ import DashboardStatusCounts from "../components/DashboardStatusCounts.jsx";
 import DashboardAttentionRepairs from "../components/DashboardAttentionRepairs.jsx";
 import DashboardTechnicianWorkload from "../components/DashboardTechnicianWorkload.jsx";
 import DashboardRecentRepairs from "../components/DashboardRecentRepairs.jsx";
+import DashboardPersonalActivity from "../components/DashboardPersonalActivity.jsx";
 import DashboardFinancialSnapshot from "../components/DashboardFinancialSnapshot.jsx";
 import DashboardSkeleton from "../components/DashboardSkeleton.jsx";
 
@@ -35,6 +37,7 @@ function DashboardContent({ user }) {
   const navigate = useNavigate();
 
   const [dashboard, setDashboard] = useState(null);
+  const [restricted, setRestricted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError, errorVersion] = useFeedbackState("");
   const [reloadCount, setReloadCount] = useState(0);
@@ -43,6 +46,7 @@ function DashboardContent({ user }) {
   const canViewDashboard = hasAccess(currentRoles, "dashboard");
   const canViewRepairs = hasAccess(currentRoles, "repairs");
   const isAdmin = hasRole(currentRoles, "ADMIN");
+  const isCombined = !isAdmin && hasRole(currentRoles, "TECHNICIAN") && hasRole(currentRoles, "FRONT_DESK");
 
   useEffect(() => {
     if (!canViewDashboard) {
@@ -53,6 +57,7 @@ function DashboardContent({ user }) {
 
     setLoading(true);
     setError("");
+    setRestricted(false);
     setDashboard(null);
 
     async function loadDashboard() {
@@ -90,6 +95,7 @@ function DashboardContent({ user }) {
           setDashboard(result);
         }
       } catch (requestError) {
+        if (!controller.signal.aborted) setRestricted([403, 404].includes(requestError?.status));
         if (!controller.signal.aborted) {
           setError(
             requestError?.message || "The dashboard could not be loaded.",
@@ -137,7 +143,7 @@ function DashboardContent({ user }) {
           <p>
             {isTechnicianOnly
               ? "Here is the latest on your assigned repairs."
-              : "Here is the latest on your repair operations."}
+              : "Here is the latest on shop-wide repair operations."}
           </p>
         </div>
 
@@ -157,11 +163,11 @@ function DashboardContent({ user }) {
       {!loading && error && (
         <section className="page-content">
           <FeedbackNotice
-            title="Unable to load dashboard"
+            title={restricted ? "Access restricted" : "Unable to load dashboard"}
             className="customer-form-error"
             role="alert"
             resetKey={[error, errorVersion]}
-            actions={
+            actions={restricted ? <button type="button" onClick={() => navigate("/account")}>Go to account</button> :
               <button
                 type="button"
                 className="create-repair-button"
@@ -171,7 +177,7 @@ function DashboardContent({ user }) {
               </button>
             }
           >
-            <p>{error}</p>
+            <p>{restricted ? "This information is unavailable or you do not have access." : error}</p>
           </FeedbackNotice>
         </section>
       )}
@@ -234,19 +240,32 @@ function DashboardContent({ user }) {
               </section>
             </div>
             <div className="dashboard-side-column">
-              <section className="page-content dashboard-workload-section">
+              {isCombined && <DashboardPersonalActivity user={user}
+                workload={dashboard.technicianWorkload.find((row) => String(row.id) === String(user.id))}
+                activity={dashboard.frontDeskActivity?.find((row) => String(row.id) === String(user.id))}
+                activityDate={dashboard.activityDate} />}
+
+              {(!isCombined && (isAdmin || hasRole(currentRoles, "TECHNICIAN"))) && <section className="page-content dashboard-workload-section">
                 <div className="dashboard-panel-header">
                   <div>
                     <h3>
-                      {isTechnicianOnly ? "Your Workload" : "Technician Workload"}
+                      {isAdmin ? "Technician Workload" : "Your Workload"}
                     </h3>
                   </div>
                 </div>
 
                 <DashboardTechnicianWorkload
-                  technicians={dashboard.technicianWorkload}
+                  technicians={isAdmin ? dashboard.technicianWorkload : dashboard.technicianWorkload.filter((row) => String(row.id) === String(user.id))}
                 />
-              </section>
+              </section>}
+
+              {(!isCombined && (isAdmin || hasRole(currentRoles, "FRONT_DESK"))) && (
+                <section className="page-content dashboard-workload-section">
+                  <div className="dashboard-panel-header"><h3>{isAdmin ? "Front Desk Activity" : "Your Front Desk Activity"}</h3></div>
+                  <DashboardFrontDeskActivity activityDate={dashboard.activityDate}
+                    staff={isAdmin ? dashboard.frontDeskActivity ?? [] : (dashboard.frontDeskActivity ?? []).filter((row) => String(row.id) === String(user.id))} />
+                </section>
+              )}
 
               <section className="page-content dashboard-status-section">
                 <div className="dashboard-panel-header">

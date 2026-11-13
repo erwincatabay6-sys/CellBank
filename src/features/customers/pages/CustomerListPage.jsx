@@ -23,6 +23,7 @@ function CustomerListPage() {
     loading,
     loaded,
     loadError,
+    restricted,
     reloadCustomers,
     addCustomer,
   } = useCustomers();
@@ -87,11 +88,11 @@ function CustomerListPage() {
 
         {loadError && (
           <FeedbackNotice
-            title="Unable to load customers"
+            title={restricted ? "Access restricted" : "Unable to load customers"}
             className="customer-form-error"
             role="alert"
             resetKey={[loadError]}
-            actions={
+            actions={restricted ? <button type="button" className="secondary-repair-button" onClick={() => navigate("/dashboard")}>Back to dashboard</button> :
               <button
                 className="secondary-repair-button"
                 type="button"

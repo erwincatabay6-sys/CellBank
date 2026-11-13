@@ -1863,3 +1863,31 @@
 .tracking-copy-button {
   flex-shrink: 0;
 }
+
+@media (min-width: 901px) and (min-height: 701px) {
+  .repair-list-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .repair-list-page > :not(.repair-list-panel) { flex-shrink: 0; }
+  .repair-list-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .repair-list-panel .repair-table-wrapper {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+  }
+}
+
+@media print {
+  .repair-list-page, .repair-list-panel { height: auto; display: block; overflow: visible; }
+  .repair-list-panel .repair-table-wrapper { max-height: none; overflow: visible; }
+}

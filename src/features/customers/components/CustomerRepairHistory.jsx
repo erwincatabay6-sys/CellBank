@@ -21,6 +21,7 @@ function CustomerRepairHistory({
   loading = false,
   loaded = false,
   error = "",
+  restricted = false,
   onRetry,
   onRepairClick,
   deviceView = false,
@@ -73,11 +74,11 @@ function CustomerRepairHistory({
 
       {error && (
         <FeedbackNotice
-          title="Unable to load repair history"
+          title={restricted ? "Access restricted" : "Unable to load repair history"}
           className="customer-form-error"
           role="alert"
           resetKey={[error]}
-          actions={
+          actions={!restricted &&
             <button
               className="secondary-repair-button"
               type="button"
