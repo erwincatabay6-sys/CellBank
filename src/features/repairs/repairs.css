@@ -1895,3 +1895,8 @@
 .tracking-code-row { flex-wrap: wrap; }
 .tracking-email-control { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
 .tracking-email-control button { white-space: normal; }
+
+.status-history-text p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

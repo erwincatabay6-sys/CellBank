@@ -47,6 +47,9 @@ function RepairStatusHistory({
 }) {
   const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
+  const [customerUpdate, setCustomerUpdate] = useState("");
+  const customerUpdateRef = useRef(null);
+  const customerUpdateTooLong = customerUpdate.length > 2000;
   const [formOpen, setFormOpen] = useState(false);
   const [localError, setLocalError, localErrorVersion] = useFeedbackState("");
 
@@ -55,6 +58,7 @@ function RepairStatusHistory({
   useEffect(() => {
     setStatus("");
     setNote("");
+    setCustomerUpdate("");
     setFormOpen(false);
     setLocalError("");
   }, [repairId]);
@@ -89,7 +93,7 @@ function RepairStatusHistory({
       return;
     }
 
-    if (formOpen || status || note.trim()) {
+    if (formOpen || status || note.trim() || customerUpdate.trim()) {
       setLocalError(
         "Your current status draft was kept. Confirm or cancel it before using an AI status suggestion.",
       );
@@ -99,6 +103,7 @@ function RepairStatusHistory({
 
     setStatus(suggestedStatus);
     setNote("");
+    setCustomerUpdate("");
     setFormOpen(true);
     setLocalError("");
 
@@ -112,6 +117,7 @@ function RepairStatusHistory({
     formOpen,
     status,
     note,
+    customerUpdate,
     onSuggestionHandled,
   ]);
 
@@ -124,6 +130,7 @@ function RepairStatusHistory({
   function resetForm() {
     setStatus("");
     setNote("");
+    setCustomerUpdate("");
     setLocalError("");
   }
 
@@ -155,6 +162,11 @@ function RepairStatusHistory({
       return;
     }
 
+    if (customerUpdateTooLong) {
+      customerUpdateRef.current?.focus();
+      return;
+    }
+
     setLocalError("");
     submittingRef.current = true;
 
@@ -162,6 +174,7 @@ function RepairStatusHistory({
       const saved = await onSubmitStatus({
         status,
         note: note.trim() || null,
+        customerUpdate: customerUpdate.trim() || null,
       });
 
       if (saved === true) {
@@ -251,7 +264,7 @@ function RepairStatusHistory({
           </div>
 
           <div className="repair-form-group">
-            <label htmlFor="status-note">Status Note</label>
+            <label htmlFor="status-note">Internal note</label>
 
             <textarea
               id="status-note"
@@ -259,9 +272,34 @@ function RepairStatusHistory({
               onChange={(event) => setNote(event.target.value)}
               rows="3"
               maxLength={2000}
-              placeholder="Optional reason or status note"
+              placeholder="Optional internal reason or note"
+              aria-describedby="status-note-help"
               disabled={controlsDisabled}
             />
+            <small id="status-note-help">Visible only to authorized staff.</small>
+          </div>
+
+          <div className="repair-form-group">
+            <label htmlFor="status-customer-update">Customer update</label>
+            <textarea
+              ref={customerUpdateRef}
+              id="status-customer-update"
+              value={customerUpdate}
+              onChange={(event) => setCustomerUpdate(event.target.value)}
+              rows="3"
+              maxLength={2000}
+              disabled={controlsDisabled}
+              aria-invalid={customerUpdateTooLong}
+              aria-describedby={`status-customer-update-help${customerUpdateTooLong ? " status-customer-update-error" : ""}`}
+            />
+            <small id="status-customer-update-help">
+              Visible on the customer tracking page. Included in the email when the device is marked Ready for Release.
+            </small>
+            {customerUpdateTooLong && (
+              <p id="status-customer-update-error" className="feedback-field-error" role="alert">
+                Customer update must not exceed 2000 characters.
+              </p>
+            )}
           </div>
 
           <div className="finding-form-actions">
@@ -303,15 +341,17 @@ function RepairStatusHistory({
                 </strong>
               </p>
 
-              {entry.note && (
-                <p
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {entry.note}
-                </p>
+              {typeof entry.note === "string" && entry.note.trim() && (
+                <div className="status-history-text">
+                  <strong>Internal note</strong>
+                  <p>{entry.note}</p>
+                </div>
+              )}
+              {typeof entry.customerUpdate === "string" && entry.customerUpdate.trim() && (
+                <div className="status-history-text">
+                  <strong>Customer update</strong>
+                  <p>{entry.customerUpdate}</p>
+                </div>
               )}
             </article>
           ))}

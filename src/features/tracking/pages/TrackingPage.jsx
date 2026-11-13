@@ -238,6 +238,9 @@ function TrackingPage() {
                       </div>
 
                       <p>{entry.description}</p>
+                      {typeof entry.customerUpdate === "string" && entry.customerUpdate.trim() && (
+                        <p className="tracking-customer-update">{entry.customerUpdate}</p>
+                      )}
                     </div>
                   </article>
                 ))}

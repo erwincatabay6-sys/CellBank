@@ -536,6 +536,7 @@ function RepairWorkspace({ repairId, user }) {
       const saved = await updateRepairStatus(record.repair.id, {
         status: data.status,
         note: data.note,
+        customerUpdate: data.customerUpdate,
         expectedUpdatedAt: record.repair.updatedAt,
       });
 
@@ -607,6 +608,7 @@ function RepairWorkspace({ repairId, user }) {
       } else {
         setStatusError(
           error.errors?.status ||
+            error.errors?.customerUpdate ||
             error.errors?.note ||
             error.errors?.expectedUpdatedAt ||
             error.message ||
