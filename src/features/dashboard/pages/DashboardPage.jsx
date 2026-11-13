@@ -15,6 +15,7 @@ import DashboardStatusCounts from "../components/DashboardStatusCounts.jsx";
 import DashboardAttentionRepairs from "../components/DashboardAttentionRepairs.jsx";
 import DashboardTechnicianWorkload from "../components/DashboardTechnicianWorkload.jsx";
 import DashboardRecentRepairs from "../components/DashboardRecentRepairs.jsx";
+import DashboardPersonalActivity from "../components/DashboardPersonalActivity.jsx";
 import DashboardFinancialSnapshot from "../components/DashboardFinancialSnapshot.jsx";
 import DashboardSkeleton from "../components/DashboardSkeleton.jsx";
 
@@ -45,6 +46,7 @@ function DashboardContent({ user }) {
   const canViewDashboard = hasAccess(currentRoles, "dashboard");
   const canViewRepairs = hasAccess(currentRoles, "repairs");
   const isAdmin = hasRole(currentRoles, "ADMIN");
+  const isCombined = !isAdmin && hasRole(currentRoles, "TECHNICIAN") && hasRole(currentRoles, "FRONT_DESK");
 
   useEffect(() => {
     if (!canViewDashboard) {
@@ -238,7 +240,12 @@ function DashboardContent({ user }) {
               </section>
             </div>
             <div className="dashboard-side-column">
-              {(isAdmin || hasRole(currentRoles, "TECHNICIAN")) && <section className="page-content dashboard-workload-section">
+              {isCombined && <DashboardPersonalActivity user={user}
+                workload={dashboard.technicianWorkload.find((row) => String(row.id) === String(user.id))}
+                activity={dashboard.frontDeskActivity?.find((row) => String(row.id) === String(user.id))}
+                activityDate={dashboard.activityDate} />}
+
+              {(!isCombined && (isAdmin || hasRole(currentRoles, "TECHNICIAN"))) && <section className="page-content dashboard-workload-section">
                 <div className="dashboard-panel-header">
                   <div>
                     <h3>
@@ -252,7 +259,7 @@ function DashboardContent({ user }) {
                 />
               </section>}
 
-              {(isAdmin || hasRole(currentRoles, "FRONT_DESK")) && (
+              {(!isCombined && (isAdmin || hasRole(currentRoles, "FRONT_DESK"))) && (
                 <section className="page-content dashboard-workload-section">
                   <div className="dashboard-panel-header"><h3>{isAdmin ? "Front Desk Activity" : "Your Front Desk Activity"}</h3></div>
                   <DashboardFrontDeskActivity activityDate={dashboard.activityDate}

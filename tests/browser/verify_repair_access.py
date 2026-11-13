@@ -93,8 +93,8 @@ async def main():
                 admin='ADMIN' in roles
                 await expect(p.get_by_role('status',name='Loading dashboard')).to_have_count(0)
                 await expect(p.get_by_role('region',name='Repair summary',exact=True)).to_be_visible()
-                assert await p.get_by_role('heading',name='Technician Workload' if admin else 'Your Workload',exact=True).count()==int(admin or 'TECHNICIAN' in roles)
-                assert await p.get_by_role('heading',name='Front Desk Activity' if admin else 'Your Front Desk Activity',exact=True).count()==int(admin or 'FRONT_DESK' in roles)
+                assert await p.get_by_role('heading',name='Technician Workload' if admin else 'Your Workload',exact=True).count()==int(admin or roles==['TECHNICIAN'])
+                assert await p.get_by_role('heading',name='Front Desk Activity' if admin else 'Your Front Desk Activity',exact=True).count()==int(admin or roles==['FRONT_DESK'])
                 await expect(p.locator('.dashboard-technician-avatar img')).to_have_count(0)
                 assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 assert not any('/auth/me/profile-image' in path for path in calls)

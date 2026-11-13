@@ -197,7 +197,7 @@ function RepairList({ user }) {
   });
 
   return (
-    <>
+    <div className="repair-list-page">
       <section className="page-header">
         <h2>Repairs</h2>
         <p>Manage and monitor Cellbank repair jobs.</p>
@@ -260,7 +260,7 @@ function RepairList({ user }) {
         </div>
       )}
 
-      <section className="page-content" aria-busy={loading}>
+      <section className="page-content repair-list-panel" aria-busy={loading}>
         {loadError && (
           <FeedbackNotice
             title={restricted ? "Access restricted" : "Unable to load repairs"}
@@ -332,7 +332,7 @@ function RepairList({ user }) {
           <RepairTable repairs={filteredRepairs} />
         )}
       </section>
-    </>
+    </div>
   );
 }
 

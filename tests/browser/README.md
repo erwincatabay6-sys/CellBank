@@ -59,3 +59,11 @@ and desktop/mobile themes. Screenshots default to `/tmp/cellbank-access-tests`.
 These are mocked checks, not Spring Boot integration tests. Verify actual session
 changes, backend reassignment races, customer/device filtering, employee image
 cookies, and status/payment operations against the revised local backend before merging.
+
+## Repair-list space and combined roles
+
+`PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_dashboard_space.py`
+checks the repair list's viewport bounds and internal scrolling, resize/mobile
+layouts, keyboard reachability, and combined-role identity/counts in both themes.
+It uses mocked API responses and saves screenshots under `/tmp/cellbank-dashboard-space`.
+Recent Active Repairs retains the dashboard API's existing five-record limit.
