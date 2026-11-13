@@ -133,8 +133,7 @@ export const REPAIR_STATUS_ACCESS = {
 // =====================================================
 // REPAIR STATUS TRANSITIONS
 // =====================================================
-// Frontend business-rule mirror. Spring Boot will later
-// enforce the same transition rules on the backend.
+// Frontend mirror of the transitions enforced by Spring Boot.
 
 export const REPAIR_STATUS_TRANSITIONS = {
   RECEIVED: ["AWAITING_APPROVAL", "IN_PROGRESS", "CANCELLED"],
@@ -281,4 +280,24 @@ export function canChangeRepairStatus(roles, status) {
   return normalizedRoles.some(
     (role) => REPAIR_STATUS_ACCESS[role]?.includes(status) === true,
   );
+}
+
+// Repair-level technical permissions must never inherit Front Desk's broad access.
+export function hasTechnicalRepairAccess(user, repair) {
+  return hasRole(user?.roles, "ADMIN") || (
+    hasRole(user?.roles, "TECHNICIAN") && user?.id != null &&
+    repair?.assignedTechnicianId != null &&
+    String(user.id) === String(repair.assignedTechnicianId)
+  );
+}
+
+export function repairAccessRoles(user, repair) {
+  return hasTechnicalRepairAccess(user, repair)
+    ? normalizeRoles(user?.roles)
+    : normalizeRoles(user?.roles).filter((role) => role !== "TECHNICIAN");
+}
+
+export function canOpenTechnician(user, id) {
+  return hasRole(user?.roles, "ADMIN") || hasRole(user?.roles, "FRONT_DESK") ||
+    (hasRole(user?.roles, "TECHNICIAN") && user?.id != null && String(user.id) === String(id));
 }

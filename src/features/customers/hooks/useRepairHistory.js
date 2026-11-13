@@ -1,3 +1,4 @@
+import { useAuth } from "../../auth/context/AuthContext.jsx";
 import { useEffect, useState } from "react";
 
 import {
@@ -6,6 +7,8 @@ import {
 } from "../../../api/repairApi.js";
 
 export default function useRepairHistory(customerId, deviceId = null) {
+  const { user } = useAuth();
+  const accountKey = JSON.stringify([user?.id, user?.roles]);
   const [state, setState] = useState({
     key: null,
     repairs: [],
@@ -17,7 +20,7 @@ export default function useRepairHistory(customerId, deviceId = null) {
   const [retryVersion, setRetryVersion] = useState(0);
 
   const enabled = customerId != null;
-  const key = enabled ? `${customerId}:${deviceId ?? "all"}` : null;
+  const key = enabled ? `${accountKey}:${customerId}:${deviceId ?? "all"}` : null;
 
   useEffect(() => {
     if (!enabled) {
@@ -62,9 +65,12 @@ export default function useRepairHistory(customerId, deviceId = null) {
           setState((current) => ({
             ...current,
             loading: false,
+            restricted: [403, 404].includes(error.status),
+            repairs: [403, 404].includes(error.status) ? [] : current.repairs,
+            loaded: [403, 404].includes(error.status) ? false : current.loaded,
             error:
-              error.status === 403
-                ? "You do not have permission to view repair history."
+              [403, 404].includes(error.status)
+                ? "This history is unavailable or you do not have access."
                 : error.message || "Unable to load repair history.",
           }));
         }
@@ -86,6 +92,7 @@ export default function useRepairHistory(customerId, deviceId = null) {
     loading: enabled && (!current || state.loading),
     loaded: current && state.loaded,
     error: current ? state.error : "",
+    restricted: current && state.restricted,
     retry: () => setRetryVersion((value) => value + 1),
   };
 }

@@ -1,3 +1,5 @@
+import StaffAvatar from "./StaffAvatar.jsx";
+
 function DashboardTechnicianWorkload({ technicians }) {
   if (technicians.length === 0) {
     return (
@@ -21,15 +23,7 @@ function DashboardTechnicianWorkload({ technicians }) {
       {technicians.map((technician) => (
         <div key={technician.id} className="dashboard-workload-item">
           <div className="dashboard-technician-identity">
-            <span className="dashboard-technician-avatar" aria-hidden="true">
-              {(technician.name ?? "")
-                .trim()
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((part) => part[0])
-                .join("")
-                .toUpperCase()}
-            </span>
+            <StaffAvatar name={technician.name} profileImageUrl={technician.profileImageUrl} />
             <strong>{technician.name}</strong>
           </div>
 

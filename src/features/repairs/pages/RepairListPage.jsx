@@ -28,8 +28,13 @@ const statuses = [
 ];
 
 function RepairListPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const accountKey = JSON.stringify([user?.id, [...(user?.roles ?? [])].sort()]);
+  return <RepairList key={accountKey} user={user} />;
+}
+
+function RepairList({ user }) {
+  const navigate = useNavigate();
 
   const canCreateRepair =
     hasRole(user?.roles, "ADMIN") ||
@@ -41,6 +46,7 @@ function RepairListPage() {
     technicians: [],
   });
 
+  const [restricted, setRestricted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError, loadErrorVersion] = useFeedbackState("");
@@ -57,6 +63,7 @@ function RepairListPage() {
     async function loadRecords() {
       setLoading(true);
       setLoadError("");
+      setRestricted(false);
 
       try {
         const [repairs, customers, technicians] = await Promise.all([
@@ -80,8 +87,13 @@ function RepairListPage() {
         }
       } catch (error) {
         if (active && error.code !== "CANCELLED") {
+          if ([403, 404].includes(error.status)) {
+            setRestricted(true);
+            setData({ repairs: [], customers: [], technicians: [] });
+            setLoaded(false);
+          }
           setLoadError(
-            error.status === 403
+            [403, 404].includes(error.status)
               ? "You do not have permission to view these records."
               : error.message || "Unable to load repairs.",
           );
@@ -251,11 +263,11 @@ function RepairListPage() {
       <section className="page-content" aria-busy={loading}>
         {loadError && (
           <FeedbackNotice
-            title="Unable to load repairs"
+            title={restricted ? "Access restricted" : "Unable to load repairs"}
             className="customer-form-error"
             role="alert"
             resetKey={[loadError, loadErrorVersion]}
-            actions={
+            actions={restricted ? <button type="button" onClick={() => navigate("/dashboard")}>Back to dashboard</button> :
               <button
                 className="secondary-repair-button"
                 type="button"

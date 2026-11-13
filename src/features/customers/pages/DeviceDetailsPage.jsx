@@ -106,6 +106,7 @@ function DeviceDetailsPage() {
               loading={history.loading}
               loaded={history.loaded}
               error={history.error}
+              restricted={history.restricted}
               onRetry={history.retry}
               onRepairClick={(repairId) => navigate(`/repairs/${repairId}`)}
               deviceView

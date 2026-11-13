@@ -6,7 +6,7 @@ import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import { getTechnician } from "../../../api/technicianApi.js";
-import { hasAccess } from "../../../config/accessControl.js";
+import { hasAccess, canOpenTechnician } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import TechnicianDetailsSkeleton from "../components/TechnicianDetailsSkeleton.jsx";
 
@@ -45,7 +45,7 @@ function TechnicianDetails({ technicianId, user }) {
   const [reloadCount, setReloadCount] = useState(0);
 
   const roles = user?.roles ?? [];
-  const canView = hasAccess(roles, "technicians");
+  const canView = hasAccess(roles, "technicians") && canOpenTechnician(user, technicianId);
   const canViewRepairs = hasAccess(roles, "repairs");
 
   useEffect(() => {
@@ -85,9 +85,9 @@ function TechnicianDetails({ technicianId, user }) {
         }
       } catch (requestError) {
         if (!controller.signal.aborted) {
-          setNotFound(requestError?.status === 404);
+          setNotFound([403, 404].includes(requestError?.status));
           setError(
-            requestError?.message ||
+            [403, 404].includes(requestError?.status) ? "This record is unavailable or you do not have access." : requestError?.message ||
               "The technician details could not be loaded.",
           );
         }
@@ -112,8 +112,9 @@ function TechnicianDetails({ technicianId, user }) {
   if (!canView) {
     return (
       <section className="page-header">
-        <h2>Access Denied</h2>
-        <p>You do not have permission to view technicians.</p>
+        <h2>Access restricted</h2>
+        <p>You do not have access to these technician details.</p>
+        <button type="button" onClick={() => navigate("/technicians")}>Back to technicians</button>
       </section>
     );
   }
@@ -125,7 +126,7 @@ function TechnicianDetails({ technicianId, user }) {
       <section className="page-header">
         <h2>
           {notFound
-            ? "Technician Not Found"
+            ? "Access restricted"
             : technician?.name || "Technician Details"}
         </h2>
 
@@ -137,7 +138,7 @@ function TechnicianDetails({ technicianId, user }) {
       {!loading && error && (
         <section className="page-content">
           <FeedbackNotice
-            title="Unable to load technician"
+            title={notFound ? "Access restricted" : "Unable to load technician"}
             resetKey={[error, errorVersion, notFound]}
             actions={
               notFound ? (
@@ -160,7 +161,7 @@ function TechnicianDetails({ technicianId, user }) {
             }
           >
             {notFound
-              ? "The requested technician record does not exist."
+              ? "This record is unavailable or you do not have access."
               : error}
           </FeedbackNotice>
         </section>

@@ -10,7 +10,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 USER = dict(id=1, name='Local Test Admin', username='local-admin', email='local@example.test', roles=['ADMIN'], emailVerified=True)
 DEVICE = dict(id=1, brand='Local', model='Test phone', deviceType='PHONE')
 CUSTOMER = dict(id=1, name='Local Test Customer', phone='09999999999', email=None, devices=[DEVICE])
-REPAIR = dict(id=1, customerId=1, deviceId=1, repairReference='CB-TEST-1', trackingCode='EXACT-TRACKING-CODE-123456', status='IN_PROGRESS', updatedAt='2026-11-07T00:00:00Z', createdAt='2026-11-06T00:00:00Z', createdById=1, problemCategory='DISPLAY', reportedProblem='Local visual test only', serviceType='HARDWARE_REPAIR', agreedPrice='1000.00', estimatedCost='500.00')
+REPAIR = dict(id=1, assignedTechnicianId=1, customerId=1, deviceId=1, repairReference='CB-TEST-1', trackingCode='EXACT-TRACKING-CODE-123456', status='IN_PROGRESS', updatedAt='2026-11-07T00:00:00Z', createdAt='2026-11-06T00:00:00Z', createdById=1, problemCategory='DISPLAY', reportedProblem='Local visual test only', serviceType='HARDWARE_REPAIR', agreedPrice='1000.00', estimatedCost='500.00')
 results=[]
 
 async def main():

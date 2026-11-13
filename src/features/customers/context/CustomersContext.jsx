@@ -58,6 +58,7 @@ function CustomerStore({ children, enabled }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(enabled);
   const [loaded, setLoaded] = useState(false);
+  const [restricted, setRestricted] = useState(false);
   const [loadError, setLoadError] = useState("");
 
   const mounted = useRef(false);
@@ -78,6 +79,7 @@ function CustomerStore({ children, enabled }) {
 
     setLoading(true);
     setLoadError("");
+    setRestricted(false);
 
     try {
       const result = await getCustomers({
@@ -100,9 +102,14 @@ function CustomerStore({ children, enabled }) {
         version === requestVersion.current &&
         error.code !== "CANCELLED"
       ) {
+        if ([403, 404].includes(error.status)) {
+          setCustomers([]);
+          setLoaded(false);
+          setRestricted(true);
+        }
         setLoadError(
-          error.status === 403
-            ? "You do not have permission to view customers."
+          [403, 404].includes(error.status)
+            ? "Customer information is unavailable or you do not have access."
             : error.message || "Unable to load customers.",
         );
       }
@@ -203,6 +210,7 @@ function CustomerStore({ children, enabled }) {
         loading,
         loaded,
         loadError,
+        restricted,
         reloadCustomers,
         addCustomer,
         updateCustomer,

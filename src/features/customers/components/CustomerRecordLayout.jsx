@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useCustomers } from "../context/CustomersContext.jsx";
 
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -11,7 +12,7 @@ function CustomerRecordLayout({
   busy = false,
   children,
 }) {
-  const { loading, loaded, loadError, reloadCustomers } = useCustomers();
+  const { loading, loaded, loadError, restricted, reloadCustomers } = useCustomers();
 
   const initialLoading = !loaded && loading;
   const recordMissing = loaded && !found && !loadError && !loading;
@@ -29,11 +30,11 @@ function CustomerRecordLayout({
         <section className="page-content" aria-busy={loading}>
           {loadError && (
             <FeedbackNotice
-              title="Unable to load customer information"
+              title={restricted ? "Access restricted" : "Unable to load customer information"}
               className="customer-form-error"
               role="alert"
               resetKey={[loadError]}
-              actions={
+              actions={restricted ? <Link to="/customers">Back to customers</Link> :
                 <button
                   className="secondary-repair-button"
                   type="button"
@@ -70,8 +71,9 @@ function CustomerRecordLayout({
 
           {recordMissing && (
             <div className="workspace-empty-state">
-              <strong>Record not found</strong>
-              <p>The requested record is not available.</p>
+              <strong>Record unavailable</strong>
+              <p>This record is unavailable or you do not have access.</p>
+              <Link to="/customers">Back to customers</Link>
             </div>
           )}
         </section>
