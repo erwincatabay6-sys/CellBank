@@ -104,7 +104,8 @@ async def main():
                 c,p,_=await setup('/repairs/1',clipboard=script)
                 await p.get_by_role('button',name='Copy repair tracking code',exact=True).click()
                 await expect(p.get_by_text('Could not copy automatically. Select the tracking code and copy it manually.',exact=True)).to_be_visible()
-                assert await p.locator('.feedback-toast').count()==0
+                assert await p.locator('.feedback-toast').count()==1
+                assert await p.locator('.tracking-code-control .feedback-notice').count()==0
                 code=p.locator('.tracking-code-value');await code.focus();await code.evaluate('(e)=>{const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)}')
                 assert await p.evaluate('getSelection().toString()')==REPAIR['trackingCode']
                 await c.close()

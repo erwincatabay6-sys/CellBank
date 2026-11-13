@@ -8,14 +8,15 @@ export class ApiError extends Error {
     this.status = status;
     this.errors = data?.errors || {};
 
-    const retryAfter = Number(
-      retryAfterHeader ?? data?.retryAfterSeconds,
-    );
-
-    this.retryAfterSeconds =
-      Number.isFinite(retryAfter) && retryAfter > 0
-        ? Math.ceil(retryAfter)
-        : null;
+    const numericHeader = retryAfterHeader?.trim() ? Number(retryAfterHeader) : NaN;
+    const dateHeader = retryAfterHeader ? Date.parse(retryAfterHeader) : NaN;
+    const retryAfter = Number.isFinite(numericHeader)
+      ? numericHeader
+      : Number.isFinite(dateHeader)
+        ? Math.max(0, (dateHeader - Date.now()) / 1000)
+        : Number(data?.retryAfterSeconds);
+    this.retryAfterSeconds = Number.isFinite(retryAfter) && retryAfter >= 0
+      ? Math.ceil(retryAfter) : null;
   }
 }
 

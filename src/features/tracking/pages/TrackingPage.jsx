@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 
-import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+import { useSearchParams } from "react-router-dom";
+import { normalizeTrackingCode } from "../trackingCode.js";
+import useCountdown from "../../../hooks/useCountdown.js";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 
 import StatusBadge from "../../../components/StatusBadge.jsx";
 import { trackRepair } from "../../../api/trackingApi.js";
 
 import "../tracking.css";
-
-const TRACKING_CODE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 const NOT_FOUND_MESSAGE =
   "Repair not found. Check the tracking code and try again.";
@@ -30,97 +30,88 @@ function formatDate(value) {
 }
 
 function TrackingPage() {
-  const [trackingCode, setTrackingCode] = useState("");
+  const [params] = useSearchParams();
+  const linkCode = params.get("code") ?? "";
+  const [trackingCode, setTrackingCode] = useState(linkCode);
   const [trackingResult, setTrackingResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [
-    requestError,
-    setRequestError,
-    requestErrorVersion,
-    requestErrorInline,
-  ] = useFeedbackState("", {
+  const [, setRequestError] = useFeedbackState("", {
     toast: { variant: "error", title: "Unable to track repair" },
   });
   const [submitting, setSubmitting] = useState(false);
-
+  const [deadline, setDeadline] = useState(0);
+  const remaining = useCountdown(deadline);
   const requestRef = useRef(null);
   const inputRef = useRef(null);
 
+  function cancelLookup() {
+    requestRef.current?.abort();
+    requestRef.current = null;
+    setSubmitting(false);
+    setTrackingResult(null);
+  }
+
   useEffect(() => {
-    return () => {
-      requestRef.current?.abort();
-    };
-  }, []);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    if (requestRef.current) {
-      return;
-    }
-
-    const code = trackingCode.trim();
-
+    cancelLookup();
     setErrorMessage("");
-    setRequestError("");
+    setTrackingCode(linkCode);
+    // Defer one task so Strict Mode cleanup cancels its first setup before a request.
+    const timer = window.setTimeout(() => {
+      if (linkCode) lookup(linkCode);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [linkCode]);
 
+  async function lookup(value) {
+    cancelLookup();
+    setErrorMessage("");
+    if (Date.now() < deadline) return;
+    const code = normalizeTrackingCode(value);
     if (!code) {
-      setErrorMessage("Enter your tracking code.");
+      const message = value.trim() ? "Enter a valid short tracking code or paste your existing 43-character code." : "Enter your tracking code.";
+      setErrorMessage(message);
+      setRequestError(message);
+      inputRef.current?.focus();
       return;
     }
-
-    if (!TRACKING_CODE_PATTERN.test(code)) {
-      setErrorMessage(NOT_FOUND_MESSAGE);
-      return;
-    }
-
     const controller = new AbortController();
     requestRef.current = controller;
-
     setSubmitting(true);
-    setTrackingResult(null);
-
     try {
-      const result = await trackRepair(code, {
-        signal: controller.signal,
-      });
-
-      if (
-        result?.trackingCode !== code ||
-        typeof result.device !== "string" ||
-        typeof result.status !== "string" ||
-        !result.receivedAt ||
-        !result.lastUpdated ||
-        !Array.isArray(result.statusHistory)
-      ) {
-        throw new Error(
-          "The server returned unexpected tracking data. Please try again.",
-        );
+      const result = await trackRepair(code, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      if (normalizeTrackingCode(result?.trackingCode ?? "") !== code ||
+          typeof result.device !== "string" || typeof result.status !== "string" ||
+          !result.receivedAt || !result.lastUpdated || !Array.isArray(result.statusHistory)) {
+        throw new Error("The server returned unexpected tracking data. Please try again.");
       }
-
-      if (!controller.signal.aborted) {
-        setTrackingResult(result);
-      }
+      setTrackingResult(result);
     } catch (error) {
-      if (!controller.signal.aborted) {
-        if (error?.status === 404) {
-          setErrorMessage(NOT_FOUND_MESSAGE);
-        } else {
-          setRequestError(
-            error?.message ||
-              "Repair tracking is temporarily unavailable. Please try again.",
-          );
-        }
+      if (controller.signal.aborted) return;
+      if (error.status === 429) {
+        const seconds = error.retryAfterSeconds ?? 60;
+        setDeadline(Date.now() + seconds * 1000);
+        setRequestError(`Too many tracking requests. Try again in ${seconds} seconds.`);
+      } else {
+        const message = error.status === 404 ? NOT_FOUND_MESSAGE : error.message || "Repair tracking is temporarily unavailable.";
+        if (error.status === 404) setErrorMessage(message);
+        setRequestError(message);
       }
     } finally {
       if (requestRef.current === controller) {
         requestRef.current = null;
-      }
-
-      if (!controller.signal.aborted) {
         setSubmitting(false);
       }
     }
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (!submitting && !remaining) lookup(trackingCode);
   }
 
   function handleNewSearch() {
@@ -158,12 +149,15 @@ function TrackingPage() {
                 id="tracking-code"
                 name="tracking-code"
                 value={trackingCode}
-                onChange={(event) => setTrackingCode(event.target.value)}
+                onChange={(event) => {
+                  cancelLookup();
+                  setErrorMessage("");
+                  setTrackingCode(event.target.value);
+                }}
                 placeholder="Paste your tracking code"
                 autoComplete="off"
                 autoCapitalize="none"
                 spellCheck={false}
-                disabled={submitting}
                 aria-invalid={Boolean(errorMessage)}
                 aria-describedby={
                   errorMessage
@@ -173,34 +167,17 @@ function TrackingPage() {
               />
 
               <small id="tracking-code-help">
-                Codes are case-sensitive. Paste the code exactly as provided.
+                Enter an 8-character code (for example, K7MP-4X9R), with or without the hyphen. Existing 43-character codes are case-sensitive.
               </small>
             </div>
 
-            {errorMessage && (
-              <div
-                id="tracking-error"
-                className="public-form-error"
-                role="alert"
-              >
-                {errorMessage}
-              </div>
-            )}
-
-            {requestError && requestErrorInline && (
-              <FeedbackNotice
-                title="Unable to track repair"
-                className="public-form-error"
-                resetKey={requestErrorVersion}
-              >
-                {requestError}
-              </FeedbackNotice>
-            )}
+            {errorMessage && <p id="tracking-error" className="feedback-field-error">{errorMessage}</p>}
+            {remaining > 0 && <p role="status">Try again in {remaining} seconds.</p>}
 
             <button
               className="primary-action"
               type="submit"
-              disabled={submitting}
+              disabled={submitting || remaining > 0}
             >
               <Search size={20} />
               <span>{submitting ? "Checking..." : "Check Status"}</span>
