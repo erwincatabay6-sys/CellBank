@@ -334,12 +334,10 @@ function RepairStatusHistory({
                 <span>{formatTimestamp(entry.changedAt)}</span>
               </div>
 
-              <p>
-                Changed by{" "}
-                <strong>
-                  {entry.changedByName || staffName(entry.changedById)}
-                </strong>
-              </p>
+              <div className="status-history-text">
+                <strong>Changed by</strong>
+                <p>{entry.changedByName || staffName(entry.changedById)}</p>
+              </div>
 
               {typeof entry.note === "string" && entry.note.trim() && (
                 <div className="status-history-text">
