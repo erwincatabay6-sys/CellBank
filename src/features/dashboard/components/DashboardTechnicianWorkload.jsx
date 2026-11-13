@@ -1,3 +1,4 @@
+import StaffList from "./StaffList.jsx";
 import StaffAvatar from "./StaffAvatar.jsx";
 
 function DashboardTechnicianWorkload({ technicians }) {
@@ -12,14 +13,7 @@ function DashboardTechnicianWorkload({ technicians }) {
   }
 
   return (
-    <div
-      className={`dashboard-workload-list ${
-        technicians.length > 5 ? "dashboard-scroll-list" : ""
-      }`}
-      role="region"
-      aria-label="Technician workload"
-      tabIndex={technicians.length > 5 ? 0 : undefined}
-    >
+    <StaffList count={technicians.length} label="Technician workload">
       {technicians.map((technician) => (
         <div key={technician.id} className="dashboard-workload-item">
           <div className="dashboard-technician-identity">
@@ -42,7 +36,7 @@ function DashboardTechnicianWorkload({ technicians }) {
           </div>
         </div>
       ))}
-    </div>
+    </StaffList>
   );
 }
 

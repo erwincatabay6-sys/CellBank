@@ -228,3 +228,8 @@
     max-width: 640px;
   }
 }
+
+.tracking-customer-update {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

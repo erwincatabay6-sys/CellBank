@@ -67,3 +67,17 @@ checks the repair list's viewport bounds and internal scrolling, resize/mobile
 layouts, keyboard reachability, and combined-role identity/counts in both themes.
 It uses mocked API responses and saves screenshots under `/tmp/cellbank-dashboard-space`.
 Recent Active Repairs retains the dashboard API's existing five-record limit.
+
+### Tracking-code/email revision
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_tracking_email.py` against the local Vite server. It intercepts API calls and sends no real emails. Covers public short/legacy lookups, query-link automatic lookup, invalid/404/429 and stale requests; resend role permissions, no-body CSRF requests, missing email, success/error cooldowns; two-row staff lists at desktop/mobile widths in both themes; all four report payment icons.
+
+Notification audit: general action feedback already uses FeedbackProvider/useFeedbackState throughout auth, account, administration, customers and repairs. Tracking lookup validation now publishes through that same provider, retaining plain input-linked descriptions without a second alert card; clipboard failures also use toasts. Compact field validation remains associated with inputs. Load failures, invalid verification/recovery links, access/unavailable states, inline Retry/conflict recovery, and uncertain-save safeguards remain persistent. Repair creation confirms only the saved repair, not email delivery.
+
+These are mocked browser checks, not SMTP delivery or live backend integration tests. Backend reference: backend-cb feature/tracking-code-email at 9aea49f (preserved Retry-After headers).
+
+### Internal notes and customer updates
+
+`PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_customer_updates.py` verifies the status PATCH retains `expectedUpdatedAt` and sends separate `note`/`customerUpdate` fields, accepts exactly 2,000 characters, rejects longer drafts, normalizes empty updates to null, and preserves drafts on a mocked validation failure. It checks labeled staff history, public omission of internal notes (even if a mock supplies one), older/missing/blank updates, plain-text rendering, line breaks, mobile widths and both themes. No frontend email request is made on status changes. All API responses are mocked; actual backend/SMTP integration is not tested.
+
+Backend contract reference: `backend-cb` branch `feature/tracking-code-email`, commit `f11d105`. **Deployment prerequisite, not confirmed:** apply `database/005_add_status_customer_update.sql` to add nullable `repair_status_history.customer_update varchar(2000)` before deploying that backend. This frontend PR does not apply migrations or deploy either repository.

@@ -53,6 +53,8 @@ function formatTimestamp(value) {
 function RepairOverview({
   feedbackVersion,
   repair,
+  customer,
+  coordinationRoles = [],
   estimatedCost,
   agreedPrice,
   staffName = (staffId) =>
@@ -201,7 +203,15 @@ function RepairOverview({
               {label === "Tracking Code" &&
               typeof value === "string" &&
               value.trim() ? (
-                <RepairTrackingCode key={`${repair.id}:${value}`} code={value} />
+                <RepairTrackingCode
+                  key={`${repair.id}:${value}`}
+                  code={value}
+                  repairId={repair.id}
+                  customer={customer}
+                  canResend={coordinationRoles.some((role) =>
+                    ["ADMIN", "FRONT_DESK"].includes(role),
+                  )}
+                />
               ) : (
                 <strong
                   style={{

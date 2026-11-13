@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Copy } from "lucide-react";
 
-import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+import ResendTrackingEmail from "./ResendTrackingEmail.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 
-export default function RepairTrackingCode({ code }) {
+export default function RepairTrackingCode({ code, repairId, customer, canResend }) {
   const [copying, setCopying] = useState(false);
-  const [result, setResult, resultVersion] = useFeedbackState(null, {
-    toast: (value) =>
-      value.success
-        ? {
-            variant: "success",
-            title: "Tracking code copied",
-            message: value.text,
-          }
-        : null,
+  const [, setResult] = useFeedbackState(null, {
+    toast: (value) => ({
+      variant: value.success ? "success" : "error",
+      title: value.success ? "Tracking code copied" : "Unable to copy tracking code",
+      message: value.text,
+    }),
   });
   const inProgress = useRef(false);
   const active = useRef(true);
@@ -77,17 +74,9 @@ export default function RepairTrackingCode({ code }) {
         >
           <Copy size={16} aria-hidden="true" />
         </button>
+        {canResend && <ResendTrackingEmail key={repairId} repairId={repairId} customer={customer} />}
       </div>
-      {result && !result.success && (
-        <FeedbackNotice
-          title="Unable to copy tracking code"
-          role="alert"
-          className="customer-form-error"
-          resetKey={resultVersion}
-        >
-          {result.text}
-        </FeedbackNotice>
-      )}
+
     </div>
   );
 }

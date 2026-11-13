@@ -1,3 +1,12 @@
+import { CircleHelp, CircleDollarSign, Clock, CircleCheck } from "lucide-react";
+
+const paymentIcons = { "Price Not Agreed": CircleHelp, "Unpaid": CircleDollarSign, "Partially Paid": Clock, "Paid": CircleCheck };
+
+function PaymentIcon({ status }) {
+  const Icon = paymentIcons[status] ?? CircleHelp;
+  return <Icon size={13} aria-hidden="true" />;
+}
+
 function FinancialReportTable({ records, onRepairClick }) {
   return (
     <div className="report-table-wrapper" role="region" aria-label="Financial records" tabIndex={0}>
@@ -54,6 +63,7 @@ function FinancialReportTable({ records, onRepairClick }) {
                     .toLowerCase()
                     .replaceAll(" ", "-")}`}
                 >
+                  <PaymentIcon status={record.paymentStatus} />
                   {record.paymentStatus}
                 </span>
               </td>

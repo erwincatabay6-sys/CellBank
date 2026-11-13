@@ -1891,3 +1891,34 @@
   .repair-list-page, .repair-list-panel { height: auto; display: block; overflow: visible; }
   .repair-list-panel .repair-table-wrapper { max-height: none; overflow: visible; }
 }
+
+.tracking-code-row { flex-wrap: wrap; }
+.tracking-email-control { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
+.tracking-email-control button { white-space: normal; }
+
+.status-history-text {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 16px;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.status-history-text > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.status-history-item .status-history-text p {
+  min-width: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .status-history-text {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
