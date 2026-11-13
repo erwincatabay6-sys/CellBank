@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeTrackingCode } from "../src/features/tracking/trackingCode.js";
+import { normalizeTrackingCode } from "../src/features/tracking/repairCode.js";
 import { ApiError } from "../src/api/http.js";
 
 test("short codes normalize; legacy codes preserve exact case", () => {

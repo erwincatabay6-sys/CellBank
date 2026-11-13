@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 
 import { useSearchParams } from "react-router-dom";
-import { normalizeTrackingCode } from "../trackingCode.js";
+import { normalizeTrackingCode } from "../repairCode.js";
 import useCountdown from "../../../hooks/useCountdown.js";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 
