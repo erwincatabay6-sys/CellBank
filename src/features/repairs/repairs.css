@@ -1896,29 +1896,71 @@
 .tracking-email-control { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
 .tracking-email-control button { white-space: normal; }
 
-.status-history-text {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
-  align-items: start;
-  gap: 4px 16px;
-  margin-top: 12px;
+.status-history-metadata {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.status-history-metadata p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.status-history-details-button {
+  flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.status-details-modal[open] {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  width: calc(100% - 32px);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.status-details-modal::backdrop {
+  background: var(--modal-backdrop);
+}
+
+.status-details-modal .modal-header {
+  flex-shrink: 0;
+}
+
+.status-details-body {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
   line-height: 1.5;
 }
 
-.status-history-text > strong {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.status-details-body > p {
+  margin-top: 6px;
+  color: var(--text-secondary);
 }
 
-.status-history-item .status-history-text p {
-  min-width: 0;
-  margin: 0;
+.status-details-message {
+  margin-top: 16px;
+}
+
+.status-details-message p {
+  margin: 4px 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  color: var(--text-secondary);
 }
 
-@media (max-width: 600px) {
-  .status-history-text {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.status-history-details-button:focus-visible,
+.status-details-modal button:focus-visible,
+.status-details-body:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }

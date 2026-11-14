@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Ellipsis } from "lucide-react";
+import StatusUpdateDetails from "./StatusUpdateDetails.jsx";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -45,6 +47,10 @@ function RepairStatusHistory({
   suggestedStatus = "",
   onSuggestionHandled,
 }) {
+  const [selection, setSelection] = useState(null);
+  const selectedEntry = selection?.repairId === repairId
+    ? history.find((entry) => entry.id === selection.id)
+    : null;
   const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
   const [customerUpdate, setCustomerUpdate] = useState("");
@@ -334,23 +340,22 @@ function RepairStatusHistory({
                 <span>{formatTimestamp(entry.changedAt)}</span>
               </div>
 
-              <div className="status-history-text">
-                <strong>Changed by</strong>
-                <p>{entry.changedByName || staffName(entry.changedById)}</p>
+              <div className="status-history-metadata">
+                <p><strong>Changed by:</strong>{" "}{entry.changedByName || staffName(entry.changedById)}</p>
+                {[entry.note, entry.customerUpdate].some(
+                  (value) => typeof value === "string" && value.trim(),
+                ) && (
+                  <button
+                    type="button"
+                    className="modal-close-button status-history-details-button"
+                    aria-label={`View status update details: ${entry.newStatus.replaceAll("_", " ")}, ${formatTimestamp(entry.changedAt)}`}
+                    aria-haspopup="dialog"
+                    onClick={() => setSelection({ repairId, id: entry.id })}
+                  >
+                    <Ellipsis size={20} aria-hidden="true" />
+                  </button>
+                )}
               </div>
-
-              {typeof entry.note === "string" && entry.note.trim() && (
-                <div className="status-history-text">
-                  <strong>Internal note</strong>
-                  <p>{entry.note}</p>
-                </div>
-              )}
-              {typeof entry.customerUpdate === "string" && entry.customerUpdate.trim() && (
-                <div className="status-history-text">
-                  <strong>Customer update</strong>
-                  <p>{entry.customerUpdate}</p>
-                </div>
-              )}
             </article>
           ))}
         </div>
@@ -360,6 +365,14 @@ function RepairStatusHistory({
 
           <p>Status changes for this repair will appear here.</p>
         </div>
+      )}
+      {selectedEntry && (
+        <StatusUpdateDetails
+          entry={selectedEntry}
+          changedBy={selectedEntry.changedByName || staffName(selectedEntry.changedById)}
+          timestamp={formatTimestamp(selectedEntry.changedAt)}
+          onClose={() => setSelection(null)}
+        />
       )}
     </section>
   );
