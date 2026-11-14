@@ -75,12 +75,15 @@ async def main():
     await p.get_by_role('button',name='Confirm Status Change').click()
     await expect(p.locator('.status-history-item')).to_have_count(2)
     assert state['saved']['customerUpdate']==(value.strip() or None)
-    await expect(p.locator('.status-history-text').filter(has_text='Internal note')).to_contain_text(NOTE)
-    assert await p.locator('.status-history-text b').count()==0
-    if width==1440:await expect(p.locator('.status-history-text').filter(has_text='Customer update')).to_contain_text(UPDATE)
-    else:assert await p.locator('.status-history-text').filter(has_text='Customer update').count()==0
+    assert NOTE not in await p.locator('.status-history-list').inner_text()
+    await p.locator('.status-history-details-button').first.click()
+    await expect(p.locator('.status-details-message').filter(has_text='Internal note')).to_contain_text(NOTE)
+    assert await p.locator('.status-details-message b').count()==0
+    if width==1440:await expect(p.locator('.status-details-message').filter(has_text='Customer update')).to_contain_text(UPDATE)
+    else:assert await p.locator('.status-details-message').filter(has_text='Customer update').count()==0
     assert not any('/tracking-email' in x[1] for x in calls)
     assert 'Email delivered' not in await p.locator('body').inner_text()
+    await p.get_by_role('button',name='Close status update details').click()
     await p.goto(BASE+'/track?code=K7MP-4X9R')
     await expect(p.locator('.tracking-customer-update')).to_have_count(1)
     await expect(p.locator('.tracking-customer-update')).to_contain_text(UPDATE)
