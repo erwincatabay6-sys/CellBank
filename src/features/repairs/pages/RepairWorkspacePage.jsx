@@ -1417,6 +1417,7 @@ function RepairWorkspace({ repairId, user }) {
             <RepairOverview
               feedbackVersion={[categoryErrorVersion, categoryMessageVersion]}
               repair={repair}
+              device={device}
               customer={record.customer}
               coordinationRoles={user?.roles ?? []}
               estimatedCost={repair.estimatedCost}
