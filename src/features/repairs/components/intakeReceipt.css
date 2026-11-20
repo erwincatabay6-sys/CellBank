@@ -1,0 +1,168 @@
+.repair-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.repair-overview .repair-overview-heading h3 {
+  margin: 0;
+}
+
+.repair-overview-heading button {
+  margin-inline-start: auto;
+}
+
+.intake-receipt-dialog[open] {
+  max-width: 400px;
+}
+
+.intake-receipt-dialog .modal-header {
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.intake-receipt-dialog .modal-header h3 {
+  margin: 0;
+}
+
+.intake-receipt-preview {
+  min-height: 0;
+  overflow: auto;
+}
+
+.intake-receipt-preview:focus-visible {
+  outline-offset: -2px;
+}
+
+.intake-receipt-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-top: 12px;
+}
+
+.intake-receipt {
+  box-sizing: border-box;
+  width: 80mm;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 4mm;
+  background: #fff;
+  color: #000;
+  color-scheme: light;
+  font: 10pt/1.3 Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.intake-receipt p,
+.intake-receipt h4,
+.intake-receipt dd {
+  margin: 0;
+}
+
+.intake-receipt-brand,
+.intake-receipt-tracking {
+  text-align: center;
+}
+
+.intake-receipt-brand strong {
+  font-size: 24pt;
+  line-height: 1.1;
+}
+
+.intake-receipt-brand h4 {
+  margin-top: 1mm;
+  font-size: 13pt;
+}
+
+.intake-receipt-details {
+  display: grid;
+  gap: 2mm;
+  margin: 3mm 0;
+  padding: 3mm 0;
+  border-block: 1px dashed #000;
+}
+
+.intake-receipt-details dt {
+  font-weight: 700;
+  break-after: avoid;
+}
+
+.intake-receipt-details dd {
+  white-space: pre-wrap;
+}
+
+.intake-receipt-tracking {
+  break-inside: avoid;
+}
+
+.intake-receipt-tracking code {
+  display: block;
+  margin-top: 1mm;
+  font: bold 15pt/1.2 ui-monospace, monospace;
+}
+
+.intake-receipt-qr {
+  display: block;
+  width: 38mm;
+  max-width: 100%;
+  height: auto;
+  margin: 1mm auto;
+}
+
+.intake-receipt .intake-receipt-reminder {
+  margin-top: 2mm;
+}
+
+@media print {
+  html:has(> body > .intake-receipt-dialog[open]),
+  body:has(> .intake-receipt-dialog[open]) {
+    margin: 0;
+    background: #fff;
+    color-scheme: light !important;
+  }
+
+  body:has(> .intake-receipt-dialog[open]) > :not(.intake-receipt-dialog) {
+    display: none !important;
+  }
+
+  body > .intake-receipt-dialog[open] {
+    position: static;
+    display: block;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .intake-receipt-dialog::backdrop,
+  .intake-receipt-dialog .modal-header,
+  .intake-receipt-actions {
+    display: none;
+  }
+
+  .intake-receipt-preview {
+    overflow: visible;
+  }
+
+  .intake-receipt {
+    padding-block: 0;
+  }
+
+  .intake-receipt-details {
+    display: block;
+  }
+
+  .intake-receipt-details > div + div {
+    margin-top: 2mm;
+  }
+}

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { ReceiptText } from "lucide-react";
+
 import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -7,6 +9,7 @@ import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 import { hasAccess } from "../../../config/accessControl.js";
 
 import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import IntakeReceiptDialog from "./IntakeReceiptDialog.jsx";
 import RepairTrackingCode from "./RepairTrackingCode.jsx";
 
 import {
@@ -53,6 +56,7 @@ function formatTimestamp(value) {
 function RepairOverview({
   feedbackVersion,
   repair,
+  device,
   customer,
   coordinationRoles = [],
   estimatedCost,
@@ -67,6 +71,8 @@ function RepairOverview({
   categoryError = "",
   categoryMessage = "",
 }) {
+  const [receiptTrigger, setReceiptTrigger] = useState(null);
+  const hasTrackingCode = typeof repair.trackingCode === "string" && Boolean(repair.trackingCode.trim());
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [localError, setLocalError, localErrorVersion, , localErrorField] =
@@ -186,7 +192,28 @@ function RepairOverview({
   return (
     <>
       <section className="page-content repair-overview">
-        <h3>Repair Overview</h3>
+        <div className="repair-overview-heading">
+          <h3>Repair Overview</h3>
+          <button
+            className="secondary-repair-button"
+            type="button"
+            aria-haspopup="dialog"
+            disabled={!hasTrackingCode}
+            title={!hasTrackingCode ? "No tracking code is recorded for this repair" : undefined}
+            onClick={(event) => setReceiptTrigger(event.currentTarget)}
+          >
+            <ReceiptText size={16} aria-hidden="true" />
+            Intake receipt
+          </button>
+        </div>
+        {receiptTrigger && hasTrackingCode && (
+          <IntakeReceiptDialog
+            repair={repair}
+            device={device}
+            trigger={receiptTrigger}
+            onClose={() => setReceiptTrigger(null)}
+          />
+        )}
 
         <div className="repair-overview-grid">
           {fields.map(([label, value]) => (
