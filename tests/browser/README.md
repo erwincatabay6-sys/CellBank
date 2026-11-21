@@ -85,3 +85,24 @@ Backend contract reference: `backend-cb` branch `feature/tracking-code-email`, c
 ### Compact status history details
 
 `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_status_details.py` checks compact metadata, conditional ellipsis buttons for both/either/neither message, plain-text modal content, Escape/X dismissal, Tab/Shift+Tab containment, focus restoration, long names/messages and scrollable mobile/landscape layouts in both themes. APIs are mocked; no records or emails are changed. `verify_customer_updates.py` also checks the existing status submission and public/private separation with staff messages now shown in this modal. Native Safari/Firefox and screen-reader checks remain manual.
+
+### Staff email verification and replacement
+
+With Vite running, use `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_email.py`.
+The suite mocks the API and checks the workspace gate on sign-in, reload and
+protected routes, cross-tab refresh behavior, exact-code 403 routing, ordinary
+403 errors, public routes, OTP paste and keyboard editing, expiry and resend,
+removal after five failures, and admin proposal and cancellation feedback.
+Screenshots go to `CELLBANK_TEST_OUTPUT` (default `/tmp/cellbank-staff-email`).
+Test-only OTP values are generated in memory and omitted from screenshots.
+
+For a live check, use backend-cb `feature/staff-email-verification-gate` at
+`8f9f3c55aa46682fd2632d49abd9b4a43b463dbe` with an isolated PostgreSQL database
+and local SMTP capture. Initialize the database with the deployment schema,
+roles, and migrations 005 and 006. Supply a fresh test key from
+`openssl rand -base64 32`; do not reuse a production key. Seed separate test
+accounts for an active verified admin, an active unverified technician, and
+an active verified Front Desk user. Use independent sessions and fetch
+`/api/auth/csrf` after each login and before state-changing requests. Read the
+verification link and OTP from the local mail catcher. The mocked browser test
+does not verify delivery, persistence, or backend permission enforcement.

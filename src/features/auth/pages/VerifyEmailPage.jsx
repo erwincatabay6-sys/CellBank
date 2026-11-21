@@ -86,7 +86,7 @@ function VerifyEmailPage() {
             resetKey={token}
           >
             This verification link is incomplete or invalid. Request a new
-            link from Account Settings.
+            link from the staff verification screen after signing in.
           </FeedbackNotice>
         )}
 

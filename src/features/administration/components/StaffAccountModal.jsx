@@ -11,6 +11,7 @@ function StaffAccountModal({
   saving = false,
   onClose,
   onSave,
+  onCancelPendingEmailChange,
 }) {
   // -----------------------------
   // MODE
@@ -30,6 +31,8 @@ function StaffAccountModal({
   const [email, setEmail] = useState(initialUser?.email ?? "");
 
   const [password, setPassword] = useState("");
+
+  const [confirmingCancellation, setConfirmingCancellation] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -248,6 +251,31 @@ function StaffAccountModal({
           {/* =========================
                         ACTIONS
                     ========================== */}
+          {onCancelPendingEmailChange && (
+            <div className="repair-form-group">
+              <small>
+                Changing a verified address proposes a replacement. The active email stays in use until staff confirm it.
+              </small>
+              {confirmingCancellation ? (
+                <>
+                  <p>Cancel the pending replacement, if any? The active email will stay in use.</p>
+                  <div className="modal-actions">
+                    <button type="button" className="secondary-repair-button" disabled={saving}
+                      onClick={() => setConfirmingCancellation(false)}>Keep proposal</button>
+                    <button type="button" className="secondary-repair-button" disabled={saving}
+                      onClick={async () => {
+                        await onCancelPendingEmailChange();
+                        setConfirmingCancellation(false);
+                      }}>Cancel pending email change</button>
+                  </div>
+                </>
+              ) : (
+                <button type="button" className="secondary-repair-button" disabled={saving}
+                  onClick={() => setConfirmingCancellation(true)}>Cancel any pending email change</button>
+              )}
+            </div>
+          )}
+
           <div className="modal-actions">
             <button
               className="cancel-repair-button"

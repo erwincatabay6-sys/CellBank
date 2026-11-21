@@ -97,3 +97,20 @@ export function resetPassword(token, newPassword) {
     }),
   });
 }
+const pendingEmailChangePath = "/api/auth/me/pending-email-change";
+
+export function getPendingEmailChange() {
+  return apiRequest(pendingEmailChangePath);
+}
+
+export function resendPendingEmailCode() {
+  return apiRequest(`${pendingEmailChangePath}/resend`, { method: "POST" });
+}
+
+export function confirmPendingEmailChange(code) {
+  return apiRequest(`${pendingEmailChangePath}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+}

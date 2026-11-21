@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -24,8 +25,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
   const [sessionMessage, setSessionMessage] = useState("");
+  const profileRequest = useRef(0);
 
   const refreshSession = useCallback(async () => {
+    profileRequest.current++;
     setLoading(true);
     setAuthError("");
 
@@ -48,8 +51,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
+    const request = ++profileRequest.current;
     const currentUser = await getCurrentUser();
-    setUser(currentUser);
+    if (request === profileRequest.current) setUser(currentUser);
     return currentUser;
   }, []);
 
@@ -63,14 +67,22 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      profileRequest.current++;
       setUser(null);
       setAuthError("");
       setSessionMessage("Your session has ended. Please sign in again.");
     }
 
+    function handleVerificationRequired() {
+      profileRequest.current++;
+      setUser((current) => current ? { ...current, emailVerified: false } : current);
+    }
+
+    window.addEventListener("cellbank:email-verification-required", handleVerificationRequired);
     window.addEventListener("cellbank:session-expired", handleSessionExpired);
 
     return () => {
+      window.removeEventListener("cellbank:email-verification-required", handleVerificationRequired);
       window.removeEventListener(
         "cellbank:session-expired",
         handleSessionExpired,
@@ -79,6 +91,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   async function login(identifier, password) {
+    profileRequest.current++;
     await loginRequest(identifier, password);
 
     const currentUser = await getCurrentUser();
@@ -91,6 +104,7 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     await logoutRequest();
+    profileRequest.current++;
     setUser(null);
     setAuthError("");
     setSessionMessage("");

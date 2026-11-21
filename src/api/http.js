@@ -6,6 +6,7 @@ export class ApiError extends Error {
 
     this.name = "ApiError";
     this.status = status;
+    this.code = data?.code;
     this.errors = data?.errors || {};
 
     const numericHeader = retryAfterHeader?.trim() ? Number(retryAfterHeader) : NaN;
@@ -114,6 +115,10 @@ export async function apiRequest(path, options = {}) {
     }
 
     if (!response.ok) {
+      if (response.status === 403 && data?.code === "EMAIL_VERIFICATION_REQUIRED") {
+        window.dispatchEvent(new Event("cellbank:email-verification-required"));
+      }
+
       throw new ApiError(
         response.status,
         data,
