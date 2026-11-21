@@ -2,6 +2,8 @@ import { Navigate } from "react-router-dom";
 import { hasAccess } from "../config/accessControl.js";
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
 
+import PublicLayout from "../layouts/PublicLayout.jsx";
+import VerifyStaffEmailPage from "../features/auth/pages/VerifyStaffEmailPage.jsx";
 import FeedbackNotice from "./FeedbackNotice.jsx";
 
 export default function AccessGuard({ permission, children }) {
@@ -30,6 +32,10 @@ export default function AccessGuard({ permission, children }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.emailVerified === false) {
+    return <PublicLayout><VerifyStaffEmailPage key={user.id} /></PublicLayout>;
   }
 
   if (!hasAccess(user.roles, permission)) {

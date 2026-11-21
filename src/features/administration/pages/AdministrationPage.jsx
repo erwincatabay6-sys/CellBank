@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
 
+import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
@@ -13,6 +14,7 @@ import {
   createStaffAccount,
   updateStaffAccount,
   updateStaffAccess,
+  cancelStaffPendingEmailChange,
 } from "../../../api/staffApi.js";
 
 import StaffTable from "../components/StaffTable.jsx";
@@ -48,6 +50,7 @@ function getErrorMessage(error) {
 
 function AdministrationPage() {
   const { user: currentUser, refreshSession } = useAuth();
+  const { publish } = useFeedback();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,6 +211,17 @@ function AdministrationPage() {
           : [...existingUsers, savedUser],
       );
 
+      if (selectedUser && data.email.toLowerCase() !== selectedUser.email.toLowerCase()) {
+        const pending = savedUser.email.toLowerCase() !== data.email.toLowerCase();
+        publish({
+          variant: "success",
+          title: pending ? "Replacement email proposed" : "Staff email corrected",
+          message: pending
+            ? "The current email remains active while the replacement awaits staff confirmation."
+            : "The staff member can request a verification link for the corrected address.",
+        });
+      }
+
       setStaffModalOpen(false);
       setSelectedUser(null);
 
@@ -225,6 +239,23 @@ function AdministrationPage() {
       if (error.status === 401) {
         await refreshSession();
       }
+    } finally {
+      mutationInProgress.current = false;
+      setSaving(false);
+    }
+  }
+
+  async function handleCancelPendingEmailChange() {
+    if (mutationInProgress.current || !selectedUser || !currentUser?.roles.includes("ADMIN")) return;
+
+    mutationInProgress.current = true;
+    setSaving(true);
+    setFormError("");
+    try {
+      await cancelStaffPendingEmailChange(selectedUser.id);
+      publish({ variant: "success", title: "Email change cleared", message: "This account has no pending replacement email." });
+    } catch (error) {
+      setFormError(getErrorMessage(error));
     } finally {
       mutationInProgress.current = false;
       setSaving(false);
@@ -400,6 +431,9 @@ function AdministrationPage() {
           saving={saving}
           onClose={handleModalClose}
           onSave={handleStaffSave}
+          onCancelPendingEmailChange={
+            currentUser?.roles.includes("ADMIN") && selectedUser ? handleCancelPendingEmailChange : undefined
+          }
         />
       )}
     </>

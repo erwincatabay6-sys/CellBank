@@ -1,278 +1,135 @@
-import { useEffect, useRef, useState } from "react";
-import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
-import { RequestError } from "../../../api/http.js";
-import { useAuth } from "../../auth/context/AuthContext.jsx";
-import { MailCheck, MailWarning, Send } from "lucide-react";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import { useRef, useState } from "react";
+import { MailCheck } from "lucide-react";
+
 import {
-  sendEmailVerification,
-  getEmailVerificationStatus,
+  confirmPendingEmailChange,
+  getPendingEmailChange,
+  resendPendingEmailCode,
 } from "../../../api/authApi.js";
+import { useAuth } from "../../auth/context/AuthContext.jsx";
+import useEmailStatus from "../../auth/useEmailStatus.js";
+import EmailChangeDialog from "./EmailChangeDialog.jsx";
 
-import useFeedbackState from "../../../hooks/useFeedbackState.js";
-import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
-
-function EmailVerificationSettings({ user }) {
-  const { publish } = useFeedback();
+export default function EmailVerificationSettings({ user }) {
   const { refreshUser } = useAuth();
+  const { status, statusError, refreshStatus } = useEmailStatus(getPendingEmailChange);
+  const [trigger, setTrigger] = useState(null);
+  const [action, setAction] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [retryDeadline, setRetryDeadline] = useState(0);
+  const [profileRefreshNeeded, setProfileRefreshNeeded] = useState(false);
+  const busy = useRef(false);
+  const headingRef = useRef(null);
 
-  const emailVerified = user.emailVerified === true;
-  const sendInProgress = useRef(false);
-
-  const [verificationRequested, setVerificationRequested] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
-  const [, setErrorMessage] = useFeedbackState("", {
-    toast: { variant: "error", title: "Unable to send verification" },
-  });
-  const [statusError, setStatusError, statusErrorVersion] =
-    useFeedbackState("");
-  const [statusReload, setStatusReload] = useState(0);
-  const [resendAvailableAt, setResendAvailableAt] = useState(0);
-  const [secondsRemaining, setSecondsRemaining] = useState(0);
-
-  useEffect(() => {
-    if (!resendAvailableAt) {
-      return;
-    }
-
-    function updateCountdown() {
-      const remaining = Math.max(
-        0,
-        Math.ceil((resendAvailableAt - Date.now()) / 1000),
-      );
-
-      setSecondsRemaining(remaining);
-      return remaining;
-    }
-
-    updateCountdown();
-
-    const intervalId = window.setInterval(() => {
-      if (updateCountdown() === 0) {
-        window.clearInterval(intervalId);
-      }
-    }, 250);
-
-    return () => window.clearInterval(intervalId);
-  }, [resendAvailableAt]);
-
-  useEffect(() => {
-    if (emailVerified) {
-      setCheckingStatus(false);
-      setResendAvailableAt(0);
-      setSecondsRemaining(0);
-      setStatusError("");
-      return;
-    }
-
-    if (sending) {
-      return;
-    }
-
-    let active = true;
-    let refreshing = false;
-
-    function applyVerificationStatus(status) {
-      const remainingMilliseconds =
-        !status.emailVerified && status.resendAvailableAt
-          ? Math.max(
-              0,
-              Date.parse(status.resendAvailableAt) -
-                Date.parse(status.serverTime),
-            )
-          : 0;
-
-      setResendAvailableAt(
-        remainingMilliseconds > 0 ? Date.now() + remainingMilliseconds : 0,
-      );
-
-      setSecondsRemaining(Math.ceil(remainingMilliseconds / 1000));
-    }
-
-    async function synchronizeStatus() {
-      if (!active || refreshing || sendInProgress.current) {
-        return;
-      }
-
-      refreshing = true;
-      setCheckingStatus(true);
-      setStatusError("");
-
-      try {
-        const status = await getEmailVerificationStatus();
-
-        if (!active || sendInProgress.current) {
-          return;
-        }
-
-        applyVerificationStatus(status);
-
-        if (status.emailVerified !== emailVerified) {
-          await refreshUser();
-        }
-      } catch (error) {
-        if (active && error.status !== 401) {
-          setStatusError(
-            error instanceof RequestError
-              ? error.message
-              : "Unable to check verification status. Please try again.",
-          );
-        }
-      } finally {
-        refreshing = false;
-
-        if (active) {
-          setCheckingStatus(false);
-        }
-      }
-    }
-
-    function handleReturnToPage() {
-      if (document.visibilityState === "visible") {
-        void synchronizeStatus();
-      }
-    }
-
-    void synchronizeStatus();
-
-    window.addEventListener("focus", handleReturnToPage);
-    document.addEventListener("visibilitychange", handleReturnToPage);
-
-    return () => {
-      active = false;
-      window.removeEventListener("focus", handleReturnToPage);
-      document.removeEventListener("visibilitychange", handleReturnToPage);
-    };
-  }, [emailVerified, sending, refreshUser, user.id, user.email, statusReload]);
-
-  async function handleSendVerification() {
-    if (
-      emailVerified ||
-      sendInProgress.current ||
-      checkingStatus ||
-      Date.now() < resendAvailableAt
-    ) {
-      return;
-    }
-
-    sendInProgress.current = true;
-    setSending(true);
-    setErrorMessage("");
-    setStatusError("");
-    setVerificationRequested(false);
-
+  async function changeEmail(nextAction, code) {
+    if (busy.current) return false;
+    busy.current = true;
+    setAction(nextAction);
+    setError("");
+    setNotice("");
     try {
-      await sendEmailVerification();
-      setVerificationRequested(true);
-      publish({
-        variant: "success",
-        title: "Verification email sent",
-        message:
-          "Verification instructions have been sent to your registered email address.",
-      });
-    } catch (error) {
-      setErrorMessage(
-        error.message ||
-          "Unable to send the verification email. Please try again.",
+      if (nextAction === "confirm") {
+        await confirmPendingEmailChange(code);
+        setProfileRefreshNeeded(true);
+      } else if (nextAction === "resend") {
+        await resendPendingEmailCode();
+        setNotice("A new code was sent. Check your inbox.");
+      }
+
+      if (nextAction === "confirm" || nextAction === "refresh") {
+        try {
+          await refreshUser();
+          setProfileRefreshNeeded(false);
+          setNotice("Your new email is confirmed.");
+        } catch {
+          setNotice("Your email was confirmed. Refresh your account to see the active address.");
+        }
+      }
+      await refreshStatus();
+      return true;
+    } catch (failure) {
+      if (failure.retryAfterSeconds) {
+        setRetryDeadline(Date.now() + failure.retryAfterSeconds * 1000);
+      }
+      if (failure.outcomeUncertain && nextAction === "confirm") {
+        try {
+          await refreshUser();
+        } catch {
+          // Keep the request error visible when the profile cannot be reconciled.
+        }
+      }
+      // The fifth wrong code can remove the proposal even when the response is 400.
+      await refreshStatus();
+      setError(
+        failure.status === 429
+          ? "Please wait before requesting another code."
+          : failure.message,
       );
+      return false;
     } finally {
-      // Keep the button disabled while the effect reloads the cooldown.
-      setCheckingStatus(true);
-      sendInProgress.current = false;
-      setSending(false);
+      busy.current = false;
+      setAction("");
     }
   }
 
+  function openDialog(event) {
+    setError("");
+    setNotice("");
+    setTrigger(event.currentTarget);
+    void refreshStatus();
+  }
+
   return (
-    <section className="page-content">
+    <section className="page-content account-panel">
       <div className="workspace-section-header">
         <div>
-          <h3>Email Verification</h3>
-
-          <p className="workspace-section-description">
-            Verify your registered email for account recovery and security
-            notifications.
-          </p>
+          <h3 ref={headingRef} tabIndex={-1}>Email Verification</h3>
+          <p className="workspace-section-description">Manage your staff email and recovery address.</p>
         </div>
       </div>
-
       <div className="email-verification-card">
-        <div className="email-verification-icon">
-          {emailVerified ? <MailCheck size={28} /> : <MailWarning size={28} />}
-        </div>
-
+        <div className="email-verification-icon"><MailCheck size={28} aria-hidden="true" /></div>
         <div className="email-verification-details">
           <span>Registered Email</span>
-
           <strong>{user.email}</strong>
-
-          <div className="email-verification-status">
-            <span className={emailVerified ? "verified" : "unverified"}>
-              {emailVerified ? "Verified" : "Unverified"}
-            </span>
-          </div>
-
-          <p>
-            {emailVerified
-              ? "This email can be used for account recovery and security notifications."
-              : "Open the verification link sent to this email address to verify it."}
-          </p>
+          <div className="email-verification-status"><span className="verified">Verified</span></div>
+          <p>This email stays active for account recovery until you confirm a replacement.</p>
+          {status?.pending && <p>A replacement email is waiting for your confirmation.</p>}
         </div>
-
-        {!emailVerified && (
-          <button
-            className="secondary-repair-button"
-            type="button"
-            onClick={handleSendVerification}
-            disabled={sending || checkingStatus || secondsRemaining > 0}
-            aria-busy={sending || checkingStatus}
-          >
-            {sending || checkingStatus ? (
-              <LoadingSpinner size={18} />
-            ) : (
-              <Send size={18} />
-            )}
-
-            <span>
-              {sending
-                ? "Sending..."
-                : checkingStatus
-                  ? "Checking..."
-                  : secondsRemaining > 0
-                    ? `Resend in ${secondsRemaining}s`
-                    : verificationRequested
-                      ? "Resend Verification"
-                      : "Send Verification"}
-            </span>
+        {(status?.pending || trigger) && (
+          <button type="button" className="secondary-repair-button" aria-haspopup="dialog" onClick={openDialog}>
+            Confirm new email
           </button>
         )}
       </div>
-
-      {statusError && !emailVerified && (
-        <FeedbackNotice
-          title="Unable to check verification"
-          resetKey={[statusError, statusErrorVersion]}
-          actions={
-            <button
-              className="secondary-repair-button"
-              type="button"
-              disabled={checkingStatus || sending}
-              onClick={() => {
-                setCheckingStatus(true);
-                setStatusError("");
-                setStatusReload((current) => current + 1);
-              }}
-            >
-              Retry Status Check
-            </button>
-          }
-        >
-          {statusError}
-        </FeedbackNotice>
+      {statusError && !trigger && (
+        <p className="staff-email-error" role="alert">
+          {statusError}{" "}
+          <button className="staff-email-link" type="button" onClick={refreshStatus}>Retry status check</button>
+        </p>
+      )}
+      {notice && !trigger && <p role="status">{notice}</p>}
+      {profileRefreshNeeded && !trigger && (
+        <button className="staff-email-link" type="button" disabled={Boolean(action)}
+          onClick={() => void changeEmail("refresh")}>Refresh account</button>
+      )}
+      {trigger && (
+        <EmailChangeDialog
+          trigger={trigger}
+          fallbackFocus={headingRef}
+          status={status}
+          statusError={statusError}
+          refreshStatus={refreshStatus}
+          profileRefreshNeeded={profileRefreshNeeded}
+          action={action}
+          error={error}
+          notice={notice}
+          retryDeadline={retryDeadline}
+          onAction={changeEmail}
+          onClose={() => setTrigger(null)}
+        />
       )}
     </section>
   );
 }
-
-export default EmailVerificationSettings;

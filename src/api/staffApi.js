@@ -33,3 +33,9 @@ export function updateStaffAccess(userId, active) {
     body: JSON.stringify({ active }),
   });
 }
+
+export function cancelStaffPendingEmailChange(userId) {
+  return apiRequest(`/api/users/${userId}/pending-email-change`, {
+    method: "DELETE",
+  });
+}
