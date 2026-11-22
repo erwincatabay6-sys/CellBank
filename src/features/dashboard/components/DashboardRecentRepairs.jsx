@@ -12,9 +12,7 @@ function DashboardRecentRepairs({ repairs, onRepairClick }) {
 
   return (
     <div
-      className={`dashboard-recent-table-wrapper ${
-        repairs.length > 5 ? "dashboard-scroll-list" : ""
-      }`}
+      className="dashboard-recent-table-wrapper"
       role="region"
       aria-label="Recent active repairs"
       tabIndex={0}

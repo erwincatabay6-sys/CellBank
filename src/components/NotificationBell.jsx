@@ -1,3 +1,4 @@
+import  { LoadingStatus } from "./PendingAction.jsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -262,13 +263,9 @@ export default function NotificationBell() {
           )}
 
           {(loading || busy) && (
-            <div className="notification-status" role="status">
-              {busy
-                ? "Saving read status..."
-                : data
-                  ? "Refreshing..."
-                  : "Loading notifications..."}
-            </div>
+            <LoadingStatus className="notification-status">
+              {busy ? "Saving read status" : data ? "Refreshing notifications" : "Loading notifications"}
+            </LoadingStatus>
           )}
 
           <div className="notification-list" aria-busy={loading || busy}>

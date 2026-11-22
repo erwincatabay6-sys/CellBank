@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 const deviceTypes = [
   "Mobile Phone",
@@ -305,15 +305,7 @@ function DeviceRegistrationModal({
               type="submit"
               disabled={saving || outcomeUncertain}
             >
-              {saving && <LoadingSpinner size={16} />}
-
-              <span>
-                {saving
-                  ? "Saving..."
-                  : isEditing
-                    ? "Save Changes"
-                    : "Register Device"}
-              </span>
+              <PendingAction pending={saving} label={isEditing ? "Save Changes" : "Register Device"} pendingLabel="Saving device" />
             </button>
           </div>
         </form>

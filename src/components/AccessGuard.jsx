@@ -1,3 +1,4 @@
+import  { LoadingStatus } from "./PendingAction.jsx";
 import { Navigate } from "react-router-dom";
 import { hasAccess } from "../config/accessControl.js";
 import { useAuth } from "../features/auth/context/AuthContext.jsx";
@@ -10,7 +11,7 @@ export default function AccessGuard({ permission, children }) {
   const { user, loading, authError, refreshSession } = useAuth();
 
   if (loading) {
-    return <p role="status">Checking your session...</p>;
+    return <LoadingStatus>Checking your session</LoadingStatus>;
   }
 
   if (authError) {

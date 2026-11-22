@@ -9,7 +9,7 @@ import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 function PasswordSettings() {
   const { publish } = useFeedback();
@@ -303,9 +303,7 @@ function PasswordSettings() {
             disabled={saving}
             aria-busy={saving}
           >
-            {saving && <LoadingSpinner size={18} />}
-
-            <span>{saving ? "Changing Password..." : "Change Password"}</span>
+            <PendingAction pending={saving} label="Change Password" pendingLabel="Changing password" />
           </button>
         </div>
       </form>

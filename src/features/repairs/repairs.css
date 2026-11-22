@@ -1894,7 +1894,7 @@
 
 .tracking-code-row { flex-wrap: wrap; }
 .tracking-email-control { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
-.tracking-email-control button { white-space: normal; }
+.tracking-email-control button { align-self: flex-start; max-width: 100%; white-space: normal; }
 
 .status-history-metadata {
   display: flex;

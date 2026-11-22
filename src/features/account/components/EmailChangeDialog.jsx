@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Mail, X } from "lucide-react";
@@ -72,7 +73,7 @@ export default function EmailChangeDialog({
       <Mail className="staff-email-icon" size={32} aria-hidden="true" />
       <h3 id="staff-email-dialog-title">Confirm your new email</h3>
       {pending && (
-        <form onSubmit={submit} className="staff-email-buttons">
+        <form onSubmit={submit} className="staff-email-buttons interaction-enter">
           <p>Enter the six-digit code sent to<br /><strong>{status.maskedProposedEmail}</strong></p>
           <div className="staff-otp">
             <input ref={inputRef} type="text" name="email-confirmation-code" inputMode="numeric"
@@ -110,11 +111,12 @@ export default function EmailChangeDialog({
             {expiration ? `Code expires in ${Math.floor(expiration / 60)}:${String(expiration % 60).padStart(2, "0")}.` : "This code has expired. Request a new code."}
           </p>
           <button className="create-repair-button" type="submit" disabled={!canConfirm || Boolean(action)}>
-            {action === "confirm" ? "Confirming…" : "Confirm email"}
+            <PendingAction pending={action === "confirm"} label="Confirm email" pendingLabel="Confirming email" />
           </button>
           <button className="staff-email-link" type="button" disabled={Boolean(action) || Boolean(statusError) || cooldown > 0}
             onClick={resend}>
-            {action === "resend" ? "Sending…" : cooldown ? `Resend in ${cooldown}s` : "Resend code"}
+            <PendingAction pending={action === "resend"} label={cooldown ? `Resend in ${cooldown}s` : "Resend code"}
+              pendingLabel="Sending code" reserveLabel="Resend in 60s" />
           </button>
         </form>
       )}

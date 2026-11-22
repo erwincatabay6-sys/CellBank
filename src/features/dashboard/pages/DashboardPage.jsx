@@ -229,8 +229,8 @@ function DashboardContent({ user }) {
                 </div>
                 <p className="dashboard-table-description">
                   {isTechnicianOnly
-                    ? "Your five most recently updated active repair jobs."
-                    : "The five most recently updated active repair jobs."}
+                    ? "Up to 10 of your active repairs, most recently updated first."
+                    : "Up to 10 active repairs, most recently updated first."}
                 </p>
 
                 <DashboardRecentRepairs

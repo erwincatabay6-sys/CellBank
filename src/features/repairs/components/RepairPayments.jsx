@@ -7,7 +7,7 @@ import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 import { Plus } from "lucide-react";
 
 import { hasAccess } from "../../../config/accessControl.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 
@@ -316,7 +316,7 @@ function RepairPayments({
       </div>
 
       {formOpen && canRecordPayments && (
-        <form className="payment-form" onSubmit={handleSubmit}>
+        <form className="payment-form interaction-enter" onSubmit={handleSubmit}>
           <div className="repair-form-group">
             <label htmlFor="payment-amount">Amount</label>
 
@@ -385,8 +385,7 @@ function RepairPayments({
               type="submit"
               disabled={controlsDisabled || !canAcceptPayment}
             >
-              {saving && <LoadingSpinner size={16} />}
-              <span>{saving ? "Recording..." : "Record Payment"}</span>
+              <PendingAction pending={saving} label="Record Payment" pendingLabel="Recording payment" />
             </button>
           </div>
         </form>

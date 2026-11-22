@@ -1,3 +1,4 @@
+import PendingAction from "./PendingAction.jsx";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -74,8 +75,7 @@ function Header() {
           onClick={handleLogout}
           disabled={loggingOut}
         >
-          <LogOut size={18} />
-          <span>{loggingOut ? "Signing out..." : "Logout"}</span>
+          <PendingAction pending={loggingOut} label="Logout" pendingLabel="Signing out" icon={<LogOut size={18} aria-hidden="true" />} />
         </button>
       </div>
     </header>

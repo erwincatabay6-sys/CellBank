@@ -1,4 +1,6 @@
-function StaffTable({ users, saving = false, onUserClick, onToggleStatus }) {
+import PendingAction from "../../../components/PendingAction.jsx";
+
+function StaffTable({ users, saving = false, updatingAccessId, onUserClick, onToggleStatus }) {
   return (
     <div className="staff-table-wrapper" role="region" aria-label="Staff accounts" tabIndex={0}>
       <table className="staff-table">
@@ -70,7 +72,11 @@ function StaffTable({ users, saving = false, onUserClick, onToggleStatus }) {
                   }
                   onClick={() => onToggleStatus(user.id)}
                 >
-                  {user.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                  <PendingAction
+                    pending={updatingAccessId === user.id}
+                    label={user.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                    pendingLabel={user.status === "ACTIVE" ? "Deactivating" : "Activating"}
+                  />
                 </button>
               </td>
             </tr>

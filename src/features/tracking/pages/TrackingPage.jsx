@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useEffect, useRef, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 
@@ -179,14 +180,13 @@ function TrackingPage() {
               type="submit"
               disabled={submitting || remaining > 0}
             >
-              <Search size={20} />
-              <span>{submitting ? "Checking..." : "Check Status"}</span>
+              <PendingAction pending={submitting} label="Check Status" pendingLabel="Checking status" icon={<Search size={20} aria-hidden="true" />} />
             </button>
           </form>
         </>
       ) : (
         <>
-          <div className="tracking-result-header">
+          <div className="tracking-result-header interaction-enter">
             <div style={{ minWidth: 0 }}>
               <span className="tracking-result-label">Tracking Code</span>
 

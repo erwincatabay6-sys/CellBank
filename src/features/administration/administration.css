@@ -243,3 +243,14 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.staff-email-change-actions > .secondary-repair-button {
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 44px;
+  text-align: start;
+}
+
+.staff-email-cancellation .modal-actions {
+  justify-content: flex-start;
+}

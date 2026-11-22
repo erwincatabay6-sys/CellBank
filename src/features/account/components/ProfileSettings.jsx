@@ -1,14 +1,13 @@
 import { useState } from "react";
 
 import FieldFeedback from "../../../components/FieldFeedback.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 
 import { Camera, UserCircle } from "lucide-react";
-
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 function ProfileSettings({ user }) {
   // -----------------------------
@@ -171,13 +170,7 @@ function ProfileSettings({ user }) {
               aria-busy={uploadingImage}
               aria-disabled={uploadingImage}
             >
-              {uploadingImage ? (
-                <LoadingSpinner size={18} />
-              ) : (
-                <Camera size={18} />
-              )}
-
-              <span>{uploadingImage ? "Uploading..." : "Choose Image"}</span>
+              <PendingAction pending={uploadingImage} label="Choose Image" pendingLabel="Uploading photo" icon={<Camera size={18} aria-hidden="true" />} />
             </label>
 
             <input
@@ -195,7 +188,10 @@ function ProfileSettings({ user }) {
           </div>
         </div>
 
-        {uploadingImage && <p role="status">Uploading picture...</p>}
+
+        <span className="loading-announcement" role="status">
+          {uploadingImage ? "Uploading photo" : ""}
+        </span>
 
         <FieldFeedback
           id="profile-picture"
@@ -264,9 +260,7 @@ function ProfileSettings({ user }) {
             disabled={saving}
             aria-busy={saving}
           >
-            {saving && <LoadingSpinner size={18} />}
-
-            <span>{saving ? "Saving..." : "Save Full Name"}</span>
+            <PendingAction pending={saving} label="Save Full Name" pendingLabel="Saving name" />
           </button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -1326,7 +1327,7 @@ function RepairWorkspace({ repairId, user }) {
               )}
 
               <form
-                className="technician-assignment-form"
+                className="technician-assignment-form interaction-enter"
                 onSubmit={handleTechnicianAssignmentSave}
                 aria-busy={assignmentSaving}
               >
@@ -1384,10 +1385,7 @@ function RepairWorkspace({ repairId, user }) {
                     type="submit"
                     disabled={controlsDisabled || assignmentUnchanged}
                   >
-                    {assignmentSaving && <LoadingSpinner size={16} />}
-                    <span>
-                      {assignmentSaving ? "Saving..." : "Save Assignment"}
-                    </span>
+                    <PendingAction pending={assignmentSaving} label="Save Assignment" pendingLabel="Saving assignment" />
                   </button>
                 </div>
               </form>
@@ -1413,7 +1411,7 @@ function RepairWorkspace({ repairId, user }) {
             ))}
           </nav>
 
-          <div hidden={activeTab !== "overview"}>
+          <div className="workspace-tab-content" hidden={activeTab !== "overview"}>
             <RepairOverview
               feedbackVersion={[categoryErrorVersion, categoryMessageVersion]}
               repair={repair}
@@ -1440,7 +1438,7 @@ function RepairWorkspace({ repairId, user }) {
             </FeedbackNotice>
           )}
           {canFindings && (
-            <div hidden={activeTab !== "findings"}>
+            <div className="workspace-tab-content" hidden={activeTab !== "findings"}>
               <RepairFindings
                 feedbackVersion={[findingErrorVersion, findingMessageVersion]}
                 repairId={repairId}
@@ -1459,7 +1457,7 @@ function RepairWorkspace({ repairId, user }) {
             </div>
           )}
 
-          <div hidden={activeTab !== "status-history"}>
+          <div className="workspace-tab-content" hidden={activeTab !== "status-history"}>
             <RepairStatusHistory
               feedbackVersion={[statusErrorVersion, statusMessageVersion]}
               repairId={repairId}
@@ -1478,7 +1476,7 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
-          <div hidden={activeTab !== "parts-costs"}>
+          <div className="workspace-tab-content" hidden={activeTab !== "parts-costs"}>
             <RepairPartsCosts
               feedbackVersion={[costsErrorVersion, costsMessageVersion]}
               repairId={repairId}
@@ -1500,7 +1498,7 @@ function RepairWorkspace({ repairId, user }) {
             />
           </div>
 
-          <div hidden={activeTab !== "payments"}>
+          <div className="workspace-tab-content" hidden={activeTab !== "payments"}>
             <RepairPayments
               feedbackVersion={[paymentErrorVersion, paymentMessageVersion]}
               repairId={repairId}
@@ -1518,7 +1516,7 @@ function RepairWorkspace({ repairId, user }) {
           </div>
 
           {canFindings && (
-            <div hidden={activeTab !== "ai"}>
+            <div className="workspace-tab-content" hidden={activeTab !== "ai"}>
               <RepairAiTroubleshooting
                 onAccessLost={loseTechnicalAccess}
                 repair={repair}

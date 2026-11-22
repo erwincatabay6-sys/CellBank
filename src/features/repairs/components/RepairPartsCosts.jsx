@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
@@ -6,7 +7,6 @@ import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { hasAccess } from "../../../config/accessControl.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
 
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 
@@ -512,8 +512,7 @@ function RepairPartsCosts({
                 type="submit"
                 disabled={controlsDisabled}
               >
-                {saving && <LoadingSpinner size={16} />}
-                <span>{saving ? "Saving..." : "Save Estimate"}</span>
+                <PendingAction pending={saving} label="Save Estimate" pendingLabel="Saving estimate" />
               </button>
             </div>
           </form>
@@ -572,8 +571,7 @@ function RepairPartsCosts({
                 type="submit"
                 disabled={controlsDisabled}
               >
-                {saving && <LoadingSpinner size={16} />}
-                <span>{saving ? "Saving..." : "Confirm Agreement"}</span>
+                <PendingAction pending={saving} label="Confirm Agreement" pendingLabel="Saving agreement" />
               </button>
             </div>
           </form>
@@ -602,7 +600,7 @@ function RepairPartsCosts({
 
       {partFormOpen && canEditPartsCosts && (
         <form
-          className="part-form"
+          className="part-form interaction-enter"
           onSubmit={handlePartSubmit}
           aria-busy={saving}
         >
@@ -704,8 +702,7 @@ function RepairPartsCosts({
               type="submit"
               disabled={controlsDisabled || !partName.trim()}
             >
-              {saving && <LoadingSpinner size={16} />}
-              <span>{saving ? "Saving..." : "Add Part"}</span>
+              <PendingAction pending={saving} label="Add Part" pendingLabel="Adding part" />
             </button>
           </div>
         </form>

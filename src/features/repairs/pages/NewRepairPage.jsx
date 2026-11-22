@@ -12,7 +12,7 @@ import {
   getDeviceRepairHistory,
 } from "../../../api/repairApi.js";
 import { hasRole } from "../../../config/accessControl.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction, { LoadingStatus } from "../../../components/PendingAction.jsx";
 
 import {
   problemCategoryOptions,
@@ -224,7 +224,7 @@ function NewRepairPage() {
     deviceHistoryReload,
   ]);
 
-  let previousRepairsText = "Loading...";
+  let previousRepairsText = <LoadingStatus>Loading previous repairs</LoadingStatus>;
 
   if (deviceHistory.key === deviceHistoryKey) {
     if (deviceHistory.error) {
@@ -475,8 +475,8 @@ function NewRepairPage() {
       </section>
 
       {loading && (
-        <section className="page-content" role="status">
-          <LoadingSpinner size={18} /> Loading customers and devices...
+        <section className="page-content">
+          <LoadingStatus>Loading customers and devices</LoadingStatus>
         </section>
       )}
 
@@ -770,7 +770,7 @@ function NewRepairPage() {
                 {fieldError("assignedTechnicianId")}
 
                 {techniciansLoading && (
-                  <p role="status">Loading technicians...</p>
+                  <LoadingStatus>Loading technicians</LoadingStatus>
                 )}
 
                 {technicianError && (
@@ -853,14 +853,7 @@ function NewRepairPage() {
             type="submit"
             disabled={formDisabled}
           >
-            {saving && <LoadingSpinner size={16} />}
-            <span>
-              {saving
-                ? "Creating Repair..."
-                : savedRepair
-                  ? "Repair Created"
-                  : "Create Repair"}
-            </span>
+            <PendingAction pending={saving} label={savedRepair ? "Repair Created" : "Create Repair"} pendingLabel="Creating repair" />
           </button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useEffect, useRef, useState } from "react";
 import { Mail } from "lucide-react";
 import { getEmailVerificationStatus, sendEmailVerification } from "../../../api/authApi.js";
@@ -66,17 +67,20 @@ export default function VerifyStaffEmailPage() {
       <div className="staff-email-buttons">
         <button className="create-repair-button" type="button" onClick={() => void run("send")}
           disabled={!status || Boolean(action) || cooldown > 0}>
-          {action === "send" ? "Sending…" : cooldown ? `Resend in ${cooldown}s` : "Send verification link"}
+          <PendingAction pending={action === "send" || (!status && !statusError)} label={cooldown ? `Resend in ${cooldown}s` : "Send verification link"}
+            pendingLabel={action === "send" ? "Sending verification link" : "Checking resend availability"} reserveLabel="Send verification link" />
         </button>
         <button className="secondary-repair-button" type="button" onClick={() => void run("check")} disabled={Boolean(action)}>
-          {action === "check" ? "Checking…" : "I’ve verified my email"}
+          <PendingAction pending={action === "check"} label="I’ve verified my email" pendingLabel="Checking verification" />
         </button>
         {(error || statusError) && <p className="staff-email-error" role="alert">{error || statusError}</p>}
         {statusError && <button className="staff-email-link" type="button" onClick={refreshStatus}>Retry status check</button>}
         {notice && <p role="status">{notice}</p>}
       </div>
       <p>If the email address is wrong, contact your administrator.</p>
-      <button className="staff-email-link" type="button" onClick={() => void run("signout")} disabled={Boolean(action)}>Sign out</button>
+      <button className="staff-email-link" type="button" onClick={() => void run("signout")} disabled={Boolean(action)}>
+        <PendingAction pending={action === "signout"} label="Sign out" pendingLabel="Signing out" />
+      </button>
     </section>
   );
 }
