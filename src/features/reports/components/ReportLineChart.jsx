@@ -1,12 +1,11 @@
-function formatChartValue(value, valueType) {
-  if (valueType === "currency") {
-    return `₱${value.toLocaleString()}`;
-  }
+import ReportChartData from "./ReportChartData.jsx";
+import useReportChartWidth from "../utils/useReportChartWidth.js";
 
+function formatCount(value) {
   return value.toLocaleString();
 }
 
-function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
+function ReportLineChart({ data, ariaLabel }) {
   if (data.length === 0) {
     return (
       <div className="report-chart-empty">
@@ -15,15 +14,13 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
     );
   }
 
-  const width = 640;
-  const height = 270;
+  return <LinePlot data={data} ariaLabel={ariaLabel} />;
+}
 
-  const padding = {
-    top: 24,
-    right: 24,
-    bottom: 52,
-    left: 64,
-  };
+function LinePlot({ data, ariaLabel }) {
+  const { ref, width } = useReportChartWidth(Math.max(270, 90 + (data.length - 1) * 72));
+  const height = 205;
+  const padding = { top: 25, right: 35, bottom: 31, left: 43 };
 
   const plotWidth = width - padding.left - padding.right;
 
@@ -31,16 +28,7 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
 
   const maxValue = Math.max(...data.map((item) => item.value), 1);
 
-  let yMax;
-
-  if (valueType === "currency") {
-    const paddedMax = maxValue * 1.15;
-    const step = Math.max(Math.ceil(paddedMax / 4 / 500) * 500, 500);
-
-    yMax = step * 4;
-  } else {
-    yMax = Math.max(Math.ceil(maxValue / 4) * 4, 4);
-  }
+  const yMax = Math.max(Math.ceil(maxValue / 4) * 4, 4);
 
   const points = data.map((item, index) => {
     const x =
@@ -67,83 +55,94 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
   }));
 
   return (
-    <div
-      className="report-line-chart-wrapper"
-      role="img"
-      aria-label={ariaLabel}
-    >
-      <svg
-        className="report-line-chart"
-        viewBox={`0 0 ${width} ${height}`}
-        aria-hidden="true"
+    <>
+      <div
+        ref={ref}
+        className="report-line-chart-wrapper"
+        role="region"
+        aria-label={ariaLabel}
+        tabIndex={0}
       >
-        {yTicks.map((tick) => {
-          const y = padding.top + plotHeight - tick.ratio * plotHeight;
+        <svg
+          className="report-line-chart"
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ width }}
+          aria-hidden="true"
+        >
+          {yTicks.map((tick) => {
+            const y = padding.top + plotHeight - tick.ratio * plotHeight;
 
-          return (
-            <g key={tick.ratio}>
-              <line
-                className="report-chart-grid-line"
-                x1={padding.left}
-                x2={width - padding.right}
-                y1={y}
-                y2={y}
+            return (
+              <g key={tick.ratio}>
+                <line
+                  className="report-chart-grid-line"
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+
+                <text
+                  className="report-chart-axis-label"
+                  x={padding.left - 12}
+                  y={y + 4}
+                  textAnchor="end"
+                >
+                  {formatCount(tick.value)}
+                </text>
+              </g>
+            );
+          })}
+
+          <line
+            className="report-chart-axis-line"
+            x1={padding.left}
+            x2={width - padding.right}
+            y1={padding.top + plotHeight}
+            y2={padding.top + plotHeight}
+          />
+
+          {points.length > 1 && (
+            <path className="report-chart-line" d={pathData} fill="none" />
+          )}
+
+          {points.map((point) => (
+            <g key={point.key ?? point.label}>
+              <circle
+                className="report-chart-point"
+                cx={point.x}
+                cy={point.y}
+                r="5"
               />
 
               <text
-                className="report-chart-axis-label"
-                x={padding.left - 12}
-                y={y + 4}
-                textAnchor="end"
+                className="report-chart-point-value"
+                x={point.x}
+                y={point.y - 12}
+                textAnchor="middle"
               >
-                {formatChartValue(tick.value, valueType)}
+                {formatCount(point.value)}
+              </text>
+
+              <text
+                className="report-chart-x-label"
+                x={point.x}
+                y={height - 18}
+                textAnchor="middle"
+              >
+                {point.label}
               </text>
             </g>
-          );
-        })}
-
-        <line
-          className="report-chart-axis-line"
-          x1={padding.left}
-          x2={width - padding.right}
-          y1={padding.top + plotHeight}
-          y2={padding.top + plotHeight}
-        />
-
-        {points.length > 1 && (
-          <path className="report-chart-line" d={pathData} fill="none" />
-        )}
-
-        {points.map((point) => (
-          <g key={point.key ?? point.label}>
-            <circle
-              className="report-chart-point"
-              cx={point.x}
-              cy={point.y}
-              r="5"
-            />
-
-            <text
-              className="report-chart-point-value"
-              x={point.x}
-              y={point.y - 12}
-              textAnchor="middle"
-            >
-              {formatChartValue(point.value, valueType)}
-            </text>
-
-            <text
-              className="report-chart-x-label"
-              x={point.x}
-              y={height - 18}
-              textAnchor="middle"
-            >
-              {point.label}
-            </text>
-          </g>
-        ))}
-      </svg>
-    </div>
+          ))}
+        </svg>
+      </div>
+      <ReportChartData
+        data={data}
+        label="Monthly repair volume"
+        valueLabel="Repairs"
+        formatValue={formatCount}
+      />
+    </>
   );
 }
 

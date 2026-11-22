@@ -10,16 +10,16 @@ function ReportBarChart({ data, ariaLabel }) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
 
   return (
-    <div className="report-bar-chart" role="img" aria-label={ariaLabel}>
+    <div className="report-bar-chart" role="group" aria-label={ariaLabel}>
       {data.map((item) => {
         const width =
-          item.value === 0 ? 0 : Math.max((item.value / maxValue) * 100, 5);
+          (item.value / maxValue) * 100;
 
         return (
-          <div className="report-bar-row" key={item.key ?? item.label}>
+          <div className="report-bar-row" data-status={item.key} key={item.key ?? item.label}>
             <span className="report-bar-label">{item.label}</span>
 
-            <div className="report-bar-track">
+            <div className="report-bar-track" aria-hidden="true">
               <div
                 className="report-bar-fill"
                 style={{

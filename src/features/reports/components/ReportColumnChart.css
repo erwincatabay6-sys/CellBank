@@ -5,7 +5,7 @@
 
 .report-column-chart {
   display: block;
-  width: 100%;
+  max-width: none;
   height: auto;
 }
 
@@ -19,7 +19,7 @@
 
 .report-column-value {
   fill: var(--text-primary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
