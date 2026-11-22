@@ -1,3 +1,4 @@
+import  { LoadingStatus } from "../../../components/PendingAction.jsx";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -39,7 +40,7 @@ function CustomerDetailsPage() {
   const modalOpen = customerEditOpen || deviceModalOpen;
 
   const repairCount = history.loading
-    ? "Loading..."
+    ? <LoadingStatus>Loading repairs</LoadingStatus>
     : history.error
       ? "Unavailable"
       : history.loaded

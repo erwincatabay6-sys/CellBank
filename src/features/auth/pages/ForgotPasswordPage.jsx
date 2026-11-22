@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 
 import "../auth.css";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 const RECOVERY_COOLDOWN_KEY = "cellbank.recoveryResendAvailableAt";
 
@@ -201,15 +201,7 @@ function ForgotPasswordPage() {
           disabled={submitting || secondsRemaining > 0}
           aria-busy={submitting}
         >
-          {submitting ? <LoadingSpinner size={20} /> : <Mail size={20} />}
-
-          <span>
-            {submitting
-              ? "Sending..."
-              : secondsRemaining > 0
-                ? `Resend in ${secondsRemaining}s`
-                : "Send Recovery Instructions"}
-          </span>
+          <PendingAction pending={submitting} label={secondsRemaining > 0 ? `Resend in ${secondsRemaining}s` : "Send Recovery Instructions"} pendingLabel="Sending instructions" icon={<Mail size={20} aria-hidden="true" />} reserveLabel="Send Recovery Instructions" />
         </button>
 
         {/* =========================

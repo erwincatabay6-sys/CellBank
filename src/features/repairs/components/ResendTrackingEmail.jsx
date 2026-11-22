@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -64,8 +65,8 @@ export default function ResendTrackingEmail({ repairId, customer }) {
       <button type="button" className="secondary-repair-button"
         onClick={resend} disabled={missingEmail || state.sending || remaining > 0}
         aria-busy={state.sending} aria-describedby={missingEmail ? `tracking-email-help-${repairId}` : undefined}>
-        <Mail size={16} aria-hidden="true" />
-        {state.sending ? "Sending…" : remaining ? `Resend in ${remaining}s` : "Resend tracking email"}
+        <PendingAction pending={state.sending} label={remaining ? `Resend in ${remaining}s` : "Resend tracking email"}
+          pendingLabel="Sending tracking email" icon={<Mail size={16} aria-hidden="true" />} reserveLabel="Resend tracking email" />
       </button>
       {missingEmail && <small id={`tracking-email-help-${repairId}`}>
         <Link to={`/customers/${customer.id}`}>Add a customer email</Link> to send tracking updates.

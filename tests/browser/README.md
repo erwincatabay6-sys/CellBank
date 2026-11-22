@@ -66,7 +66,7 @@ cookies, and status/payment operations against the revised local backend before 
 checks the repair list's viewport bounds and internal scrolling, resize/mobile
 layouts, keyboard reachability, and combined-role identity/counts in both themes.
 It uses mocked API responses and saves screenshots under `/tmp/cellbank-dashboard-space`.
-Recent Active Repairs retains the dashboard API's existing five-record limit.
+The layout suite uses a five-record fixture. The interaction polish suite also tests zero and ten recent repairs.
 
 ### Tracking-code/email revision
 
@@ -106,3 +106,8 @@ an active verified Front Desk user. Use independent sessions and fetch
 `/api/auth/csrf` after each login and before state-changing requests. Read the
 verification link and OTP from the local mail catcher. The mocked browser test
 does not verify delivery, persistence, or backend permission enforcement.
+
+
+### Frontend interaction polish
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_interaction_polish.py` with Vite running. This fixture checks the Administration loading indicator, scoped staff editor button size, stable pending-save width, no entrance replay while typing, keyboard activation, reduced motion, and both dashboard descriptions with zero and ten API records. It uses mocked APIs on a light desktop viewport and a dark 360px viewport. The staff email suite also checks Account Settings, first verification and the OTP dialog.

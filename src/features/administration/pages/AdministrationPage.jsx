@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
+import { LoadingStatus } from "../../../components/PendingAction.jsx";
 
 import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
@@ -66,6 +67,7 @@ function AdministrationPage() {
     useFeedbackState("");
 
   const [saving, setSaving] = useState(false);
+  const [updatingAccessId, setUpdatingAccessId] = useState(null);
   const mutationInProgress = useRef(false);
 
   const loadStaff = useCallback(async () => {
@@ -280,6 +282,7 @@ function AdministrationPage() {
 
     mutationInProgress.current = true;
     setSaving(true);
+    setUpdatingAccessId(userId);
     setFormError("");
 
     try {
@@ -307,6 +310,7 @@ function AdministrationPage() {
     } finally {
       mutationInProgress.current = false;
       setSaving(false);
+      setUpdatingAccessId(null);
     }
   }
 
@@ -317,7 +321,7 @@ function AdministrationPage() {
         <p>Manage staff accounts, roles, and system access.</p>
       </section>
 
-      <section className="page-content" aria-busy={loading || saving}>
+      <section className="page-content">
         <div className="workspace-section-header">
           <div>
             <h3>Staff Accounts</h3>
@@ -381,7 +385,7 @@ function AdministrationPage() {
           </FeedbackNotice>
         )}
 
-        {saving && <p role="status">Saving changes...</p>}
+        {saving && !staffModalOpen && <LoadingStatus>Updating staff access</LoadingStatus>}
 
         {loading ? (
           <StaffTableSkeleton />
@@ -410,6 +414,7 @@ function AdministrationPage() {
               <StaffTable
                 users={filteredUsers}
                 saving={saving}
+                updatingAccessId={updatingAccessId}
                 onUserClick={handleUserClick}
                 onToggleStatus={handleToggleStatus}
               />

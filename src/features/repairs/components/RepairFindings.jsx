@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import FieldFeedback from "../../../components/FieldFeedback.jsx";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -260,7 +260,7 @@ function RepairFindings({
 
       {formOpen && canRecord && (
         <form
-          className="finding-form"
+          className="finding-form interaction-enter"
           onSubmit={handleSubmit}
           aria-busy={saving}
         >
@@ -353,8 +353,7 @@ function RepairFindings({
               type="submit"
               disabled={controlsDisabled || !findingText.trim()}
             >
-              {saving && <LoadingSpinner size={16} />}
-              <span>{saving ? "Saving..." : "Save Finding"}</span>
+              <PendingAction pending={saving} label="Save Finding" pendingLabel="Saving finding" />
             </button>
           </div>
         </form>

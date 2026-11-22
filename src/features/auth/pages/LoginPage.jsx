@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import { RequestError } from "../../../api/http.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
@@ -200,9 +200,7 @@ function LoginPage() {
           disabled={submitting || loading}
           aria-busy={submitting}
         >
-          {submitting ? <LoadingSpinner size={20} /> : <LogIn size={20} />}
-
-          <span>{submitting ? "Signing In..." : "Login"}</span>
+          <PendingAction pending={submitting} label="Login" pendingLabel="Signing in" icon={<LogIn size={20} aria-hidden="true" />} />
         </button>
       </form>
     </section>

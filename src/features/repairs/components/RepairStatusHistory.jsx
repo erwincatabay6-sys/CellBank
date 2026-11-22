@@ -11,7 +11,7 @@ import {
   canChangeRepairStatus,
   canTransitionRepairStatus,
 } from "../../../config/accessControl.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 const repairStatuses = [
   { value: "RECEIVED", label: "Received" },
@@ -237,7 +237,7 @@ function RepairStatusHistory({
 
       {formOpen && canChangeStatus && (
         <form
-          className="status-change-form"
+          className="status-change-form interaction-enter"
           onSubmit={handleSubmit}
           aria-busy={saving}
         >
@@ -323,8 +323,7 @@ function RepairStatusHistory({
               type="submit"
               disabled={controlsDisabled || !selectedStatusAllowed}
             >
-              {saving && <LoadingSpinner size={16} />}
-              <span>{saving ? "Saving..." : "Confirm Status Change"}</span>
+              <PendingAction pending={saving} label="Confirm Status Change" pendingLabel="Saving status" />
             </button>
           </div>
         </form>

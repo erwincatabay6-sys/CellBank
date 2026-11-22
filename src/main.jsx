@@ -10,6 +10,7 @@ import { ThemeProvider } from "./features/theme/ThemeContext.jsx";
 
 import "./styles/global.css";
 import "./styles/layout.css";
+import "./styles/interactions.css";
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>

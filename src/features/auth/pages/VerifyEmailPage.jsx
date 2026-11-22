@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { MailCheck } from "lucide-react";
 import { useFeedback } from "../../feedback/FeedbackProvider.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 import { verifyEmail } from "../../../api/authApi.js";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
@@ -109,13 +109,7 @@ function VerifyEmailPage() {
             disabled={submitting}
             aria-busy={submitting}
           >
-            {submitting ? (
-              <LoadingSpinner size={20} />
-            ) : (
-              <MailCheck size={20} />
-            )}
-
-            <span>{submitting ? "Verifying..." : "Verify Email"}</span>
+            <PendingAction pending={submitting} label="Verify Email" pendingLabel="Verifying email" icon={<MailCheck size={20} aria-hidden="true" />} />
           </button>
         )}
 

@@ -10,7 +10,7 @@ import { Eye, EyeOff, KeyRound } from "lucide-react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 import "../auth.css";
 
@@ -248,9 +248,7 @@ function ResetPasswordPage() {
             disabled={submitting}
             aria-busy={submitting}
           >
-            {submitting ? <LoadingSpinner size={20} /> : <KeyRound size={20} />}
-
-            <span>{submitting ? "Resetting..." : "Reset Password"}</span>
+            <PendingAction pending={submitting} label="Reset Password" pendingLabel="Resetting password" icon={<KeyRound size={20} aria-hidden="true" />} />
           </button>
         )}
 

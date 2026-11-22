@@ -1,13 +1,13 @@
+import { LoadingStatus } from "../../../components/PendingAction.jsx";
 import Skeleton from "../../../components/Skeleton.jsx";
 
 export default function StaffTableSkeleton() {
   return (
-    <div role="status" aria-label="Loading staff accounts">
+    <div>
+      <div className="administration-result-count">
+        <LoadingStatus>Loading staff accounts</LoadingStatus>
+      </div>
       <div aria-hidden="true">
-        <div className="administration-result-count">
-          <Skeleton width={210} height={16} />
-        </div>
-
         <div className="staff-table-wrapper">
           <table className="staff-table">
             <thead>

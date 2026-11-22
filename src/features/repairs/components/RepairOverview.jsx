@@ -8,7 +8,7 @@ import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
 import { hasAccess } from "../../../config/accessControl.js";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 import IntakeReceiptDialog from "./IntakeReceiptDialog.jsx";
 import RepairTrackingCode from "./RepairTrackingCode.jsx";
 
@@ -361,8 +361,7 @@ function RepairOverview({
                   selectedCategory === repair.problemCategory
                 }
               >
-                {categorySaving && <LoadingSpinner size={16} />}
-                <span>{categorySaving ? "Saving..." : "Save Category"}</span>
+                <PendingAction pending={categorySaving} label="Save Category" pendingLabel="Saving category" />
               </button>
             </div>
           </form>

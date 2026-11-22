@@ -1,3 +1,4 @@
+import PendingAction from "../../../components/PendingAction.jsx";
 import { useState } from "react";
 
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
@@ -32,6 +33,7 @@ function StaffAccountModal({
 
   const [password, setPassword] = useState("");
 
+  const [cancellingEmail, setCancellingEmail] = useState(false);
   const [confirmingCancellation, setConfirmingCancellation] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -252,23 +254,30 @@ function StaffAccountModal({
                         ACTIONS
                     ========================== */}
           {onCancelPendingEmailChange && (
-            <div className="repair-form-group">
+            <div className="repair-form-group staff-email-change-actions">
               <small>
                 Changing a verified address proposes a replacement. The active email stays in use until staff confirm it.
               </small>
               {confirmingCancellation ? (
-                <>
+                <div className="staff-email-cancellation interaction-enter">
                   <p>Cancel the pending replacement, if any? The active email will stay in use.</p>
                   <div className="modal-actions">
                     <button type="button" className="secondary-repair-button" disabled={saving}
                       onClick={() => setConfirmingCancellation(false)}>Keep proposal</button>
                     <button type="button" className="secondary-repair-button" disabled={saving}
                       onClick={async () => {
-                        await onCancelPendingEmailChange();
-                        setConfirmingCancellation(false);
-                      }}>Cancel pending email change</button>
+                        setCancellingEmail(true);
+                        try {
+                          await onCancelPendingEmailChange();
+                          setConfirmingCancellation(false);
+                        } finally {
+                          setCancellingEmail(false);
+                        }
+                      }}>
+                      <PendingAction pending={cancellingEmail} label="Cancel pending email change" pendingLabel="Cancelling email change" />
+                    </button>
                   </div>
-                </>
+                </div>
               ) : (
                 <button type="button" className="secondary-repair-button" disabled={saving}
                   onClick={() => setConfirmingCancellation(true)}>Cancel any pending email change</button>
@@ -290,11 +299,9 @@ function StaffAccountModal({
               type="submit"
               disabled={saving}
             >
-              {saving
-                ? "Saving..."
-                : isEditing
-                  ? "Save Changes"
-                  : "Create Account"}
+              <PendingAction pending={saving && !cancellingEmail}
+                label={isEditing ? "Save Changes" : "Create Account"}
+                pendingLabel={isEditing ? "Saving account" : "Creating account"} />
             </button>
           </div>
         </form>

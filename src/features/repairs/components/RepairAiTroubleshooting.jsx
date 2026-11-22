@@ -23,7 +23,7 @@ import {
 
 import { RequestError } from "../../../api/http.js";
 import { getProblemCategoryLabel } from "../problemCategories.js";
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction, { LoadingStatus } from "../../../components/PendingAction.jsx";
 
 const MAX_ATTACHMENTS = 3;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -388,8 +388,8 @@ function RepairAiConversation({
       </div>
 
       {loading && (
-        <div className="workspace-empty-state" role="status">
-          <p>Loading AI conversation and repair context...</p>
+        <div className="workspace-empty-state">
+          <LoadingStatus>Loading AI conversation and repair context</LoadingStatus>
         </div>
       )}
 
@@ -602,14 +602,14 @@ function RepairAiConversation({
         })}
 
         {isResponding && (
-          <div className="ai-message assistant-message" role="status">
+          <div className="ai-message assistant-message">
             <div className="ai-message-icon">
               <Bot size={18} />
             </div>
 
             <div className="ai-message-content">
               <span>AI Assistant</span>
-              <p>Thinking...</p>
+              <LoadingStatus>Preparing a reply</LoadingStatus>
             </div>
           </div>
         )}
@@ -736,8 +736,7 @@ function RepairAiConversation({
               (!messageText.trim() && attachments.length === 0)
             }
           >
-            {isResponding ? <LoadingSpinner size={18} /> : <Send size={18} />}
-            <span>{isResponding ? "Sending..." : "Send"}</span>
+            <PendingAction pending={isResponding} label="Send" pendingLabel="Sending message" icon={<Send size={18} aria-hidden="true" />} />
           </button>
         </div>
       </form>

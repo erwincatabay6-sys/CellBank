@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
-import LoadingSpinner from "../../../components/LoadingSpinner.jsx";
+import PendingAction from "../../../components/PendingAction.jsx";
 
 function CustomerRegistrationModal({
   initialCustomer = null,
@@ -285,14 +285,7 @@ function CustomerRegistrationModal({
               type="submit"
               disabled={saving || outcomeUncertain}
             >
-              {saving && <LoadingSpinner size={16} />}
-              <span>
-                {saving
-                  ? "Saving..."
-                  : isEditing
-                    ? "Save Changes"
-                    : "Register Customer"}
-              </span>
+              <PendingAction pending={saving} label={isEditing ? "Save Changes" : "Register Customer"} pendingLabel="Saving customer" />
             </button>
           </div>
         </form>
