@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
+import StatusBadge from "../../../components/StatusBadge.jsx";
 
 import { CalendarDays, RotateCcw, Search } from "lucide-react";
 
@@ -367,9 +368,9 @@ function ReportsContent({ user }) {
                 <p>Current status of repairs received in the selected period.</p>
               </div>
               <dl className="report-status-list">
-                {reportStatuses.map(({ value, label }) => (
+                {reportStatuses.map(({ value }) => (
                   <div key={value}>
-                    <dt>{label}</dt>
+                    <dt><StatusBadge status={value} /></dt>
                     <dd>{report.statusCounts[value] ?? 0}</dd>
                   </div>
                 ))}

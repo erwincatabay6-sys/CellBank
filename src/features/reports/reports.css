@@ -425,17 +425,13 @@
 .report-status-list > div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  padding: 6px 0;
+  padding: 3px 0;
 }
 
 .report-status-list > div + div {
   border-top: 1px solid var(--border);
-}
-
-.report-status-list dt {
-  color: var(--text-secondary);
 }
 
 .report-status-list dd {

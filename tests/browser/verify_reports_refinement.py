@@ -122,7 +122,7 @@ async def main():
             assert calls[-1] == (START, END)
             assert await overview.locator('strong').all_text_contents() == ['8', '5', '2', '₱6,450.00']
             await expect(page.locator('.report-status-list dd')).to_have_text(['1', '1', '2', '0', '1', '2', '1'])
-            await expect(page.locator('.report-status-list dt')).to_have_text([
+            await expect(page.locator('.report-status-list dt .status-badge')).to_have_text([
                 'Received', 'Awaiting Approval', 'In Progress', 'Awaiting Parts',
                 'Ready for Release', 'Completed', 'Cancelled',
             ])
