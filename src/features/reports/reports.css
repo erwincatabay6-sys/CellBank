@@ -417,51 +417,31 @@
   text-align: center;
 }
 
-.report-bar-chart {
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-}
-
-.report-bar-row {
-  display: grid;
-  grid-template-columns:
-    minmax(104px, 1.05fr)
-    minmax(0, 2fr)
-    max-content;
-
-  align-items: center;
-
-  gap: 10px;
-}
-
-.report-bar-label {
-  color: var(--text-secondary);
-
-  font-size: 0.78rem;
-}
-
-.report-bar-track {
-  height: 10px;
-
-  overflow: hidden;
-
-  background-color: var(--chart-track);
-  border-radius: 999px;
-}
-
-.report-bar-fill {
-  height: 100%;
-
-  background-color: var(--report-status-color, var(--primary));
-  border-radius: inherit;
-}
-
-.report-bar-value {
-  text-align: right;
-
+.report-status-list {
+  margin: 0;
   font-size: 0.82rem;
+}
+
+.report-status-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.report-status-list > div + div {
+  border-top: 1px solid var(--border);
+}
+
+.report-status-list dt {
+  color: var(--text-secondary);
+}
+
+.report-status-list dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* =====================================================
@@ -548,15 +528,6 @@
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
-
-.report-bar-row[data-status="RECEIVED"] { --report-status-color: var(--status-neutral-text); }
-.report-bar-row[data-status="AWAITING_APPROVAL"] { --report-status-color: var(--status-approval-text); }
-.report-bar-row[data-status="IN_PROGRESS"] { --report-status-color: var(--status-info-text); }
-.report-bar-row[data-status="AWAITING_PARTS"] { --report-status-color: var(--status-warning-text); }
-.report-bar-row:is([data-status="READY_FOR_RELEASE"], [data-status="COMPLETED"]) {
-  --report-status-color: var(--status-success-text);
-}
-.report-bar-row[data-status="CANCELLED"] { --report-status-color: var(--status-danger-text); }
 
 .report-tab-list {
   display: flex;

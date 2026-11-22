@@ -12,7 +12,6 @@ import { useAuth } from "../../auth/context/AuthContext.jsx";
 import RepairReportTable from "../components/RepairReportTable.jsx";
 import FinancialReportTable from "../components/FinancialReportTable.jsx";
 import ReportLineChart from "../components/ReportLineChart.jsx";
-import ReportBarChart from "../components/ReportBarChart.jsx";
 import ReportDetailsTabs from "../components/ReportDetailsTabs.jsx";
 import ReportsSkeleton from "../components/ReportsSkeleton.jsx";
 import ReportColumnChart from "../components/ReportColumnChart.jsx";
@@ -198,12 +197,6 @@ function ReportsContent({ user }) {
     ? buildPaymentChart(report.paymentTrend, startDate, endDate)
     : { data: [], periodLabel: "" };
 
-  const statusChartData = reportStatuses.map((status) => ({
-    key: status.value,
-    label: status.label,
-    value: report?.statusCounts?.[status.value] ?? 0,
-  }));
-
   const filteredFinancialRecords = financialRecords.filter(
     (record) =>
       paymentStatusFilter === "ALL" ||
@@ -373,10 +366,14 @@ function ReportsContent({ user }) {
                 <h3>Repairs by Status</h3>
                 <p>Current status of repairs received in the selected period.</p>
               </div>
-              <ReportBarChart
-                data={statusChartData}
-                ariaLabel="Bar chart showing repair count by status"
-              />
+              <dl className="report-status-list">
+                {reportStatuses.map(({ value, label }) => (
+                  <div key={value}>
+                    <dt>{label}</dt>
+                    <dd>{report.statusCounts[value] ?? 0}</dd>
+                  </div>
+                ))}
+              </dl>
             </article>
           </section>
 

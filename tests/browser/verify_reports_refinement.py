@@ -21,6 +21,7 @@ JOBS = [
     ('2026-02-23', 'READY_FOR_RELEASE', 'T. Garcia', 'MacBook Air', 1800),
     ('2026-03-05', 'RECEIVED', 'J. Aquino', 'Nintendo Switch', None),
     ('2026-03-12', 'CANCELLED', 'V. Dizon', 'OPPO Reno8', None),
+    ('2025-12-19', 'COMPLETED', 'R. Lim', 'Nokia G42', None),
 ]
 PAYMENTS = [(1, '2026-02-08', 700), (1, '2026-04-02', 300),
             (2, '2026-01-25', 3250), (3, '2026-03-03', 1600), (6, '2026-03-14', 900)]
@@ -120,10 +121,11 @@ async def main():
             await expect(overview).to_contain_text('₱6,450.00')
             assert calls[-1] == (START, END)
             assert await overview.locator('strong').all_text_contents() == ['8', '5', '2', '₱6,450.00']
-            assert await page.locator('.report-bar-value').all_text_contents() == ['1', '1', '2', '0', '1', '2', '1']
-            assert [await row.get_attribute('data-status') for row in
-                    await page.locator('.report-bar-row').all()] == STATUS
-            assert await page.locator('.report-bar-row[data-status=AWAITING_PARTS] .report-bar-fill').evaluate('(e)=>e.offsetWidth') == 0
+            await expect(page.locator('.report-status-list dd')).to_have_text(['1', '1', '2', '0', '1', '2', '1'])
+            await expect(page.locator('.report-status-list dt')).to_have_text([
+                'Received', 'Awaiting Approval', 'In Progress', 'Awaiting Parts',
+                'Ready for Release', 'Completed', 'Cancelled',
+            ])
             assert await page.evaluate('innerWidth === document.documentElement.clientWidth')
             assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert await page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
@@ -155,14 +157,13 @@ async def main():
                 await page.mouse.move(0, 0)
                 await page.screenshot(path=output/'reports-after-mobile-390.png')
 
-            volume = page.locator('.report-chart-data summary').first
-            if width < 400:
-                await volume.tap()
-            else:
-                await volume.focus()
-                await volume.press('Enter')
-            await expect(page.get_by_role('table', name='Monthly repair volume')).to_contain_text('Jan 2026')
-            await volume.click()
+            volume = page.get_by_role('img', name='Monthly repair volume')
+            await expect(volume).to_have_accessible_description('Jan 2026: 2; Feb 2026: 4; Mar 2026: 2')
+            await expect(volume.locator('.report-chart-point-value')).to_have_text(['2', '4', '2'])
+            baseline = await volume.locator('.report-chart-axis-line').bounding_box()
+            month_label = await volume.locator('.report-chart-x-label').first.bounding_box()
+            assert month_label['y'] - baseline['y'] >= 8
+            await expect(charts.get_by_text('View chart data')).to_have_count(0)
             await page.get_by_role('searchbox', name='Search repair records').fill('Pixel')
             await page.get_by_label('Filter by repair status').select_option('IN_PROGRESS')
             await page.get_by_label('Filter by technician').select_option('1')
@@ -254,6 +255,9 @@ async def main():
                 assert calls[-1] == (START, None)
                 await page.get_by_role('button', name='All Time').click()
                 await expect(page.locator('.report-selected-period')).to_have_text('All Time')
+                await expect(volume.locator('.report-chart-x-label')).to_have_text([
+                    'Dec 2025', 'Jan 2026', 'Feb 2026', 'Mar 2026',
+                ])
                 await expect(finance.get_by_text('Monthly payments for the current year.', exact=False)).to_be_visible()
                 assert calls[-1] == (None, None)
 
@@ -265,7 +269,7 @@ async def main():
                 await expect(page.locator('.report-chart-point')).to_be_visible()
                 await dates(page, '2026-05-01', '2026-05-31')
                 await expect(page.get_by_text('No data is available for the selected period.')).to_be_visible()
-                await expect(page.locator('.report-bar-value')).to_have_text(['0']*7)
+                await expect(page.locator('.report-status-list dd')).to_have_text(['0']*7)
                 await expect(finance.get_by_text('No financial records found')).to_be_visible()
                 await repair_tab.click()
                 await expect(page.get_by_text('No repair records found')).to_be_visible()
