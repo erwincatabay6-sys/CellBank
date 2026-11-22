@@ -43,6 +43,16 @@ This suite reuses isolated application fixtures and requires `pdftotext` for the
 
 It exercises long Reports and repair forms, stationary header/sidebar/footer, internal navigation scrolling, expanded/collapsed states, desktop and short windows, mobile portrait/landscape, input/validation focus, route and back navigation, dropdowns, dialogs, toasts, public scrolling, and print output. It checks both themes and uses reduced viewport sizes to approximate zoom and keyboard-constrained space. Native browser zoom, real mobile keyboards, and Safari/Firefox still need manual checks. All API responses are intercepted; no production records or credentials are used.
 
+## Reports layout
+
+`PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_reports_refinement.py`
+checks the report period, all three tabs, keyboard and touch interaction,
+table overflow, print panels, and totals with isolated API fixtures. The fixture
+includes a January repair with payments in February and April so the test can
+distinguish period payments from current repair balances. Screenshots for the
+1440px desktop and 360px and 390px mobile views default to
+`/tmp/cellbank-reports-refinement`.
+
 ## Staff role preservation
 
 Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.

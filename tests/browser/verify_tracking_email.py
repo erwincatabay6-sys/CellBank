@@ -92,7 +92,8 @@ async def main():
        assert await l.evaluate('(e)=>e.children[1].getBoundingClientRect().bottom<=e.getBoundingClientRect().bottom+1')
        await l.focus();await p.keyboard.press('End');await p.wait_for_timeout(300);assert await l.evaluate('(e)=>e.scrollTop')>0
     await p.screenshot(path=f'/tmp/tracking-dashboard-{theme}-{width}.png')
-    await p.goto(BASE+'/reports');await expect(p.locator('.financial-status svg[aria-hidden="true"]')).to_have_count(4)
+    await p.goto(BASE+'/reports');await p.get_by_role('tab',name='Financial records').click()
+    await expect(p.get_by_role('tabpanel',name='Financial records').locator('.financial-status svg[aria-hidden="true"]')).to_have_count(4)
     await p.goto(BASE+'/repairs/1');await expect(p.get_by_role('button',name='Resend tracking email',exact=True)).to_be_visible();await p.screenshot(path=f'/tmp/tracking-resend-{theme}-{width}.png');assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth')
     await c.close()
   print('PASS staff counts 0/1/2/4, wrapped rows, keyboard scrolling, four payment icons and both-theme mobile layout',flush=True)

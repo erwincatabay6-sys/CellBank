@@ -1,12 +1,11 @@
-function formatChartValue(value, valueType) {
-  if (valueType === "currency") {
-    return `₱${value.toLocaleString()}`;
-  }
+import { useId } from "react";
+import useReportChartWidth from "../utils/useReportChartWidth.js";
 
+function formatCount(value) {
   return value.toLocaleString();
 }
 
-function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
+function ReportLineChart({ data, ariaLabel }) {
   if (data.length === 0) {
     return (
       <div className="report-chart-empty">
@@ -15,32 +14,23 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
     );
   }
 
-  const width = 640;
-  const height = 270;
+  return <LinePlot data={data} ariaLabel={ariaLabel} />;
+}
 
-  const padding = {
-    top: 24,
-    right: 24,
-    bottom: 52,
-    left: 64,
-  };
+function LinePlot({ data, ariaLabel }) {
+  const { ref, width } = useReportChartWidth(Math.max(270, 90 + (data.length - 1) * 72));
+  const descriptionId = useId();
+  const height = 214;
+  const padding = { top: 25, right: 35, bottom: 40, left: 43 };
 
   const plotWidth = width - padding.left - padding.right;
 
   const plotHeight = height - padding.top - padding.bottom;
+  const baseline = padding.top + plotHeight;
 
   const maxValue = Math.max(...data.map((item) => item.value), 1);
 
-  let yMax;
-
-  if (valueType === "currency") {
-    const paddedMax = maxValue * 1.15;
-    const step = Math.max(Math.ceil(paddedMax / 4 / 500) * 500, 500);
-
-    yMax = step * 4;
-  } else {
-    yMax = Math.max(Math.ceil(maxValue / 4) * 4, 4);
-  }
+  const yMax = Math.max(Math.ceil(maxValue / 4) * 4, 4);
 
   const points = data.map((item, index) => {
     const x =
@@ -48,7 +38,7 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
         ? padding.left + plotWidth / 2
         : padding.left + (index / (data.length - 1)) * plotWidth;
 
-    const y = padding.top + plotHeight - (item.value / yMax) * plotHeight;
+    const y = baseline - (item.value / yMax) * plotHeight;
 
     return {
       ...item,
@@ -68,17 +58,25 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
 
   return (
     <div
+      ref={ref}
       className="report-line-chart-wrapper"
-      role="img"
+      role="region"
       aria-label={ariaLabel}
+      tabIndex={0}
     >
       <svg
         className="report-line-chart"
         viewBox={`0 0 ${width} ${height}`}
-        aria-hidden="true"
+        style={{ width }}
+        role="img"
+        aria-label="Monthly repair volume"
+        aria-describedby={descriptionId}
       >
+        <desc id={descriptionId}>
+          {data.map(({ label, value }) => `${label}: ${formatCount(value)}`).join("; ")}
+        </desc>
         {yTicks.map((tick) => {
-          const y = padding.top + plotHeight - tick.ratio * plotHeight;
+          const y = baseline - tick.ratio * plotHeight;
 
           return (
             <g key={tick.ratio}>
@@ -96,7 +94,7 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
                 y={y + 4}
                 textAnchor="end"
               >
-                {formatChartValue(tick.value, valueType)}
+                {formatCount(tick.value)}
               </text>
             </g>
           );
@@ -106,8 +104,8 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
           className="report-chart-axis-line"
           x1={padding.left}
           x2={width - padding.right}
-          y1={padding.top + plotHeight}
-          y2={padding.top + plotHeight}
+          y1={baseline}
+          y2={baseline}
         />
 
         {points.length > 1 && (
@@ -129,13 +127,13 @@ function ReportLineChart({ data, ariaLabel, valueType = "count" }) {
               y={point.y - 12}
               textAnchor="middle"
             >
-              {formatChartValue(point.value, valueType)}
+              {formatCount(point.value)}
             </text>
 
             <text
               className="report-chart-x-label"
               x={point.x}
-              y={height - 18}
+              y={baseline + 22}
               textAnchor="middle"
             >
               {point.label}

@@ -26,21 +26,14 @@ function SkeletonCards({ count, className }) {
   );
 }
 
-function SkeletonChart({ title, payment = false }) {
+function SkeletonChart({ title }) {
   return (
-    <article
-      className={`report-chart-card ${
-        payment ? "report-payment-chart-card" : ""
-      }`}
-    >
+    <article className="report-chart-card">
       <div className="report-chart-header">
-        <h4>{title}</h4>
+        <h3>{title}</h3>
         <Skeleton width="75%" height={14} />
       </div>
-
-      <div className={payment ? "report-line-chart-wrapper" : undefined}>
-        <Skeleton height={220} />
-      </div>
+      <Skeleton height={205} />
     </article>
   );
 }
@@ -82,59 +75,25 @@ function SkeletonTable({ headings, filters = false }) {
   );
 }
 
-export default function ReportsSkeleton() {
+const headingsByTab = {
+  repairs: ["Reference", "Date Received", "Customer", "Device", "Technician", "Status"],
+  financial: ["Reference", "Customer", "Agreed Price", "Total Paid", "Balance", "Payment Status"],
+  technicians: ["Technician", "Repairs Handled", "Active", "Completed"],
+};
+
+export default function ReportsSkeleton({ activeTab = "repairs" }) {
   return (
     <div role="status" aria-label="Loading reports">
       <div aria-hidden="true">
-        <SkeletonSection title="Repair Summary">
-          <SkeletonCards count={4} className="report-summary-grid" />
-        </SkeletonSection>
+        <SkeletonCards count={4} className="report-summary-strip" />
 
-        <SkeletonSection title="Repair Analytics">
-          <div className="report-chart-grid">
-            <SkeletonChart title="Repair Volume Over Time" />
-            <SkeletonChart title="Repairs by Status" />
-          </div>
-        </SkeletonSection>
+        <div className="report-chart-grid">
+          <SkeletonChart title="Repair Volume Over Time" />
+          <SkeletonChart title="Repairs by Status" />
+        </div>
 
-        <SkeletonSection title="Financial Summary">
-          <SkeletonCards count={3} className="financial-summary-grid" />
-          <SkeletonCards count={4} className="financial-status-grid" />
-          <SkeletonChart title="Payments Received Over Time" payment />
-        </SkeletonSection>
-
-        <SkeletonSection title="Financial Records">
-          <SkeletonTable
-            filters
-            headings={[
-              "Reference",
-              "Customer",
-              "Agreed Price",
-              "Total Paid",
-              "Balance",
-              "Payment Status",
-            ]}
-          />
-        </SkeletonSection>
-
-        <SkeletonSection title="Technician Repair Activity">
-          <SkeletonTable
-            headings={["Technician", "Repairs Handled", "Active", "Completed"]}
-          />
-        </SkeletonSection>
-
-        <SkeletonSection title="Detailed Repair Records">
-          <SkeletonTable
-            filters
-            headings={[
-              "Reference",
-              "Date Received",
-              "Customer",
-              "Device",
-              "Technician",
-              "Status",
-            ]}
-          />
+        <SkeletonSection title="Report details">
+          <SkeletonTable filters={activeTab !== "technicians"} headings={headingsByTab[activeTab]} />
         </SkeletonSection>
       </div>
     </div>
