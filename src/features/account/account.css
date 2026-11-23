@@ -132,6 +132,10 @@
   font-size: 0.78rem;
 }
 
+.account-information-icon {
+  display: none;
+}
+
 /* =====================================================
    PROFILE FILE BUTTON
 ===================================================== */
@@ -150,17 +154,62 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .profile-picture-section {
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-    flex-direction: column;
+  .profile-picture-section > div:last-child {
+    flex: 1 1 155px;
+    min-width: 0;
   }
 
   .profile-picture-preview {
-    width: 84px;
+    width: 72px;
+    height: 72px;
+  }
 
-    height: 84px;
+  .profile-picture-preview svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .account-information-grid {
+    gap: 0;
+  }
+
+  .account-information-item {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 3px 12px;
+    padding: 10px 0;
+    border-left: 0;
+  }
+
+  .account-information-item + .account-information-item {
+    border-top: 1px solid var(--border);
+  }
+
+  .account-information-icon {
+    display: block;
+    grid-row: 1 / span 3;
+    align-self: center;
+    color: var(--text-secondary);
+  }
+
+  .account-information-item > :is(.account-status-active, .account-status-inactive) {
+    justify-self: start;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
+    font-size: 0.78rem;
+  }
+
+  .account-information-item > .account-status-active {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
   }
 }
 

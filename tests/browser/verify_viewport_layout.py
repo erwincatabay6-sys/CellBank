@@ -58,7 +58,7 @@ async def metrics(page):
       const box = (s) => {
         const e=document.querySelector(s), r=e.getBoundingClientRect();
         return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,
-          height:r.height,scroll:e.scrollTop,client:e.clientHeight,total:e.scrollHeight};
+          width:r.width,height:r.height,scroll:e.scrollTop,client:e.clientHeight,total:e.scrollHeight};
       };
       return {height:innerHeight,width:innerWidth,bodyHeight:document.documentElement.scrollHeight,
         bodyWidth:document.documentElement.scrollWidth,windowScroll:scrollY,
@@ -73,7 +73,11 @@ async def assert_shell(page):
     assert abs(m['header']['top']) <= 1, m
     assert m['footer']['bottom'] <= m['height'] + 1, m
     assert m['main']['client'] > 40, m
-    assert m['nav']['client'] >= 40, m
+    if m['width'] <= 650:
+        assert m['sidebar']['width'] == 0, m
+        assert m['main']['width'] >= m['width'] - 1, m
+    else:
+        assert m['nav']['client'] >= 40, m
     return m
 
 async def main():
@@ -131,10 +135,11 @@ async def main():
                         nav=await p.get_by_role('button',name='Administration',exact=True).bounding_box()
                         footer=await p.locator('.sidebar-profile').bounding_box()
                         assert nav['y']+nav['height']<=footer['y']+1
-                    await p.get_by_role('button',name='Collapse sidebar',exact=True).click()
-                    await assert_shell(p)
-                    await p.get_by_role('button',name='Expand sidebar',exact=True).click()
-                    await assert_shell(p)
+                    if width > 650:
+                        await p.get_by_role('button',name='Collapse sidebar',exact=True).click()
+                        await assert_shell(p)
+                        await p.get_by_role('button',name='Expand sidebar',exact=True).click()
+                        await assert_shell(p)
                     await p.screenshot(path=str(OUT/f'reports-{theme}-{width}x{height}.png'))
                     await c.close()
         await check('Long Reports: independent scrolling, footer, short navigation, collapse, mobile and both themes', reports)
@@ -222,8 +227,8 @@ async def main():
             await p.set_viewport_size({'width':390,'height':430})
             await p.get_by_label('Intake Notes',exact=True).focus()
             await assert_shell(p)
-            await p.get_by_role('button',name='Collapse sidebar',exact=True).click()
-            await p.get_by_role('button',name='Expand sidebar',exact=True).click()
+            await p.get_by_role('button',name='Open navigation menu',exact=True).click()
+            await p.get_by_role('button',name='Close navigation menu',exact=True).click()
             await p.locator('.main-content').evaluate('(e)=>e.scrollTop=e.scrollHeight')
             assert (await metrics(p))['main']['scroll']>0
             for path in ['/login','/forgot-password','/reset-password','/verify-email','/track']:

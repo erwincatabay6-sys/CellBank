@@ -29,7 +29,7 @@ function formatTimestamp(value) {
     : dateFormatter.format(date);
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ drawerOpen = false }) {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
@@ -43,6 +43,10 @@ export default function NotificationBell() {
   const readControllerRef = useRef(null);
   const actionControllerRef = useRef(null);
   const busyRef = useRef(false);
+
+  useEffect(() => {
+    if (drawerOpen) setOpen(false);
+  }, [drawerOpen]);
 
   const loadNotifications = useCallback(async () => {
     if (busyRef.current) {

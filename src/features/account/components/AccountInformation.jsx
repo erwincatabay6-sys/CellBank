@@ -1,3 +1,5 @@
+import { Activity, Mail, Shield, UserRound } from "lucide-react";
+
 const roleLabels = {
   ADMIN: "Administrator",
 
@@ -30,6 +32,7 @@ function AccountInformation({ user, currentRoles }) {
       <div className="account-information-grid">
         {/* USERNAME */}
         <div className="account-information-item">
+          <UserRound className="account-information-icon" size={20} aria-hidden="true" />
           <span>Username</span>
 
           <strong>{user.username}</strong>
@@ -39,6 +42,7 @@ function AccountInformation({ user, currentRoles }) {
 
         {/* REGISTERED EMAIL */}
         <div className="account-information-item">
+          <Mail className="account-information-icon" size={20} aria-hidden="true" />
           <span>Registered Email</span>
 
           <strong>{user.email}</strong>
@@ -48,6 +52,7 @@ function AccountInformation({ user, currentRoles }) {
 
         {/* ROLES */}
         <div className="account-information-item">
+          <Shield className="account-information-icon" size={20} aria-hidden="true" />
           <span>Role(s)</span>
 
           <strong>{roleText}</strong>
@@ -57,9 +62,12 @@ function AccountInformation({ user, currentRoles }) {
 
         {/* STATUS */}
         <div className="account-information-item">
+          <Activity className="account-information-icon" size={20} aria-hidden="true" />
           <span>Account Status</span>
 
-          <strong>{user.status === "ACTIVE" ? "Active" : "Inactive"}</strong>
+          <strong className={user.status === "ACTIVE" ? "account-status-active" : "account-status-inactive"}>
+            {user.status === "ACTIVE" ? "Active" : "Inactive"}
+          </strong>
 
           <small>Managed by the Administrator</small>
         </div>
