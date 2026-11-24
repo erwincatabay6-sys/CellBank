@@ -61,6 +61,14 @@ against the local frontend. It checks all 12 authenticated routes at 360×800 an
 short and landscape screens, account profile and OTP controls, and desktop
 resize. Screenshots default to `/tmp/cellbank-mobile-staff`.
 
+## Customer Details
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_customer_details.py`
+against the local frontend. It checks device search and pagination, tab state,
+role-scoped fixture counts, customer editing and registration, mobile identifier
+disclosure, and navigation to devices and repairs. Screenshots use synthetic
+records and default to `/tmp/cellbank-customer-details`.
+
 ## Staff role preservation
 
 Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.

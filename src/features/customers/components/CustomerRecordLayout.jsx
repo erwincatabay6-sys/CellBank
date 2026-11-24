@@ -8,6 +8,7 @@ import "../customers.css";
 function CustomerRecordLayout({
   title,
   description,
+  header,
   found,
   busy = false,
   children,
@@ -21,10 +22,12 @@ function CustomerRecordLayout({
 
   return (
     <>
-      <section className="page-header">
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </section>
+      {header ?? (
+        <section className="page-header">
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </section>
+      )}
 
       {showStatusPanel && (
         <section className="page-content" aria-busy={loading}>
