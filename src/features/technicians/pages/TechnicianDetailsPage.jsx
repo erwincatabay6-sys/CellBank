@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 import FeedbackNotice from "../../../components/FeedbackNotice.jsx";
 
-import StatusBadge from "../../../components/StatusBadge.jsx";
 import { getTechnician } from "../../../api/technicianApi.js";
 import { hasAccess, canOpenTechnician } from "../../../config/accessControl.js";
 import { useAuth } from "../../auth/context/AuthContext.jsx";
 import TechnicianDetailsSkeleton from "../components/TechnicianDetailsSkeleton.jsx";
+import TechnicianRepairPanel from "../components/TechnicianRepairPanel.jsx";
 
 import "../technicians.css";
+import "../technicianDetails.css";
 
 const activeStatuses = [
   ["RECEIVED", "Received"],
@@ -123,15 +124,12 @@ function TechnicianDetails({ technicianId, user }) {
 
   return (
     <>
-      <section className="page-header">
-        <h2>
-          {notFound
-            ? "Access restricted"
-            : technician?.name || "Technician Details"}
-        </h2>
-
-        <p>View technician workload and assigned repair jobs.</p>
-      </section>
+      {!technician && (
+        <section className="page-header">
+          <h2>{notFound ? "Access restricted" : "Technician Details"}</h2>
+          <p>View technician workload and assigned repair jobs.</p>
+        </section>
+      )}
 
       {loading && <TechnicianDetailsSkeleton />}
 
@@ -169,157 +167,56 @@ function TechnicianDetails({ technicianId, user }) {
 
       {!loading && !error && details && (
         <>
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Technician Information</h3>
-                <p className="workspace-section-description">
-                  Basic operational information for this technician.
-                </p>
-              </div>
-            </div>
+          <nav className="technician-detail-breadcrumb" aria-label="Breadcrumb">
+            <Link to="/technicians">Technicians</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Technician details</span>
+          </nav>
 
-            <div className="technician-info-grid">
-              <div>
-                <span>Technician</span>
-                <strong>{technician.name}</strong>
-              </div>
-
-              <div>
-                <span>Role</span>
-                <strong>{technician.role}</strong>
-              </div>
-
-              <div>
-                <span>Status</span>
-                <strong>
+          <section className="page-content technician-detail-header">
+            <div className="technician-detail-identity">
+              <h2>{technician.name}</h2>
+              <div className="technician-detail-role">
+                <span>{technician.role}</span>
+                <span className={`technician-status ${technician.status === "ACTIVE" ? "active" : "inactive"}`}>
                   {technician.status === "ACTIVE" ? "Active" : "Inactive"}
-                </strong>
-              </div>
-
-              <div>
-                <span>Active Repairs</span>
-                <strong>{technician.activeRepairs}</strong>
-              </div>
-
-              <div>
-                <span>Total Assigned</span>
-                <strong>{technician.totalRepairs}</strong>
+                </span>
               </div>
             </div>
+
+            <dl className="technician-detail-counts">
+              <div>
+                <dt>Active Repairs</dt>
+                <dd>{technician.activeRepairs}</dd>
+              </div>
+              <div>
+                <dt>Total Assigned</dt>
+                <dd>{technician.totalRepairs}</dd>
+              </div>
+            </dl>
           </section>
 
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Workload Summary</h3>
-                <p className="workspace-section-description">
-                  Current assigned repairs grouped by repair status.
-                </p>
-              </div>
-            </div>
-
-            <div className="technician-workload-grid">
+          <section className="page-content technician-detail-workload" aria-labelledby="technician-workload-title">
+            <h3 id="technician-workload-title">Workload Summary</h3>
+            <dl className="technician-detail-status-counts">
               {activeStatuses.map(([status, label]) => (
-                <div key={status}>
-                  <span>{label}</span>
-                  <strong>{details.statusCounts[status] ?? 0}</strong>
+                <div key={status} data-status={status}>
+                  <dt>{label}</dt>
+                  <dd>{details.statusCounts[status] ?? 0}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </section>
 
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Active Assigned Repairs</h3>
-                <p className="workspace-section-description">
-                  Repair jobs currently assigned to this technician.
-                </p>
-              </div>
-            </div>
-
-            <TechnicianRepairList
-              repairs={details.activeRepairs}
-              canViewRepairs={canViewRepairs}
-              onRepairClick={handleRepairClick}
-              emptyTitle="No active repairs"
-              emptyMessage="This technician currently has no active repair assignments."
-            />
-          </section>
-
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Repair History</h3>
-                <p className="workspace-section-description">
-                  Completed or cancelled repairs recorded under this technician.
-                </p>
-              </div>
-            </div>
-
-            <TechnicianRepairList
-              repairs={details.repairHistory}
-              canViewRepairs={canViewRepairs}
-              onRepairClick={handleRepairClick}
-              emptyTitle="No repair history"
-              emptyMessage="Completed or cancelled repairs will appear here."
-            />
-          </section>
+          <TechnicianRepairPanel
+            activeRepairs={details.activeRepairs}
+            repairHistory={details.repairHistory}
+            canViewRepairs={canViewRepairs}
+            onRepairClick={handleRepairClick}
+          />
         </>
       )}
     </>
-  );
-}
-
-function TechnicianRepairList({
-  repairs,
-  canViewRepairs,
-  onRepairClick,
-  emptyTitle,
-  emptyMessage,
-}) {
-  if (repairs.length === 0) {
-    return (
-      <div className="workspace-empty-state">
-        <strong>{emptyTitle}</strong>
-        <p>{emptyMessage}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="technician-repair-list">
-      {repairs.map((repair) => (
-        <button
-          key={repair.id}
-          className="technician-repair-item"
-          type="button"
-          disabled={!canViewRepairs}
-          onClick={() => onRepairClick(repair.id)}
-        >
-          <div>
-            <span>Repair Reference</span>
-            <strong>{repair.reference}</strong>
-          </div>
-
-          <div>
-            <span>Customer</span>
-            <strong>{repair.customer}</strong>
-          </div>
-
-          <div>
-            <span>Device</span>
-            <strong>{repair.device}</strong>
-          </div>
-
-          <div>
-            <span>Status</span>
-            <StatusBadge status={repair.status} />
-          </div>
-        </button>
-      ))}
-    </div>
   );
 }
 

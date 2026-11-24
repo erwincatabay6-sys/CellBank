@@ -253,7 +253,7 @@ async def main():
             "/customers/1": ".customer-detail-panel",
             "/customers/1/devices/1": ".device-info-grid",
             "/technicians": ".technician-table-wrapper",
-            "/technicians/1": ".technician-info-grid",
+            "/technicians/1": ".technician-detail-header",
             "/reports": ".report-summary-strip",
             "/administration": ".staff-table-wrapper",
             "/account": ".account-settings-grid",

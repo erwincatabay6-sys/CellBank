@@ -1,0 +1,284 @@
+.technician-detail-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.technician-detail-breadcrumb a {
+  color: var(--primary-dark);
+}
+
+.technician-detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 36%);
+  align-items: center;
+  gap: 14px 18px;
+}
+
+.technician-detail-identity {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.technician-detail-identity h2 {
+  margin-bottom: 5px;
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.technician-detail-role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--text-secondary);
+}
+
+.technician-detail-role .technician-status {
+  align-items: center;
+  gap: 6px;
+}
+
+.technician-detail-role .technician-status::before,
+.technician-detail-status-counts dt::before {
+  content: "";
+  flex: 0 0 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.technician-detail-counts,
+.technician-detail-status-counts {
+  display: grid;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.technician-detail-counts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.technician-detail-counts > div,
+.technician-detail-status-counts > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 3px 12px;
+  border-inline-start: 1px solid var(--border);
+}
+
+.technician-detail-counts dt,
+.technician-detail-status-counts dt {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.technician-detail-counts dd,
+.technician-detail-status-counts dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.technician-detail-counts dd {
+  order: -1;
+  font-size: 1.45rem;
+}
+
+.technician-detail-workload {
+  display: grid;
+  gap: 10px 14px;
+}
+
+.technician-detail-workload h3 {
+  font-size: 1rem;
+}
+
+.technician-detail-status-counts {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.technician-detail-status-counts dt {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.technician-detail-status-counts dt::before {
+  background-color: var(--status-color);
+}
+
+.technician-detail-status-counts [data-status="RECEIVED"] { --status-color: var(--status-neutral-text); }
+.technician-detail-status-counts [data-status="AWAITING_APPROVAL"] { --status-color: var(--status-approval-text); }
+.technician-detail-status-counts [data-status="IN_PROGRESS"] { --status-color: var(--status-info-text); }
+.technician-detail-status-counts [data-status="AWAITING_PARTS"] { --status-color: var(--status-warning-text); }
+.technician-detail-status-counts [data-status="READY_FOR_RELEASE"] { --status-color: var(--status-success-text); }
+
+.technician-detail-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.technician-detail-tabs button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.technician-detail-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.technician-detail-tabs button:hover {
+  background-color: var(--surface-muted);
+}
+
+.technician-detail-tabs button:focus-visible {
+  outline-offset: -2px;
+}
+
+.technician-detail-repair-table,
+.technician-detail-mobile-repairs {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.technician-detail-repair-table .technician-table {
+  table-layout: fixed;
+}
+
+.technician-detail-repair-table :is(th, td) {
+  padding: 9px 12px;
+  overflow-wrap: anywhere;
+}
+
+.technician-detail-repair-table th:first-child {
+  border-start-start-radius: 8px;
+}
+
+.technician-detail-repair-table th:last-child {
+  border-start-end-radius: 8px;
+}
+
+.technician-detail-repair-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.technician-detail-repairs .record-link {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.technician-detail-repairs .status-badge {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.technician-detail-mobile-repairs {
+  display: none;
+}
+
+@media (min-width: 1150px) {
+  .technician-detail-workload {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+@media (max-width: 850px) {
+  .technician-detail-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .technician-detail-counts > div:first-child {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+
+  .technician-detail-status-counts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 10px;
+  }
+
+  .technician-detail-status-counts > div:nth-child(3n+1) {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+
+  .technician-detail-repair-table {
+    display: none;
+  }
+
+  .technician-detail-mobile-repairs {
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .technician-detail-mobile-repairs li {
+    padding: 8px 12px 12px;
+  }
+
+  .technician-detail-mobile-repairs li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .technician-detail-repair-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px;
+  }
+
+  .technician-detail-repair-top .record-link {
+    min-height: 44px;
+    justify-self: start;
+  }
+
+  .technician-detail-repair-top .status-badge {
+    margin-top: 8px;
+  }
+
+  .technician-detail-repair-fields {
+    display: grid;
+    gap: 3px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .technician-detail-repair-fields > div {
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .technician-detail-repair-fields dd {
+    margin: 0;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 650px) {
+  .technician-detail-tabs button {
+    flex: 1 1 auto;
+    padding-inline: 4px;
+    font-size: 0.875rem;
+  }
+}
