@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import FieldFeedback from "../../../components/FieldFeedback.jsx";
 import PendingAction from "../../../components/PendingAction.jsx";
@@ -15,6 +15,7 @@ function ProfileSettings({ user }) {
   // -----------------------------
 
   const [fullName, setFullName] = useState(user.name);
+  const pictureInput = useRef(null);
 
   const profileImage = user.profileImageUrl;
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -164,17 +165,20 @@ function ProfileSettings({ user }) {
 
             <p>Choose an image for your staff profile.</p>
 
-            <label
+            <button
               className="secondary-repair-button"
-              htmlFor="profile-picture"
+              type="button"
+              onClick={() => pictureInput.current?.click()}
+              disabled={uploadingImage}
               aria-busy={uploadingImage}
-              aria-disabled={uploadingImage}
+              aria-describedby={imageErrorField ? "profile-picture-feedback" : undefined}
             >
               <PendingAction pending={uploadingImage} label="Choose Image" pendingLabel="Uploading photo" icon={<Camera size={18} aria-hidden="true" />} />
-            </label>
+            </button>
 
             <input
               id="profile-picture"
+              ref={pictureInput}
               aria-invalid={imageErrorField === "profile-picture"}
               aria-describedby={
                 imageErrorField ? "profile-picture-feedback" : undefined

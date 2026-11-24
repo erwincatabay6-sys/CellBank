@@ -59,7 +59,7 @@ const navItems = [
   },
 ];
 
-function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
+function Sidebar({ collapsed, onToggle, currentRoles, currentUserName, drawer, onNavigate, children }) {
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -94,6 +94,11 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
     return location.pathname.startsWith(`${path}/`);
   }
 
+  function selectDestination(path) {
+    onNavigate?.();
+    navigate(path);
+  }
+
   // -----------------------------
   // DISPLAYED USER INFORMATION
   // -----------------------------
@@ -118,11 +123,11 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
   }
 
   return (
-    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+    <aside className={drawer ? "staff-drawer-sidebar" : `sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* =========================
                 SIDEBAR TOGGLE
             ========================== */}
-      <div className="sidebar-top">
+      {!drawer && <div className="sidebar-top">
         <button
           className="sidebar-toggle"
           type="button"
@@ -131,12 +136,12 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
-      </div>
+      </div>}
 
       {/* =========================
                 NAVIGATION
             ========================== */}
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label="Staff destinations">
         {visibleNavItems.map((item) => {
           const Icon = item.icon;
 
@@ -148,7 +153,7 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
               title={collapsed ? item.label : undefined}
               aria-label={item.label}
               aria-current={isActivePath(item.path) ? "page" : undefined}
-              onClick={() => navigate(item.path)}
+              onClick={() => selectDestination(item.path)}
             >
               <Icon size={20} />
 
@@ -182,20 +187,38 @@ function Sidebar({ collapsed, onToggle, currentRoles, currentUserName }) {
           </div>
         )}
 
-        {hasAccess(currentRoles, "accountSettings") && (
+        {!drawer && hasAccess(currentRoles, "accountSettings") && (
           <button
             className={`account-settings ${
               location.pathname === "/account" ? "active" : ""
             }`}
             type="button"
             aria-label="Account Settings"
+            aria-current={isActivePath("/account") ? "page" : undefined}
             title={collapsed ? "Account Settings" : undefined}
-            onClick={() => navigate("/account")}
+            onClick={() => selectDestination("/account")}
           >
             <Settings size={18} />
           </button>
         )}
       </div>
+
+      {drawer && (
+        <div className="staff-drawer-actions">
+          {hasAccess(currentRoles, "accountSettings") && (
+            <button
+              className={`nav-item ${isActivePath("/account") ? "active" : ""}`}
+              type="button"
+              aria-current={isActivePath("/account") ? "page" : undefined}
+              onClick={() => selectDestination("/account")}
+            >
+              <Settings size={20} aria-hidden="true" />
+              Account Settings
+            </button>
+          )}
+          {children}
+        </div>
+      )}
     </aside>
   );
 }

@@ -1,9 +1,20 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../features/theme/ThemeContext.jsx";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ drawer = false }) {
   const { theme, toggleTheme } = useTheme();
   const label = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+
+  if (drawer) {
+    return (
+      <button className="nav-item staff-drawer-theme" type="button"
+        role="switch" aria-checked={theme === "dark"} onClick={toggleTheme}>
+        <Moon size={20} aria-hidden="true" />
+        Dark mode
+        <span className="staff-drawer-switch" aria-hidden="true" />
+      </button>
+    );
+  }
 
   return (
     <button

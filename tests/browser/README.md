@@ -53,6 +53,14 @@ distinguish period payments from current repair balances. Screenshots for the
 1440px desktop and 360px and 390px mobile views default to
 `/tmp/cellbank-reports-refinement`.
 
+## Mobile staff navigation
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_mobile_staff_navigation.py`
+against the local frontend. It checks all 12 authenticated routes at 360×800 and
+390×844 with browser-only API fixtures, plus drawer permissions and focus,
+short and landscape screens, account profile and OTP controls, and desktop
+resize. Screenshots default to `/tmp/cellbank-mobile-staff`.
+
 ## Staff role preservation
 
 Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.

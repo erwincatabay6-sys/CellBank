@@ -153,7 +153,6 @@ async def main():
             if width == 1440:
                 await page.screenshot(path=output/'reports-after-desktop.png')
             elif width == 390:
-                await page.get_by_role('button', name='Collapse sidebar').click()
                 await page.mouse.move(0, 0)
                 await page.screenshot(path=output/'reports-after-mobile-390.png')
 
@@ -212,7 +211,6 @@ async def main():
 
             if width in (1440, 360):
                 if width == 360:
-                    await page.get_by_role('button', name='Collapse sidebar').click()
                     await page.mouse.move(0, 0)
                     await page.set_viewport_size({'width': width, 'height': 1040})
                 await page.evaluate('document.activeElement.blur()')
