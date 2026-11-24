@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import useFeedbackState from "../../../hooks/useFeedbackState.js";
 
@@ -12,8 +12,15 @@ import CustomerRecordLayout from "../components/CustomerRecordLayout.jsx";
 import CustomerRepairHistory from "../components/CustomerRepairHistory.jsx";
 import DeviceRegistrationModal from "../components/DeviceRegistrationModal.jsx";
 
+import "../deviceDetails.css";
+
 function DeviceDetailsPage() {
   const { customerId, deviceId } = useParams();
+
+  return <DeviceDetails key={`${customerId}:${deviceId}`} customerId={customerId} deviceId={deviceId} />;
+}
+
+function DeviceDetails({ customerId, deviceId }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -52,52 +59,48 @@ function DeviceDetailsPage() {
       ]
     : [];
 
+  const header = customer && device ? (
+    <section className="page-header device-detail-header">
+      <div>
+        <h2>{device.brand} {device.model}</h2>
+        <Link to={`/customers/${customer.id}`}>{customer.name}</Link>
+      </div>
+      {canManage && (
+        <button
+          className="secondary-repair-button"
+          type="button"
+          disabled={loading || Boolean(loadError)}
+          onClick={() => {
+            setSuccessMessage("");
+            setDeviceEditOpen(true);
+          }}
+        >
+          Edit Device
+        </button>
+      )}
+    </section>
+  ) : undefined;
+
   return (
     <CustomerRecordLayout
-      title={device ? `${device.brand} ${device.model}` : "Device Details"}
-      description={
-        customer
-          ? `Device registered under ${customer.name}.`
-          : "View registered device information."
-      }
+      title="Device Details"
+      description="View registered device information."
+      header={header}
       found={Boolean(customer && device)}
       busy={deviceEditOpen}
     >
       {customer && device && (
         <>
-
-          <section className="page-content">
-            <div className="workspace-section-header">
-              <div>
-                <h3>Device Information</h3>
-                <p className="workspace-section-description">
-                  Identification and device information for this record.
-                </p>
-              </div>
-
-              {canManage && (
-                <button
-                  className="secondary-repair-button"
-                  type="button"
-                  disabled={loading || Boolean(loadError)}
-                  onClick={() => {
-                    setSuccessMessage("");
-                    setDeviceEditOpen(true);
-                  }}
-                >
-                  Edit Device
-                </button>
-              )}
-            </div>
-
-            <div className="device-info-grid">
+          <section className="page-content device-detail-information">
+            <h3>Device Information</h3>
+            <dl className="device-info-grid">
               {fields.map(([label, value]) => (
                 <div key={label}>
-                  <span>{label}</span>
-                  <strong>{value}</strong>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </section>
 
           <section className="page-content">
@@ -114,7 +117,7 @@ function DeviceDetailsPage() {
             />
           </section>
 
-          {deviceEditOpen && (
+          {deviceEditOpen && canManage && (
             <DeviceRegistrationModal
               customerName={customer.name}
               initialDevice={device}

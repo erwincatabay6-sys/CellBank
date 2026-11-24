@@ -250,7 +250,7 @@ async def main():
             "/repairs/new": "#new-repair-form, .repair-form",
             "/repairs/1": ".tracking-code-value",
             "/customers": ".customer-table-wrapper",
-            "/customers/1": ".customer-info-grid",
+            "/customers/1": ".customer-detail-panel",
             "/customers/1/devices/1": ".device-info-grid",
             "/technicians": ".technician-table-wrapper",
             "/technicians/1": ".technician-info-grid",

@@ -1,0 +1,171 @@
+.device-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 16px;
+}
+
+.device-detail-header > div {
+  min-width: 0;
+}
+
+.device-detail-header a {
+  color: var(--primary-dark);
+}
+
+.device-detail-information .device-info-grid {
+  margin: 10px 0 0;
+}
+
+.device-detail-information .device-info-grid dt,
+.device-history-row-meta {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.device-detail-information .device-info-grid dd {
+  min-width: 0;
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.device-history-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-history-count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.device-history-repeated {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 10px 12px;
+}
+
+.device-history-repeated > strong {
+  margin: 0;
+}
+
+.device-history-table,
+.device-history-mobile {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.device-history-table .customer-table {
+  table-layout: fixed;
+}
+
+.device-history-table th:nth-child(2) {
+  width: 32%;
+}
+
+.device-history-table :is(th, td) {
+  padding: 9px 12px;
+  overflow-wrap: anywhere;
+}
+
+.device-history-table td:last-child .status-badge,
+.device-history-row-top .status-badge {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.device-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.device-history-table th:first-child {
+  border-start-start-radius: 8px;
+}
+
+.device-history-table th:last-child {
+  border-start-end-radius: 8px;
+}
+
+.device-history-mobile {
+  display: none;
+}
+
+.device-history-problem {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1250px) {
+  .device-detail-information .device-info-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .device-detail-information .device-info-grid {
+    gap: 0;
+  }
+
+  .device-detail-information .device-info-grid > div {
+    display: grid;
+    grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr);
+    gap: 8px;
+    padding: 6px 0;
+    border-left: 0;
+  }
+
+  .device-detail-information .device-info-grid > div + div {
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 850px) {
+  .device-history-table {
+    display: none;
+  }
+
+  .device-history-mobile {
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .device-history-mobile li {
+    padding: 9px 10px;
+  }
+
+  .device-history-mobile li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .device-history-row-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px 10px;
+    margin-bottom: 4px;
+  }
+
+  .device-history-row-top button {
+    min-height: 44px;
+  }
+
+  .device-history-mobile p {
+    margin: 0;
+  }
+
+  .device-history-row-meta {
+    overflow-wrap: anywhere;
+  }
+}

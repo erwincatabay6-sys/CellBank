@@ -1,0 +1,236 @@
+.customer-detail-header {
+  display: grid;
+  gap: 10px;
+}
+
+.customer-detail-breadcrumb,
+.customer-detail-title,
+.customer-detail-contact {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.customer-detail-breadcrumb {
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.customer-detail-breadcrumb a {
+  color: var(--primary-dark);
+}
+
+.customer-detail-title {
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.customer-detail-title h2 {
+  min-width: 0;
+  margin: 0;
+}
+
+.customer-detail-contact {
+  gap: 8px 18px;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.customer-detail-contact > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.customer-detail-contact svg {
+  vertical-align: text-bottom;
+}
+
+.customer-detail-contact dd,
+.customer-detail-device-mobile dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.customer-detail-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.customer-detail-tabs button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.customer-detail-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.customer-detail-tabs button:hover {
+  background: var(--surface-muted);
+}
+
+.customer-detail-tabs button:focus-visible {
+  outline-offset: -2px;
+}
+
+.customer-detail-device-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.customer-detail-device-toolbar {
+  margin-bottom: 14px;
+}
+
+.customer-detail-device-toolbar .customer-search {
+  width: min(590px, 100%);
+  flex: 1 1 240px;
+  max-width: 590px;
+}
+
+.customer-detail-device-toolbar .customer-search > svg {
+  flex-shrink: 0;
+}
+
+.customer-detail-device-toolbar .customer-search:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.customer-detail-device-table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.customer-detail-device-table .customer-table {
+  table-layout: fixed;
+}
+
+.customer-detail-device-table :is(th, td) {
+  padding: 10px 14px;
+  overflow-wrap: anywhere;
+}
+
+.customer-detail-device-table th:first-child {
+  width: 32%;
+}
+
+.customer-detail-device-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.customer-detail-device-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.customer-detail-device-link svg {
+  flex-shrink: 0;
+}
+
+.customer-detail-device-mobile {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .customer-detail-contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .customer-detail-tabs button {
+    flex: 1 1 auto;
+    padding-inline: 4px;
+    font-size: 0.875rem;
+  }
+
+  .customer-detail-device-toolbar .customer-search {
+    flex-basis: 100%;
+  }
+
+  .customer-detail-device-table {
+    display: none;
+  }
+
+  .customer-detail-device-mobile {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    list-style: none;
+  }
+
+  .customer-detail-device-mobile li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .customer-detail-device-mobile summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    min-height: 44px;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  .customer-detail-device-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .customer-detail-device-mobile summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .customer-detail-device-mobile summary small {
+    display: block;
+    color: var(--text-secondary);
+  }
+
+  .customer-detail-device-mobile details[open] .customer-detail-device-chevron {
+    transform: rotate(180deg);
+  }
+
+  .customer-detail-device-mobile dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 2px 12px 0 40px;
+    font-size: 0.875rem;
+  }
+
+  .customer-detail-device-mobile dt {
+    color: var(--text-secondary);
+  }
+
+  .customer-detail-open-device {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-left: 40px;
+  }
+}

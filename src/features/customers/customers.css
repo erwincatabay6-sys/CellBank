@@ -141,71 +141,7 @@
     grid-template-columns: 1fr;
   }
 }
-.customer-device-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 
-  gap: 14px;
-}
-
-.customer-device-card {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  gap: 16px;
-
-  padding: 16px;
-
-  text-align: left;
-
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.customer-device-card:hover {
-  background-color: var(--surface-muted);
-  border-color: var(--primary);
-}
-
-.customer-device-card > div {
-  display: flex;
-  flex-direction: column;
-
-  gap: 4px;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.customer-device-card span {
-  font-size: 0.75rem;
-
-  color: var(--text-secondary);
-}
-
-.customer-device-card strong {
-  color: var(--text-primary);
-
-  line-height: 1.4;
-}
-
-@media (max-width: 900px) {
-  .customer-device-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 650px) {
-  .customer-device-card {
-    grid-template-columns: 1fr;
-  }
-}
 .device-info-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
