@@ -1175,6 +1175,18 @@
 
 .staff-drawer-actions .logout-button {
   min-height: 44px;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.staff-drawer-actions .logout-button .pending-action > span {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.staff-drawer-actions .logout-button .pending-action > span > :first-child {
+  width: 20px;
+  height: 20px;
 }
 
 .staff-drawer-switch {

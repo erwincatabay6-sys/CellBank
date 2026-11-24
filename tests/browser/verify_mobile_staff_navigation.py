@@ -190,6 +190,10 @@ async def main():
             logout = drawer.get_by_role("button", name="Logout")
             await logout.scroll_into_view_if_needed()
             await assert_in_view(logout, 360, 420)
+            theme_icon = await drawer.get_by_role("switch", name="Dark mode").locator("svg").bounding_box()
+            logout_icon = await logout.locator(".pending-action > span").first.locator("svg").bounding_box()
+            assert abs(theme_icon["x"] - logout_icon["x"]) <= 1
+            assert theme_icon["width"] == logout_icon["width"]
             await expect(drawer.get_by_role("button", name="Close navigation menu")).to_be_in_viewport()
             if roles == ["ADMIN"]:
                 await logout.tap()
