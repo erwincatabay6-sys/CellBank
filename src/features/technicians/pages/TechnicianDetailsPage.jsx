@@ -200,7 +200,7 @@ function TechnicianDetails({ technicianId, user }) {
             <h3 id="technician-workload-title">Workload Summary</h3>
             <dl className="technician-detail-status-counts">
               {activeStatuses.map(([status, label]) => (
-                <div key={status} data-status={status}>
+                <div key={status}>
                   <dt>{label}</dt>
                   <dd>{details.statusCounts[status] ?? 0}</dd>
                 </div>

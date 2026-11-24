@@ -42,8 +42,7 @@
   gap: 6px;
 }
 
-.technician-detail-role .technician-status::before,
-.technician-detail-status-counts dt::before {
+.technician-detail-role .technician-status::before {
   content: "";
   flex: 0 0 8px;
   height: 8px;
@@ -102,22 +101,6 @@
 .technician-detail-status-counts {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
-
-.technician-detail-status-counts dt {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.technician-detail-status-counts dt::before {
-  background-color: var(--status-color);
-}
-
-.technician-detail-status-counts [data-status="RECEIVED"] { --status-color: var(--status-neutral-text); }
-.technician-detail-status-counts [data-status="AWAITING_APPROVAL"] { --status-color: var(--status-approval-text); }
-.technician-detail-status-counts [data-status="IN_PROGRESS"] { --status-color: var(--status-info-text); }
-.technician-detail-status-counts [data-status="AWAITING_PARTS"] { --status-color: var(--status-warning-text); }
-.technician-detail-status-counts [data-status="READY_FOR_RELEASE"] { --status-color: var(--status-success-text); }
 
 .technician-detail-tabs {
   display: flex;
