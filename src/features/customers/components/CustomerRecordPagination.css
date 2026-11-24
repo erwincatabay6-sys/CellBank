@@ -1,0 +1,50 @@
+.customer-record-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 14px;
+}
+
+.customer-record-footer p,
+.customer-record-page-position {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.customer-record-pagination,
+.customer-record-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customer-record-page-numbers button {
+  min-width: 38px;
+  justify-content: center;
+}
+
+.customer-record-pagination [aria-current="page"] {
+  background-color: var(--button-primary);
+  color: #fff;
+}
+
+.customer-record-page-position {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .customer-record-page-numbers {
+    display: none;
+  }
+
+  .customer-record-pagination {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .customer-record-page-position {
+    display: inline;
+  }
+}

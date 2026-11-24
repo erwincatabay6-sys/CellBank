@@ -7,13 +7,7 @@ import {
   getRepeatedDeviceProblems,
 } from "../../repairs/problemCategories.js";
 
-const serviceLabels = {
-  DIAGNOSTIC: "Diagnostic",
-  HARDWARE_REPAIR: "Hardware Repair",
-  SOFTWARE_REPAIR: "Software Repair",
-  MAINTENANCE: "Maintenance / Cleaning",
-  OTHER: "Other",
-};
+import DeviceRepairList from "./DeviceRepairList.jsx";
 
 function CustomerRepairHistory({
   repairs = [],
@@ -43,15 +37,6 @@ function CustomerRepairHistory({
     ? getRepeatedDeviceProblems(repairs)
     : [];
 
-  const uncategorizedCount = new Set(
-    repairs
-      .filter(
-        (repair) =>
-          repair.status !== "CANCELLED" && repair.problemCategory == null,
-      )
-      .map((repair) => repair.id),
-  ).size;
-
   function deviceLabel(deviceId) {
     const device = devicesById.get(deviceId);
 
@@ -62,7 +47,12 @@ function CustomerRepairHistory({
     <section className="customer-repair-history-section" aria-busy={loading}>
       <div className="workspace-section-header">
         <div>
-          <h3>Repair History</h3>
+          <h3 className={deviceView ? "device-history-title" : undefined}>
+            Repair History
+            {deviceView && loaded && (
+              <span className="device-history-count" aria-hidden="true">{repairs.length}</span>
+            )}
+          </h3>
 
           <p className="workspace-section-description">
             {deviceView
@@ -115,8 +105,8 @@ function CustomerRepairHistory({
       )}
 
       {canShowPatterns && repeatedProblems.length > 0 && (
-        <div className="customer-repeated-problem-alert">
-          <strong>Repeated Problem Detected</strong>
+        <div className="customer-repeated-problem-alert device-history-repeated">
+          <strong>Repeated Problems</strong>
 
           {repeatedProblems.map((group) => (
             <p key={`${group.deviceId}:${group.category}`}>
@@ -127,7 +117,9 @@ function CustomerRepairHistory({
         </div>
       )}
 
-      {loaded && repairs.length > 0 && (
+      {loaded && repairs.length > 0 && (deviceView ? (
+        <DeviceRepairList repairs={repairs} onRepairClick={onRepairClick} disabled={disabled} />
+      ) : (
         <div className={historyClassName}>
           {repairs.map((repair) => (
             <button
@@ -143,38 +135,15 @@ function CustomerRepairHistory({
                 <strong>{repair.repairReference}</strong>
               </div>
 
-              {deviceView ? (
-                <>
-                  <div>
-                    <span>Reported Problem</span>
-                    <strong>{repair.reportedProblem}</strong>
-                  </div>
+              <div>
+                <span>Device</span>
+                <strong>{deviceLabel(repair.deviceId)}</strong>
+              </div>
 
-                  <div>
-                    <span>Service Type</span>
-                    <strong>
-                      {serviceLabels[repair.serviceType] ?? repair.serviceType}
-                    </strong>
-
-                    <span>Problem Category</span>
-                    <strong>
-                      {getProblemCategoryLabel(repair.problemCategory)}
-                    </strong>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <span>Device</span>
-                    <strong>{deviceLabel(repair.deviceId)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Reported Problem</span>
-                    <strong>{repair.reportedProblem}</strong>
-                  </div>
-                </>
-              )}
+              <div>
+                <span>Reported Problem</span>
+                <strong>{repair.reportedProblem}</strong>
+              </div>
 
               <div>
                 <span>Status</span>
@@ -183,7 +152,7 @@ function CustomerRepairHistory({
             </button>
           ))}
         </div>
-      )}
+      ))}
 
       {loaded && !loading && !error && repairs.length === 0 && (
         <div className="workspace-empty-state">

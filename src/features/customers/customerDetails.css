@@ -87,8 +87,7 @@
   outline-offset: -2px;
 }
 
-.customer-detail-device-toolbar,
-.customer-detail-device-footer {
+.customer-detail-device-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -149,34 +148,6 @@
   flex-shrink: 0;
 }
 
-.customer-detail-device-footer {
-  margin-top: 14px;
-}
-
-.customer-detail-device-footer p,
-.customer-detail-page-position {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-.customer-detail-pagination,
-.customer-detail-page-numbers {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.customer-detail-page-numbers button {
-  min-width: 38px;
-  justify-content: center;
-}
-
-.customer-detail-pagination [aria-current="page"] {
-  background-color: var(--button-primary);
-  color: #fff;
-}
-
-.customer-detail-page-position,
 .customer-detail-device-mobile {
   display: none;
 }
@@ -198,8 +169,7 @@
     flex-basis: 100%;
   }
 
-  .customer-detail-device-table,
-  .customer-detail-page-numbers {
+  .customer-detail-device-table {
     display: none;
   }
 
@@ -262,14 +232,5 @@
     align-items: center;
     min-height: 44px;
     margin-left: 40px;
-  }
-
-  .customer-detail-pagination {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .customer-detail-page-position {
-    display: inline;
   }
 }

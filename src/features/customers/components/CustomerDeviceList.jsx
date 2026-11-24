@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { ChevronDown, Laptop, Monitor, Package, Plus, Search, Smartphone, Tablet } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import CustomerRecordPagination from "./CustomerRecordPagination.jsx";
+
 export const DEVICE_PAGE_SIZE = 5;
 
 const deviceIcons = {
@@ -38,8 +40,6 @@ function CustomerDeviceList({
   const start = (currentPage - 1) * DEVICE_PAGE_SIZE;
   const visible = matches.slice(start, start + DEVICE_PAGE_SIZE);
   const range = visible.length === 1 ? start + 1 : `${start + 1}–${start + visible.length}`;
-  const firstPageButton = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
-  const pageNumbers = Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPageButton + index);
 
   function devicePath(device) {
     return `/customers/${customerId}/devices/${device.id}`;
@@ -165,48 +165,17 @@ function CustomerDeviceList({
             })}
           </ul>
 
-          <div className="customer-detail-device-footer">
-            <p role="status">
-              {pageCount > 1
-                ? `${range} of ${matches.length} devices`
-                : `${matches.length} ${matches.length === 1 ? "device" : "devices"}`}
-            </p>
-            {pageCount > 1 && (
-              <nav className="customer-detail-pagination" aria-label="Device pages">
-                <button
-                  className="secondary-repair-button"
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => onPageChange(currentPage - 1)}
-                >
-                  Previous
-                </button>
-                <div className="customer-detail-page-numbers">
-                  {pageNumbers.map((number) => (
-                    <button
-                      key={number}
-                      className="secondary-repair-button"
-                      type="button"
-                      aria-label={`Page ${number}`}
-                      aria-current={number === currentPage ? "page" : undefined}
-                      onClick={() => onPageChange(number)}
-                    >
-                      {number}
-                    </button>
-                  ))}
-                </div>
-                <span className="customer-detail-page-position">Page {currentPage} of {pageCount}</span>
-                <button
-                  className="secondary-repair-button"
-                  type="button"
-                  disabled={currentPage === pageCount}
-                  onClick={() => onPageChange(currentPage + 1)}
-                >
-                  Next
-                </button>
-              </nav>
-            )}
-          </div>
+          <CustomerRecordPagination
+            label="Device pages"
+            page={currentPage}
+            pageCount={pageCount}
+            onPageChange={onPageChange}
+            numbered
+          >
+            {pageCount > 1
+              ? `${range} of ${matches.length} devices`
+              : `${matches.length} ${matches.length === 1 ? "device" : "devices"}`}
+          </CustomerRecordPagination>
         </>
       )}
     </section>
