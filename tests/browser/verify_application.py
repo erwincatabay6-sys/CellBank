@@ -96,7 +96,16 @@ async def main():
                 await copy.focus();await copy.press('Enter')
                 await expect(p.locator('.feedback-toast')).to_contain_text('Copied')
                 assert await p.evaluate('navigator.clipboard.readText()')==tracking_code
-                a,b=await code.bounding_box(),await copy.bounding_box();assert b['x']>=a['x']+a['width']-1
+                code_box, copy_box = await code.bounding_box(), await copy.bounding_box()
+                resend = p.get_by_role('button', name='Resend tracking email')
+                resend_box = await resend.bounding_box()
+                if width < 650:
+                    assert abs(copy_box['x'] - code_box['x']) <= 1
+                    for action in [copy_box, resend_box]:
+                        assert action['y'] >= code_box['y'] + code_box['height']
+                else:
+                    assert copy_box['x'] >= code_box['x'] + code_box['width'] - 1
+                    assert abs(copy_box['y'] - code_box['y']) <= 1
                 assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 await p.screenshot(path=str(OUT/f'workspace-copy-{theme}-{width}.png'),full_page=True)
                 await c.close()
