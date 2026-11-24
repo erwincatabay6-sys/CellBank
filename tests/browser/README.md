@@ -76,6 +76,13 @@ against the local frontend. It verifies device fields, five-item repair pages,
 role-filtered recurring counts, device changes, and repair navigation at
 desktop, 360px, and 390px widths using browser-only API fixtures.
 
+## Technician Details
+
+Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_technician_details.py`
+against a local frontend. It checks the status totals, both repair tabs,
+independent pagination, authorization, and full legacy references on narrow
+screens using synthetic API fixtures.
+
 ## Staff role preservation
 
 Run `PYTHONDONTWRITEBYTECODE=1 python tests/browser/verify_staff_roles.py` with Vite running. The isolated staff form fixture checks creation, Technician/Front Desk combinations, and preserving Admin while editing details. It does not contact a backend. The application clipboard check also covers short codes and long wrapping codes in both themes.

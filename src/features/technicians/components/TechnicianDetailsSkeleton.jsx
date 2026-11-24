@@ -1,77 +1,35 @@
 import Skeleton from "../../../components/Skeleton.jsx";
 
-function SkeletonSection({ title, children }) {
-  return (
-    <section className="page-content">
-      <div className="workspace-section-header">
-        <div className="technician-skeleton-heading">
-          <h3>{title}</h3>
-          <Skeleton width={320} height={14} />
-        </div>
-      </div>
-
-      {children}
-    </section>
-  );
-}
-
-function SkeletonGrid({ className }) {
-  return (
-    <div className={className}>
-      {Array.from({ length: 5 }, (_, index) => (
-        <div key={index}>
-          <Skeleton width="65%" height={12} />
-          <Skeleton width="80%" height={18} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SkeletonRepairs() {
-  return (
-    <div className="technician-repair-list">
-      {Array.from({ length: 3 }, (_, rowIndex) => (
-        <div
-          className="technician-repair-item technician-skeleton-row"
-          key={rowIndex}
-        >
-          {Array.from({ length: 4 }, (_, columnIndex) => (
-            <div key={columnIndex}>
-              <Skeleton width="60%" height={12} />
-              <Skeleton
-                width="85%"
-                height={columnIndex === 3 ? 24 : 18}
-                rounded={columnIndex === 3}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function TechnicianDetailsSkeleton() {
   return (
     <div role="status" aria-label="Loading technician details">
-      <div aria-hidden="true">
-        <SkeletonSection title="Technician Information">
-          <SkeletonGrid className="technician-info-grid" />
-        </SkeletonSection>
-
-        <SkeletonSection title="Workload Summary">
-          <SkeletonGrid className="technician-workload-grid" />
-        </SkeletonSection>
-
-        <SkeletonSection title="Active Assigned Repairs">
-          <SkeletonRepairs />
-        </SkeletonSection>
-
-        <SkeletonSection title="Repair History">
-          <SkeletonRepairs />
-        </SkeletonSection>
-      </div>
+      <section className="page-content technician-detail-header" aria-hidden="true">
+        <div>
+          <Skeleton width={210} height={24} />
+          <Skeleton width={130} height={16} />
+        </div>
+        <div className="technician-detail-counts">
+          <Skeleton width="85%" height={32} />
+          <Skeleton width="85%" height={32} />
+        </div>
+      </section>
+      <section className="page-content technician-detail-workload" aria-hidden="true">
+        <h3>Workload Summary</h3>
+        <div className="technician-detail-status-counts">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index}><Skeleton width="85%" height={29} /></div>
+          ))}
+        </div>
+      </section>
+      <section className="page-content technician-detail-repairs" aria-hidden="true">
+        <div className="technician-detail-tabs">
+          <Skeleton width={128} height={24} />
+          <Skeleton width={128} height={24} />
+        </div>
+        {Array.from({ length: 5 }, (_, index) => (
+          <Skeleton key={index} width="100%" height={30} />
+        ))}
+      </section>
     </div>
   );
 }
